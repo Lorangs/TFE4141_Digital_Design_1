@@ -1,1 +1,9 @@
 Besvarelse Øving 2
+
+
+1.2
+    I en simulasjonssykel vil alle parallelle prosesser kjøre sammtidig. 
+    Prosessene vil bruke så lang tid som er bestemt. Dersom ingen tidsforsinkelse er bestemt, benyttes standardtiden på 1 delta-sykel per prosess. 
+1.3
+    Prosesser uten spesifisert tidsforsinkelse bruker 1 deltasykel på gjennomføring.
+
