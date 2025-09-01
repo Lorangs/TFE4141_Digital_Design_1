@@ -3,5 +3,5 @@ Prosjektemne TFE4141 Design av Digitale Systemer 1 ved NTNU.
 
 Gruppemedlemmer:
     Susanne Gripsgård
-    Ole Jacob Schubert
+    Ole-Jakob Schubert
     Lorang Strand
