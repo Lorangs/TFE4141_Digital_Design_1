@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Mon Sep  1 10:33:55 2025
+# Process ID         : 92096
+# Current directory  : /home/lorang/Documents/TFE4141_Design_av_Digitale_Systemer_1/oving/oving_2/Vivado_Tutorial/Tutorial_Created_Data/project_btf/project_btf.runs/synth_1
+# Command line       : vivado -log bft.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source bft.tcl
+# Log file           : /home/lorang/Documents/TFE4141_Design_av_Digitale_Systemer_1/oving/oving_2/Vivado_Tutorial/Tutorial_Created_Data/project_btf/project_btf.runs/synth_1/bft.vds
+# Journal file       : /home/lorang/Documents/TFE4141_Design_av_Digitale_Systemer_1/oving/oving_2/Vivado_Tutorial/Tutorial_Created_Data/project_btf/project_btf.runs/synth_1/vivado.jou
+# Running On         : laptop
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 24.04.3 LTS
+# Processor Detail   : Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz
+# CPU Frequency      : 3299.469 MHz
+# CPU Physical cores : 4
+# CPU Logical cores  : 8
+# Host memory        : 8196 MB
+# Swap memory        : 4294 MB
+# Total Virtual      : 12491 MB
+# Available Virtual  : 5799 MB
+#-----------------------------------------------------------
+source bft.tcl -notrace
