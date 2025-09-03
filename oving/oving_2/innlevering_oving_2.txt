@@ -1,1 +1,24 @@
 Besvarelse Øving 2
+
+oppgave 3
+    a. There are 1370 registers as flip-flops
+    b. There are 2084 LUT's implemented as logic in the design
+    c. LUT: Look Up Table is a hard coded table for faster loading of constant values.
+    d. Total on-chip power: 0.462W
+    e. 
+        - Simulation: functional testing in software
+        - Synthesis: Converting software to hardware
+        - Implementation: Mapping logic to the physical FPGA.
+    
+oppgave 4
+    2. We do not experiance any oscillations. The simulation stops after the given 1000ns.
+    3. If Vivado used a sequencial model of time, the simulation would be undefined
+        because Q would not get the updated value for QN after a cycle. 
+    4. When simulating post-synthesis we see more detailed time simulation
+        because the tool utilized the generated netlist to specify where a signal travels.
+
+        When simulating Pre-synthesis, the tool utilizes only delta cycles 
+        to simulate time delay between signals. 
+
+        Post-Implementation, Vivado also takes into account for the real time delay 
+        of signal length in layout.
