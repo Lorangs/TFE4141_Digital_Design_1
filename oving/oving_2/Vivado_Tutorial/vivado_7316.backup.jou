@@ -1,0 +1,33 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:37:14 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Wed Aug 27 16:10:10 2025
+# Process ID: 7316
+# Current directory: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent39620
+# Log file: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/vivado.log
+# Journal file: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial\vivado.jou
+# Running On        :SusannesPC
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :26100
+# Processor Detail  :Intel(R) Core(TM) Ultra 9 185H
+# CPU Frequency     :3072 MHz
+# CPU Physical cores:16
+# CPU Logical cores :22
+# Host memory       :33752 MB
+# Swap memory       :2147 MB
+# Total Virtual     :35900 MB
+# Available Virtual :10632 MB
+#-----------------------------------------------------------
+start_gui
+create_project project_bft C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft -part xc7z020clg400-1
+set_property simulator_language Verilog [current_project]
+add_files {C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_1.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_4.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/core_transform.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/bft_package.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_3.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_2.vhdl}
+set_property library { bftLib} [get_files  {C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_1.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_4.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/core_transform.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/bft_package.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_3.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_2.vhdl}]
+add_files {C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/async_fifo.v C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/FifoBuffer.v C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bft.vhdl}
+add_files -fileset sim_1 C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bft_tb.v
+import_files -force
+import_files -fileset constrs_1 -force -norecurse C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/bft_zynq.xdc
+update_compile_order -fileset sources_1

@@ -1,0 +1,31 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:37:14 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Wed Aug 27 16:32:54 2025
+# Process ID: 27124
+# Current directory: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent30884
+# Log file: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/vivado.log
+# Journal file: C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial\vivado.jou
+# Running On        :SusannesPC
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :26100
+# Processor Detail  :Intel(R) Core(TM) Ultra 9 185H
+# CPU Frequency     :3072 MHz
+# CPU Physical cores:16
+# CPU Logical cores :22
+# Host memory       :33752 MB
+# Swap memory       :2147 MB
+# Total Virtual     :35900 MB
+# Available Virtual :7232 MB
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.xpr
+update_compile_order -fileset sources_1
+synth_design -rtl -rtl_skip_mlo -name rtl_1
+import_files {C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_1.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_4.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/core_transform.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/bft_package.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_3.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Sources/hdl/bftLib/round_2.vhdl}
+set_property library bftLib [get_files  {C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/round_1.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/round_4.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/core_transform.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/bft_package.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/round_3.vhdl C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_2/Vivado_Tutorial/Vivado_Tutorial/Tutorial_Created_Data/project_bft/project_bft.srcs/sources_1/imports/bftLib/round_2.vhdl}]
+update_compile_order -fileset sources_1
+synth_design -rtl -rtl_skip_mlo -name rtl_1

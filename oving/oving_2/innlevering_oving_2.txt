@@ -1,1 +1,46 @@
-Besvarelse Øving 2
+Assignment 2 
+1.2
+    In a simulation cycle will all parallel processes run simultaniously. 
+    The processes will use as long time as decided. If no time-delay is decided, a standard-delay of 1 delta-cycle per process is used.
+     
+1.3
+    Processes without specified time delay uses one delta-cycle. 
+
+3.1 
+    There are 1370 flip-flops in the design 
+
+3.2 
+    There is used 1940 LUTs in the design 
+
+3.3 
+    A LUT is a Look-Up table that determines what the output is for a given input. 
+
+3.4 
+    The total on-chip power is 0.287W (72%) of dynamic power and 0.111W (28%) of device static power. 
+
+3.5 
+    Simulation
+        Apply various stimulus to verify how your design behaves in different conditions. It can be used during the design process to identify flaws and errors in the design. During simulation you can analyse the waveform from the applied stimulus and the different signals in your design. You can see how the signals change with time.
+
+    Synthesis
+        You can find out how many Flip-flops, LUTs, etc. you have used in the design.
+        You can look at the schematic of your design. There is also a hierarchy list of all your modules and submodules. 
+        Furthermore, there are timing estimates before implementation, as well as warnings and errors on your design. 
+
+    Implementation
+        During implementation you get a timing analysis for all paths. You also get the physical layout of your design where you can see how the elements are placed and analyze the path of different signals. 
+
+
+4.2 
+    The result of of the simulation is as expected. Q and QN change as expected when applying different stimuli to A and B.
+    The simulation stops once all stimuli have been applied and the processes suspend. We do not experience any oscillations like in the paper on Time and delta-delay from task 1. This is because we are using nor-gates and not nand gates as they did in the paper.
+
+4.3 
+    We would get an unexpected behavior as the Q-signal would not get the updated value of QN until the next time the stimulus changes.
+
+4.4 
+    Post-Synthesis
+        We see a more realistic simulation because the tool utilized the generated netlist to specify where a signal travels. 
+        
+    Post-Implementation
+        Vivado also takes the real time delay of signal legth in the layout into account for the simulation. 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="logic_tb_time_synth.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="logic_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="49.998 ns"></ZoomEndTime>
+      <Cursor1Time time="9.065 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="135"></NameColumnWidth>
+      <ValueColumnWidth column_width="132"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="4" />
+   <wvobject fp_name="/logic_tb/A" type="logic">
+      <obj_property name="ElementShortName">A</obj_property>
+      <obj_property name="ObjectShortName">A</obj_property>
+   </wvobject>
+   <wvobject fp_name="/logic_tb/B" type="logic">
+      <obj_property name="ElementShortName">B</obj_property>
+      <obj_property name="ObjectShortName">B</obj_property>
+   </wvobject>
+   <wvobject fp_name="/logic_tb/Q" type="logic">
+      <obj_property name="ElementShortName">Q</obj_property>
+      <obj_property name="ObjectShortName">Q</obj_property>
+   </wvobject>
+   <wvobject fp_name="/logic_tb/QN" type="logic">
+      <obj_property name="ElementShortName">QN</obj_property>
+      <obj_property name="ObjectShortName">QN</obj_property>
+   </wvobject>
+</wave_config>
