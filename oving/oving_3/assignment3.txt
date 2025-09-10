@@ -1,0 +1,5 @@
+1.2
+    An example is in a process if you have an if-statement without an else with a default value.
+
+1.3
+    Make sure all input cases have a defined output. Combinatorial circuits provide this by default, but in a process it has to be specified. 
