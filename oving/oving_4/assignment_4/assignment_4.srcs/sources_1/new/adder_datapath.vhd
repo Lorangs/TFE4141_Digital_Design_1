@@ -1,3 +1,4 @@
+
 ----------------------------------------------------------------------------------
 -- Company    :  NTNU
 -- Engineer   : �ystein Gjermundnes
@@ -93,3 +94,5 @@ begin
   data_out <= y_r(31 downto 0);
 
 end rtl;
+ 
+
