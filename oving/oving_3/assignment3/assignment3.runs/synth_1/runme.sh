@@ -12,9 +12,9 @@ echo "Please update the PATH and LD_LIBRARY_PATH variables below, before executi
 exit
 
 if [ -z "$PATH" ]; then
-  PATH=C:/Xilinx/Vivado/2024.1/ids_lite/ISE/bin/nt64;C:/Xilinx/Vivado/2024.1/ids_lite/ISE/lib/nt64:C:/Xilinx/Vivado/2024.1/bin
+  PATH=C:/ASCII_approvd/Vitis/2024.1/bin;C:/ASCII_approvd/Vivado/2024.1/ids_lite/ISE/bin/nt64;C:/ASCII_approvd/Vivado/2024.1/ids_lite/ISE/lib/nt64:C:/ASCII_approvd/Vivado/2024.1/bin
 else
-  PATH=C:/Xilinx/Vivado/2024.1/ids_lite/ISE/bin/nt64;C:/Xilinx/Vivado/2024.1/ids_lite/ISE/lib/nt64:C:/Xilinx/Vivado/2024.1/bin:$PATH
+  PATH=C:/ASCII_approvd/Vitis/2024.1/bin;C:/ASCII_approvd/Vivado/2024.1/ids_lite/ISE/bin/nt64;C:/ASCII_approvd/Vivado/2024.1/ids_lite/ISE/lib/nt64:C:/ASCII_approvd/Vivado/2024.1/bin:$PATH
 fi
 export PATH
 
@@ -25,7 +25,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='C:/Users/susan/OneDrive/Dokumenter/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_3/assignment3/assignment3.runs/synth_1'
+HD_PWD='C:/Users/oleja/Documents/7.semester/DDS1/Git/TFE4141_Digital_Design_1/oving/oving_3/assignment3/assignment3.runs/synth_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log
