@@ -1,4 +1,3 @@
-
 ----------------------------------------------------------------------------------
 -- Company    :  NTNU
 -- Engineer   : �ystein Gjermundnes
@@ -44,7 +43,12 @@ architecture rtl of adder_datapath is
   signal b_r, b_nxt: std_logic_vector(127 downto 0);
   
   -- Signals associated with the output registers
-  signal y_r, y_nxt: std_logic_vector(127 downto 0);
+  signal y_r:  std_logic_vector(31 downto 0);
+  signal y_nxt: std_logic_vector(32 downto 0);
+  
+  -- Signals associated with the adder
+  signal c_in, c_out: std_ulogic; 
+  signal temp: std_logic_vector(31 downto 0);
     
 begin
 
@@ -73,26 +77,30 @@ begin
   -- Add the content of a_r and b_r and store it in y_r.
   -- Logic for shifting out the content of y_r to data_out
   -- ***************************************************************************
+  
   process (clk, reset_n) begin
+    
     if(reset_n = '0') then
-      y_r <= (others => '0');     
+        y_r <= (others => '0');
+ 
     elsif(clk'event and clk='1') then
-      if(output_reg_en ='1') then
-        y_r <= y_nxt;       
-      end if;
-    end if;
+        if(output_reg_load = '1') then
+            temp <= b"0000000000000000000000000000000" & c_in;
+            y_nxt <= std_logic_vector(unsigned(a_r(31 downto 0)) + unsigned(b_r(31 downto 0)) + unsigned(temp));
+            c_out <= y_nxt(32);
+        else
+            y_nxt <= y_nxt;
+        end if; 
+          
+        if(output_reg_en ='1') then
+            c_in <= c_out;
+            y_r <= y_nxt(31 downto 0);
+        else 
+            y_r <= (others => '0');
+        end if;
+     end if;   
   end process;
-  
-  process (y_r, a_r, b_r, output_reg_load) begin
-    if(output_reg_load = '1') then
-      y_nxt <= std_logic_vector(unsigned(a_r) + unsigned(b_r));
-    else
-      y_nxt <= x"00000000" & y_r(127 downto 32);
-    end if;
-  end process;
-  
-  data_out <= y_r(31 downto 0);
+    
+  data_out <= y_r;
 
 end rtl;
- 
-

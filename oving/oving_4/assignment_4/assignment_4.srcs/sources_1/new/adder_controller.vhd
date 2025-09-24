@@ -70,7 +70,7 @@ begin
     elsif(clk'event and clk='1') then
       output_reg_load_r <= '0';    
       if(input_reg_en_i = '1') then
-        if(input_shift_counter_r = 7) then
+        if((input_shift_counter_r >= 7) and (input_shift_counter_r < 12)) then
           output_reg_load_r <= '1';
         end if;
       end if;
