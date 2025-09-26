@@ -20,17 +20,25 @@ message = c**d % n
 print(f"decrypt= {message}")
 
 def mult_with_mod(a, b, n):
+
+    #R_sel = 00
     R = 0
     for i in range(n):
-        if (a >> (n-1-i) & 1):
+        a = a << 1
+        if (a & (1 << 255)):
             R = (R << 1) + b
         else:
-            R = (R << 1)  
-        
+            R = (R << 1) 
+
+        #R_sel = 10
         if R >= n:
             R -= n
         if R >= n:
             R -= n
+    
+    #R_sel = 11 invalid state
+    # should trigger reset_n
+
     return R
 
 def encrypt(M, e, n):
