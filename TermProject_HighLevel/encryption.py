@@ -36,6 +36,7 @@ def encrypt(M, e, n):
 def mult_with_mod_v2(a, b, c, e, n):
     R = 0
     Q = 0
+
     for i in range(n):
         R = R << 1
         Q = Q << 1
@@ -46,16 +47,26 @@ def mult_with_mod_v2(a, b, c, e, n):
 
         if R >= 2*n:
             R -= 2*n
-        elif R >= n:
+        if R >= n:
             R -= n
         if Q >= 2*n:
             Q -= 2*n
-        elif Q >= n:
+        if Q >= n:
             Q -= n
 
     if e == 0:
-        Q = None
+        R = b
     return R, Q
+
+def encrypt_v2(M, e, n):
+    c = 1
+    P = M
+    for i in range(n):
+        x = (e >> i) & 1
+        c, P = mult_with_mod_v2(P, c, P, x, n)
+    return c
+
+
 
 # Calculate expected cipher and decrypted message
 c = M**e % n
@@ -68,3 +79,8 @@ cipher = encrypt(M, e, n)
 decyphered_message = encrypt(cipher, d, n)
 print(cipher)
 print(decyphered_message)
+
+cipher_v2 = encrypt_v2(M, e, n)
+decyphered_message_v2 = encrypt_v2(cipher_v2, d, n)
+print(cipher_v2)
+print(decyphered_message_v2)
