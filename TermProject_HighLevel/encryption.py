@@ -16,10 +16,13 @@ def mult_with_mod(a, b, n):
         R = R << 1
         if (a >> (n-1-i) & 1):
             R += b
-        if R >= 2*n:
+        if R >= 2*n:  # r = 10 n = 3 ==> R >= 2 * 3 = 6 så då 10-6 = 4,||||| N= 6 -> R = -2  ||||| N = 12 -> R = - 14
             R -= 2*n
-        elif R >= n:
+        elif R >= n: # R = 10, n = 3 ==> R >= 3 så då e R = 7,         ||||| N = 6 -> 4      ||||| N = 12 -> R = - 2
             R -= n
+       # else:       # R = 10, n = 3 ==> R >= 0 så då e R= 10,         ||||| N = 6  -> 10    ||||| N = 12 -> R = 10
+       #     R
+       # vi ønsker å velge R som ikke er negativ. aka 1 på 255 eller 256 
     return R
 
 def encrypt(M, e, n):
