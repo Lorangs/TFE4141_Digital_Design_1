@@ -1,3 +1,8 @@
+# Assignment 5
+
+
+## Task 1
+```c
 uint input(void)
 {
     set_ready_in(1);
@@ -26,3 +31,15 @@ void main(void)
         output(result);
     }
 }
+```
+
+## Task 2 
+|   State      | next state     | condition | actions| 
+|:-------------|:--------------:|--------------:|
+| Read_A       | Value 1        | Quantity 1    | |
+| Read_B      | Value 2        | Quantity 2    | |
+| SubAB      | Value 2        | Quantity 2    | |
+| SubBA      | Value 2        | Quantity 2    | |
+| write_output      | Value 2        | Quantity 2    | | 
+| wait_output      | Value 2        | Quantity 2    ||
+
