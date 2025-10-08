@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="assignment_5_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="assignment_5_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="1359236900fs"></ZoomStartTime>
+      <ZoomEndTime time="1666152621fs"></ZoomEndTime>
+      <Cursor1Time time="1615000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="253"></NameColumnWidth>
+      <ValueColumnWidth column_width="173"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="13" />
+   <wvobject type="group" fp_name="group140">
+      <obj_property name="label">constants</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="other" fp_name="/assignment_5_tb/CLK_PERIOD">
+         <obj_property name="ElementShortName">CLK_PERIOD</obj_property>
+         <obj_property name="ObjectShortName">CLK_PERIOD</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/assignment_5_tb/test_set_size">
+         <obj_property name="ElementShortName">test_set_size</obj_property>
+         <obj_property name="ObjectShortName">test_set_size</obj_property>
+         <obj_property name="CustomSignalColor">#A0A0A4</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/assignment_5_tb/bit_width">
+         <obj_property name="ElementShortName">bit_width</obj_property>
+         <obj_property name="ObjectShortName">bit_width</obj_property>
+         <obj_property name="CustomSignalColor">#A0A0A4</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/test_data_a">
+         <obj_property name="ElementShortName">test_data_a[15:0][7:0]</obj_property>
+         <obj_property name="ObjectShortName">test_data_a[15:0][7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#A0A0A4</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/test_data_b">
+         <obj_property name="ElementShortName">test_data_b[15:0][7:0]</obj_property>
+         <obj_property name="ObjectShortName">test_data_b[15:0][7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#A0A0A4</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/test_data_c">
+         <obj_property name="ElementShortName">test_data_c[15:0][7:0]</obj_property>
+         <obj_property name="ObjectShortName">test_data_c[15:0][7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#A0A0A4</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/clock">
+      <obj_property name="ElementShortName">clock</obj_property>
+      <obj_property name="ObjectShortName">clock</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/reset_n">
+      <obj_property name="ElementShortName">reset_n</obj_property>
+      <obj_property name="ObjectShortName">reset_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider37" type="divider">
+      <obj_property name="label">bus inn</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#008000</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/assignment_5_tb/data_in">
+      <obj_property name="ElementShortName">data_in[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_in[7:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      <obj_property name="AnalogYRangeType">ANALOG_YRANGETYPE_AUTO</obj_property>
+      <obj_property name="AnalogYRangeMin">0.000000</obj_property>
+      <obj_property name="AnalogYRRangeMax">0.000000</obj_property>
+      <obj_property name="AnalogInterpolation">ANALOG_INTERPOLATION_LINEAR</obj_property>
+      <obj_property name="AnalogOffscale">ANALOG_OFFSCALE_HIDE</obj_property>
+      <obj_property name="AnalogHorizLine">0.000000</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/data_in_valid">
+      <obj_property name="ElementShortName">data_in_valid</obj_property>
+      <obj_property name="ObjectShortName">data_in_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/data_in_ready">
+      <obj_property name="ElementShortName">data_in_ready</obj_property>
+      <obj_property name="ObjectShortName">data_in_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider38" type="divider">
+      <obj_property name="label">bus out</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#008000</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/assignment_5_tb/data_out">
+      <obj_property name="ElementShortName">data_out[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_out[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/data_out_valid">
+      <obj_property name="ElementShortName">data_out_valid</obj_property>
+      <obj_property name="ObjectShortName">data_out_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/assignment_5_tb/data_out_ready">
+      <obj_property name="ElementShortName">data_out_ready</obj_property>
+      <obj_property name="ObjectShortName">data_out_ready</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group142">
+      <obj_property name="label">controller internals</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/ready_in">
+         <obj_property name="ElementShortName">ready_in</obj_property>
+         <obj_property name="ObjectShortName">ready_in</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/valid_in">
+         <obj_property name="ElementShortName">valid_in</obj_property>
+         <obj_property name="ObjectShortName">valid_in</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/ready_out">
+         <obj_property name="ElementShortName">ready_out</obj_property>
+         <obj_property name="ObjectShortName">ready_out</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/valid_out">
+         <obj_property name="ElementShortName">valid_out</obj_property>
+         <obj_property name="ObjectShortName">valid_out</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/i_controller/read_a_select">
+         <obj_property name="ElementShortName">read_a_select[2:0]</obj_property>
+         <obj_property name="ObjectShortName">read_a_select[2:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/i_controller/read_b_select">
+         <obj_property name="ElementShortName">read_b_select[2:0]</obj_property>
+         <obj_property name="ObjectShortName">read_b_select[2:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/i_controller/write_select">
+         <obj_property name="ElementShortName">write_select[4:0]</obj_property>
+         <obj_property name="ObjectShortName">write_select[4:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/i_controller/opcode">
+         <obj_property name="ElementShortName">opcode[2:0]</obj_property>
+         <obj_property name="ObjectShortName">opcode[2:0]</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/input_equal">
+         <obj_property name="ElementShortName">input_equal</obj_property>
+         <obj_property name="ObjectShortName">input_equal</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/assignment_5_tb/DUT/i_controller/input_greater">
+         <obj_property name="ElementShortName">input_greater</obj_property>
+         <obj_property name="ObjectShortName">input_greater</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/assignment_5_tb/DUT/i_controller/state">
+         <obj_property name="ElementShortName">state</obj_property>
+         <obj_property name="ObjectShortName">state</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="other" fp_name="/assignment_5_tb/DUT/i_controller/state_next">
+         <obj_property name="ElementShortName">state_next</obj_property>
+         <obj_property name="ObjectShortName">state_next</obj_property>
+         <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group141">
+      <obj_property name="label">datapath internals</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/reg0">
+         <obj_property name="ElementShortName">reg0[7:0]</obj_property>
+         <obj_property name="ObjectShortName">reg0[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/reg1">
+         <obj_property name="ElementShortName">reg1[7:0]</obj_property>
+         <obj_property name="ObjectShortName">reg1[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/reg2">
+         <obj_property name="ElementShortName">reg2[7:0]</obj_property>
+         <obj_property name="ObjectShortName">reg2[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/reg3">
+         <obj_property name="ElementShortName">reg3[7:0]</obj_property>
+         <obj_property name="ObjectShortName">reg3[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/ALU_output">
+         <obj_property name="ElementShortName">ALU_output[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ALU_output[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/bus_a">
+         <obj_property name="ElementShortName">bus_a[7:0]</obj_property>
+         <obj_property name="ObjectShortName">bus_a[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/assignment_5_tb/DUT/bus_b">
+         <obj_property name="ElementShortName">bus_b[7:0]</obj_property>
+         <obj_property name="ObjectShortName">bus_b[7:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
