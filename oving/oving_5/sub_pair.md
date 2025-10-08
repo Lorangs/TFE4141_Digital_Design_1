@@ -34,12 +34,18 @@ void main(void)
 ```
 
 ## Task 2 
-|   State      | next state     | condition | actions| 
-|:-------------|:--------------:|--------------:|
-| Read_A       | Value 1        | Quantity 1    | |
-| Read_B      | Value 2        | Quantity 2    | |
-| SubAB      | Value 2        | Quantity 2    | |
-| SubBA      | Value 2        | Quantity 2    | |
-| write_output      | Value 2        | Quantity 2    | | 
-| wait_output      | Value 2        | Quantity 2    ||
+
+
+
+| **state**   	| **next state** 	| **condition**                    	| **actions**                          	|
+|-------------	|----------------	|----------------------------------	|--------------------------------------	|
+| read_A      	| read_A         	| valid in = 0                     	| ready in <- 1                        	|
+| read_A      	| read_B         	| valid in = 1                     	| ready in <- 1 & write input to reg 0 	|
+| read_B      	| read_B         	| valid in = 0                     	| ready in <- 1                        	|
+| read_B      	| subAB          	| valid in = 1                     	| ready in <- 1 & write input to reg 1 	|
+| subAB       	| wait_output    	| input_greater\|input_equals      	| Data_out = reg_0 - reg_1             	|
+| subAB       	| subBA          	| not(input_greater\|input_equals) 	| Data_out = reg_0 - reg_1             	|
+| subBA       	| wait_output    	| none                             	| Data_out = reg_1 - reg_0             	|
+| wait_output 	| wait_output    	| ready out = 0                    	| valid out = 1                        	|
+| wait_output 	| read_A         	| ready out = 1                    	| valid out = 1                        	|
 
