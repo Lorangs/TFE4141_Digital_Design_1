@@ -1,0 +1,40 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:37:14 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Wed Oct 15 15:52:40 2025
+# Process ID: 78816
+# Current directory: C:/Users/oleja/Documents/7.semester/DDS1/git_3/TFE4141_Digital_Design_1/TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent5632 C:\Users\oleja\Documents\7.semester\DDS1\git_3\TFE4141_Digital_Design_1\TermProject\tfe4141_rsa_integration_kit_2025\Exponentiation\Exponentiation\Exponentiation.xpr
+# Log file: C:/Users/oleja/Documents/7.semester/DDS1/git_3/TFE4141_Digital_Design_1/TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/vivado.log
+# Journal file: C:/Users/oleja/Documents/7.semester/DDS1/git_3/TFE4141_Digital_Design_1/TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation\vivado.jou
+# Running On        :OOxps13pluss
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :26100
+# Processor Detail  :12th Gen Intel(R) Core(TM) i7-1280P
+# CPU Frequency     :1997 MHz
+# CPU Physical cores:14
+# CPU Logical cores :20
+# Host memory       :33944 MB
+# Swap memory       :27917 MB
+# Total Virtual     :61862 MB
+# Available Virtual :8685 MB
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/oleja/Documents/7.semester/DDS1/git_3/TFE4141_Digital_Design_1/TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.xpr
+update_compile_order -fileset sources_1
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top mux_6to1 [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode All [current_project]
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top mux_6to1 [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode All [current_project]
+update_compile_order -fileset sources_1
