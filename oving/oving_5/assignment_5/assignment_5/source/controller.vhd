@@ -82,7 +82,7 @@ architecture Behavioral of controller is
 
 	type state_type is (
 		--fill inn with necesarry states
-		IDLE,ERR
+		ERR,READ_A,READ_B,SUB_AB,SUB_BA,WAIT_OUTPUT
 	);
 	signal state,state_next : state_type;
 begin
@@ -97,11 +97,60 @@ begin
 		read_b_select 	<= read_reg0;
 		ready_in 		<= '0';
 		valid_out 		<= '0';
-		state_next 		<= IDLE;
+		state_next 		<= READ_A;
 		write_select 	<= write_none;
 		
 		--main implementation of statemachine
 		case(state) is
+		    when READ_A =>
+		        ready_in <= '1';
+		        if(valid_in) then
+		          write_select    <= write_reg0;
+		          read_a_select   <= read_input;  
+		          opcode          <= alu_load;
+		          state_next      <= READ_B;
+		         else
+		          state_next      <= READ_A;
+		         end if;
+		         
+		    when READ_B =>
+		        ready_in <= '1';
+		        if(valid_in) then
+		          write_select  <= write_reg1;
+		          read_a_select <= read_input;  
+		          read_b_select <= read_reg0;
+		          opcode        <= alu_load;
+		          
+		          if(input_greater or input_equal) then
+		           state_next <= SUB_AB;
+		          else
+		           state_next <= SUB_BA;
+		          end if;
+		           
+		         else
+		          state_next <= READ_B;
+		         end if;
+		         
+		    when SUB_AB =>
+		         read_b_select    <= read_reg0;
+		         read_a_select    <= read_reg1;
+		         opcode           <= alu_sub;
+		         write_select     <= write_output;
+		         state_next       <= WAIT_OUTPUT;
+		         
+		    when SUB_BA => 
+		         read_b_select    <= read_reg1;
+		         read_a_select    <= read_reg0;
+		         opcode           <= alu_sub;
+		         write_select     <= write_output;
+		         state_next       <= WAIT_OUTPUT;
+		    when WAIT_OUTPUT => 
+		         valid_out        <= '1';
+		         if(ready_out) then
+		          state_next      <= READ_A;
+		         else 
+		          state_next      <= WAIT_OUTPUT;
+		         end if;
 			when others =>
 				read_a_select 	<= read_reg0;
 				read_b_select 	<= read_reg0;
@@ -109,7 +158,7 @@ begin
 				valid_out 		<= '0';
 				ready_in 		<= '0';
 				opcode 			<= alu_load;
-				state_next 		<= IDLE;
+				state_next 		<= READ_A;
 		end case;
 	end process main_statem_proc;
 
@@ -117,7 +166,7 @@ begin
 	update_state : process (reset_n, clk)
 	begin
 		if (reset_n = '0') then
-			state <= IDLE;
+			state <= READ_A;
 		elsif (rising_edge(clk)) then
 			state <= state_next;
 		end if;

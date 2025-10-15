@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:37:14 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Wed Oct  8 16:40:34 2025
+# Process ID: 16300
+# Current directory: C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/assignment_5/assignment_5.runs/synth_1
+# Command line: vivado.exe -log assignment_5.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source assignment_5.tcl
+# Log file: C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/assignment_5/assignment_5.runs/synth_1/assignment_5.vds
+# Journal file: C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/assignment_5/assignment_5.runs/synth_1\vivado.jou
+# Running On        :SusannesPC
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :26100
+# Processor Detail  :Intel(R) Core(TM) Ultra 9 185H
+# CPU Frequency     :3072 MHz
+# CPU Physical cores:16
+# CPU Logical cores :22
+# Host memory       :33752 MB
+# Swap memory       :2147 MB
+# Total Virtual     :35900 MB
+# Available Virtual :13571 MB
+#-----------------------------------------------------------
+source assignment_5.tcl -notrace
