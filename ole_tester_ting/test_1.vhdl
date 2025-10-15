@@ -18,7 +18,6 @@
 -- 
 ----------------------------------------------------------------------------------
 
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -50,7 +49,7 @@ entity mux_6to1 is
             signal Muxed_s0_s2       : std_logic_vector(C_block_size downto 0);
             signal Muxed_s0_s2_s4    : std_logic_vector(C_block_size downto 0);
             signal Muxed_s1_s3       : std_logic_vector(C_block_size downto 0);
-            signal Muxed_s1_s3_s5    : std_logic_vector(C_block_size downto 0)
+            signal Muxed_s1_s3_s5    : std_logic_vector(C_block_size downto 0);
            );
 end mux_6to1;
 
@@ -62,7 +61,8 @@ begin
 Mux_nr_1: process(s0 , s2 ,s2(256)) 
 begin 
     case s2(256) is 
-        when '0' => Muxed_s0_s2 <= s2;
+        when '0' => 
+            Muxed_s0_s2 <= s2;
         when '1' => 
            Muxed_s0_s2 <= s0;
         when others =>
@@ -96,7 +96,6 @@ begin
     end case;
 end process Mux_nr_3_B;
 
-
 -- deciding if R+B-2n, or other last mux for B serien. 
 Mux_nr_4_B: process(Muxed_s1_s3 , s5 ,s5(256)) -- s5(256)
 begin 
@@ -109,7 +108,6 @@ begin
             Muxed_s1_s3_s5 <= (others => '0'); 
     end case;
 end process Mux_nr_4_B;
-
 
 -- Last_temp s0||s1||s2 Muxed_s0_s2_s4
 -- Last_temp_with_B s1||s3||s5 Muxed_s1_s3_s5
@@ -124,6 +122,6 @@ begin
             R_new <= (others => '0'); 
     end case;
 end process Last_Mux;
-        --when other
+        --when others
 
 end muxBehave;
