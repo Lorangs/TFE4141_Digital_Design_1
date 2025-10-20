@@ -38,7 +38,6 @@ entity calculations is
 	);
     Port ( 
            b       : in     std_logic_vector( C_block_size downto 0 );
-           
            n_neg   : in     std_logic_vector( C_block_size downto 0 );
            
            clk     : in     std_logic;
@@ -56,7 +55,7 @@ entity calculations is
 end calculations;
 
 architecture calcBehave of calculations is
-    signal R_temp, mux2, mux3, b_n, b_2n, n_2 : std_logic_vector( C_block_size downto 0 );
+    signal R_temp, mux, b_n, b_2n, n_2 : std_logic_vector( C_block_size downto 0 );
 begin
 
 -- R_reg register
@@ -95,37 +94,15 @@ begin
 end process; 
 
 
--- Mux 2 
-process (reset_n) 
-begin 
-    case reset_n is
-        when '0' => 
-            mux2 <= n_neg;
-        when '1' => 
-            mux2 <= R_temp;
-        when others => 
-            mux2 <= mux2;
-     end case;         
-end process; 
-
--- Mux 3
-process (reset_n) 
-begin 
-    case reset_n is
-        when '0' => 
-            mux3 <= b;
-        when '1' => 
-            mux3 <= R_temp;
-        when others => 
-            mux3 <= mux3;
-     end case;         
-end process; 
+-- Mux 
+mux <= b when reset_n = '0' else R_temp;
 
 
+s0 <= R_temp;
 s1 <= std_logic_vector(signed(R_temp) + signed(b));
-s2 <= std_logic_vector(signed(mux2) + signed(n_neg)); 
+s2 <= std_logic_vector(signed(mux) + signed(n_neg)); 
 s3 <= std_logic_vector(signed(R_temp) + signed(b_n));
-s4 <= std_logic_vector(signed(mux3) + shift_left(signed(n_neg), 1));
+s4 <= std_logic_vector(signed(mux) + shift_left(signed(n_neg), 1));
 s5 <= std_logic_vector(signed(R_temp) + signed(b_2n));
 
 
