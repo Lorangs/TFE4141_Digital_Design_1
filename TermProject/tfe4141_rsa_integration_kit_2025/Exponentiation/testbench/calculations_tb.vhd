@@ -96,8 +96,8 @@ begin
     n_neg(50)   <= '1';
     
     reset_n <= '0';
-    wait for clk_period;
-    assert 
+    wait for 50 ns;
+    reset_n <= '1';
     
     wait for clk_period;  -- Wait for R_temp to update
     
