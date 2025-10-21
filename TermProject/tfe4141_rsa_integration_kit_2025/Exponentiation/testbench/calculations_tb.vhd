@@ -107,11 +107,13 @@ begin
     assert s4 = std_logic_vector(signed(b) + shift_left(signed(n_neg), 1)) report "s4 is not reset value when reset" severity error;
     -- s3 and s5 are unknown values at this point and therefore not checked 
 
+    wait for clk_period/2;
     reset_n <= '1'; -- turn off reset
-    wait for clk_period;  -- Wait for R_temp to update
     b_n <= std_logic_vector(signed(b) + signed(n_neg));
     b_2n <= std_logic_vector(signed(b) + shift_left(signed(n_neg), 1));
-
+    
+    wait for clk_period;  -- Wait for R_temp to update
+    
     -- -- Check outputs based on expected calculations
     assert s0 = std_logic_vector(shift_left(signed(R_new), 1)) report "s0 incorrect" severity error;
     assert s1 = std_logic_vector(shift_left(signed(R_new), 1) + signed(b)) report "s1 incorrect" severity error;
@@ -119,6 +121,7 @@ begin
     assert s3 = std_logic_vector(shift_left(signed(R_new), 1) + signed(b_n)) report "s3 incorrect" severity error;
     assert s4 = std_logic_vector(shift_left(signed(R_new), 1) + shift_left(signed(n_neg), 1)) report "s4 incorrect" severity error;
     assert s5 = std_logic_vector(shift_left(signed(R_new), 1) + signed(b_2n)) report "s5 incorrect" severity error;
+    
     
     R_new <= s4;
     
@@ -136,7 +139,5 @@ begin
     wait;
 
 end process;
-
-
 
 end calc_tbBehave;

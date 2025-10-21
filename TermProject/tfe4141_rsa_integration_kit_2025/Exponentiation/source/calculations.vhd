@@ -61,22 +61,18 @@ begin
 -- R_reg register
 process (clk, reset_n) 
 begin
-    if rising_edge(clk) then 
-        if (reset_n = '0') then 
-            R_temp <= (others => '0');
-        else 
-            R_temp <= std_logic_vector(shift_left(signed(R_new), 1));
-        end if;
+    if (reset_n = '0') then 
+        R_temp <= (others => '0');
     else 
-        R_temp <= R_temp;
+        R_temp <= std_logic_vector(shift_left(signed(R_new), 1));
     end if;
 end process;
 
 
 -- b-n register
-process (reset_n) 
+process (clk, reset_n) 
 begin
-    if falling_edge(reset_n) then
+    if (reset_n = '0') then
         b_n <= s2;
     else 
         b_n <= b_n;
@@ -84,9 +80,9 @@ begin
 end process;
 
 -- b-2n register
-process (reset_n)
+process (clk, reset_n)
 begin 
-    if falling_edge(reset_n) then
+    if (reset_n = '0') then
         b_2n <= s4;
     else
         b_2n <= b_2n;     
