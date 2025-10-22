@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="bHAwinWw58YbktVaIYxk" name="Mult-with-mod-2">
-        <mxGraphModel dx="3518" dy="1924" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2493" dy="1893" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -175,7 +175,7 @@
                 <mxCell id="41" value="Mux" style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.electrical.abstract.mux2;whiteSpace=wrap;rotation=90;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
                     <mxGeometry x="573" y="290" width="65" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="44" value="" style="endArrow=classic;html=1;startArrow=oval;startFill=1;edgeStyle=orthogonalEdgeStyle;rounded=0;curved=0;endFill=1;" parent="1" edge="1">
+                <mxCell id="44" value="" style="endArrow=classic;html=1;startArrow=oval;startFill=1;edgeStyle=orthogonalEdgeStyle;rounded=0;curved=0;endFill=1;" parent="1" edge="1" source="512">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="113" y="260" as="sourcePoint"/>
                         <mxPoint x="729" y="450" as="targetPoint"/>
@@ -1372,6 +1372,16 @@
                 </mxCell>
                 <mxCell id="511" value="-2n" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="960" y="219" width="40" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="513" value="" style="endArrow=classic;html=1;startArrow=oval;startFill=1;edgeStyle=orthogonalEdgeStyle;rounded=0;curved=0;endFill=1;" edge="1" parent="1" target="512">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="113" y="260" as="sourcePoint"/>
+                        <mxPoint x="729" y="450" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="512" value="Tror det er en feil her&amp;nbsp; på inngangen på muxen, trenger muligens ikke denne muxen" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FF0000;fontSize=17;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="325" y="253" width="170" height="40" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

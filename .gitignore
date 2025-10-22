@@ -1,0 +1,41 @@
+# Xilinx Vivado generated files
+*.jou
+*.log
+*.str
+*.xpr.backup
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.gen/
+
+# Temporary files
+*~
+*.tmp
+*.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+
+# Example: Ignore entire directories
+# installation_description/
+# ole_tester_ting/
+
+# Example: Ignore specific file patterns in directories
+# oving/*/project_*/
+# oving/*/*.xpr
+# TermProject/*/cleanup.tcl
+TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.cache/
+TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.xpr/
