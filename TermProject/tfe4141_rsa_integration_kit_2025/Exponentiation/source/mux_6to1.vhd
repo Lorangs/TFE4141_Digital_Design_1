@@ -57,72 +57,92 @@ architecture muxBehave of mux_6to1 is
 
 begin
 
+-- if s2 is a postiv number we whant to keep it.
+
+--mux 1
+Muxed_s0_s2 <= s2 when s2(256) = '0' else s0;
+
+-- are theese to different from eachother?
+--mux 2
+Muxed_s0_s2_s4 <=  s4 when s4(256) = '0' else Muxed_s0_s2;
+
+--mux 3 s1 , s3 ,s3(256)
+Muxed_s1_s3 <= s3 when s3(256) = '0' else s1;
+
+--mux 4 
+Muxed_s1_s3_s5 <= s5 when s5(256) = '0' else  Muxed_s1_s3;
+
+-- når mux controll er 1 må den velge verdi med b i. 
+--mux 5 (Muxed_s0_s2_s4, Muxed_s1_s3_s5, mux_control)
+R_new <= Muxed_s1_s3_s5 when mux_control = '0' else Muxed_s0_s2_s4;
+
+
 -- first mux for normal series, R or R-N
-Mux_nr_1: process(s0 , s2 ,s2(256)) 
-begin 
-    case s2(256) is 
-        when '0' => Muxed_s0_s2 <= s2;
-        when '1' => 
-           Muxed_s0_s2 <= s0;
-        when others =>
-            Muxed_s0_s2 <= (others => '0');  
-    end case;
-end process Mux_nr_1;
+--Mux_nr_1: process(s0 , s2 , s2(256)) 
+--begin 
+--    case s2(256) is 
+--        when '0' => Muxed_s0_s2 <= s2;
+--        when '1' => 
+--           Muxed_s0_s2 <= s0;
+--        when others =>
+--            Muxed_s0_s2 <= (others => '0');  
+--    end case;
+--end process Mux_nr_1;
 
 -- Second mux for normal series R-2n or others
-Mux_nr_2: process(Muxed_s0_s2, s4, s4(256))
-begin 
-    case s4(256) is 
-        when '0' => 
-            Muxed_s0_s2_s4 <= Muxed_s0_s2;
-        when '1' => 
-            Muxed_s0_s2_s4 <= s4;
-        when others =>
-            Muxed_s0_s2_s4 <= (others => '0'); 
-    end case;
-end process Mux_nr_2;
+--Mux_nr_2: process(Muxed_s0_s2, s4, s4(256))
+--begin 
+--    case s4(256) is 
+--        when '0' => 
+--            Muxed_s0_s2_s4 <= Muxed_s0_s2;
+--        when '1' => 
+--            Muxed_s0_s2_s4 <= s4;
+--        when others =>
+--            Muxed_s0_s2_s4 <= (others => '0'); 
+--    end case;
+--end process Mux_nr_2;
 
--- Deciding between R+B or R+B-N. First mux for B series 
-Mux_nr_3_B: process(s1 , s3 ,s3(256)) -- s3(256)
-begin 
-    case s5(256) is 
-        when '0' => 
-            Muxed_s1_s3 <= s1;
-        when '1' => 
-           Muxed_s1_s3 <= s3;
-        when others =>
-            Muxed_s1_s3 <= (others => '0');  
-    end case;
-end process Mux_nr_3_B;
+---- Deciding between R+B or R+B-N. First mux for B series 
+--Mux_nr_3_B: process(s1 , s3 ,s3(256)) -- s3(256)
+--begin 
+--    case s3(256) is 
+--        when '0' => 
+--            Muxed_s1_s3 <= s1;
+--        when '1' => 
+--           Muxed_s1_s3 <= s3;
+--        when others =>
+--            Muxed_s1_s3 <= (others => '0');  
+--    end case;
+--end process Mux_nr_3_B;
 
-
--- deciding if R+B-2n, or other last mux for B serien. 
-Mux_nr_4_B: process(Muxed_s1_s3 , s5 ,s5(256)) -- s5(256)
-begin 
-    case s5(256) is 
-        when '0' => 
-            Muxed_s1_s3_s5 <= Muxed_s1_s3;
-        when '1' => 
-            Muxed_s1_s3_s5 <= s5;
-        when others =>
-            Muxed_s1_s3_s5 <= (others => '0'); 
-    end case;
-end process Mux_nr_4_B;
+--
+---- deciding if R+B-2n, or other last mux for B serien. 
+--Mux_nr_4_B: process(Muxed_s1_s3 , s5 ,s5(256)) -- s5(256)
+--begin 
+--    case s5(256) is 
+--        when '0' => 
+--            Muxed_s1_s3_s5 <= Muxed_s1_s3;
+--        when '1' => 
+--            Muxed_s1_s3_s5 <= s5;
+--        when others =>
+--            Muxed_s1_s3_s5 <= (others => '0'); 
+--    end case;
+--end process Mux_nr_4_B;
 
 
 -- Last_temp s0||s1||s2 Muxed_s0_s2_s4
 -- Last_temp_with_B s1||s3||s5 Muxed_s1_s3_s5
-Last_Mux: process(Muxed_s0_s2_s4, Muxed_s1_s3_s5, mux_control)
-begin 
-    case mux_control is
-        when '0' => 
-            R_new <= Muxed_s1_s3_s5;
-        when '1' => 
-            R_new <= Muxed_s0_s2_s4;
-        when others =>
-            R_new <= (others => '0'); 
-    end case;
-end process Last_Mux;
+--Last_Mux: process(Muxed_s0_s2_s4, Muxed_s1_s3_s5, mux_control)
+--begin 
+--    case mux_control is
+--        when '0' => 
+--            R_new <= Muxed_s1_s3_s5;
+--        when '1' => 
+--            R_new <= Muxed_s0_s2_s4;
+--        when others =>
+--            R_new <= (others => '0'); 
+--    end case;
+--end process Last_Mux;
         --when other
 
 end muxBehave;
