@@ -44,17 +44,16 @@ entity mux_6to1 is
            s5          : in std_logic_vector( C_block_size downto 0);
 
            R_new       : out std_logic_vector( C_block_size downto 0);
-           mux_control : in std_logic;
-
-           -- internal signals
-            signal Muxed_s0_s2       : std_logic_vector(C_block_size downto 0);
-            signal Muxed_s0_s2_s4    : std_logic_vector(C_block_size downto 0);
-            signal Muxed_s1_s3       : std_logic_vector(C_block_size downto 0);
-            signal Muxed_s1_s3_s5    : std_logic_vector(C_block_size downto 0)
+           mux_control : in std_logic
            );
 end mux_6to1;
 
 architecture muxBehave of mux_6to1 is
+           -- internal signals
+            signal Muxed_s0_s2       : std_logic_vector(C_block_size downto 0);
+            signal Muxed_s0_s2_s4    : std_logic_vector(C_block_size downto 0);
+            signal Muxed_s1_s3       : std_logic_vector(C_block_size downto 0);
+            signal Muxed_s1_s3_s5    : std_logic_vector(C_block_size downto 0);
 
 begin
 
