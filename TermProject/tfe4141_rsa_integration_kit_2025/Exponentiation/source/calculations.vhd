@@ -55,7 +55,7 @@ entity calculations is
 end calculations;
 
 architecture calcBehave of calculations is
-    signal R_temp, mux, b_n, b_2n, n_2 : std_logic_vector( C_block_size downto 0 );
+    signal R_temp, mux, b_minus_n, b_minus_2n, n_2 : std_logic_vector( C_block_size downto 0 );
 begin
 
 -- R_reg register
@@ -73,9 +73,9 @@ end process;
 process (clk, reset_n) 
 begin
     if (reset_n = '0') then
-        b_n <= s2;
+        b_minus_n <= s2;
     else 
-        b_n <= b_n;
+        b_minus_n <= b_minus_n;
     end if;
 end process;
 
@@ -83,9 +83,9 @@ end process;
 process (clk, reset_n)
 begin 
     if (reset_n = '0') then
-        b_2n <= s4;
+        b_minus_2n <= s4;
     else
-        b_2n <= b_2n;     
+        b_minus_2n <= b_minus_2n;     
     end if;
 end process; 
 
@@ -97,9 +97,9 @@ mux <= b when reset_n = '0' else R_temp;
 s0 <= R_temp;
 s1 <= std_logic_vector(signed(R_temp) + signed(b));
 s2 <= std_logic_vector(signed(mux) + signed(n_neg)); 
-s3 <= std_logic_vector(signed(R_temp) + signed(b_n));
+s3 <= std_logic_vector(signed(R_temp) + signed(b_minus_n));
 s4 <= std_logic_vector(signed(mux) + shift_left(signed(n_neg), 1));
-s5 <= std_logic_vector(signed(R_temp) + signed(b_2n));
+s5 <= std_logic_vector(signed(R_temp) + signed(b_minus_2n));
 
 
 end calcBehave;
