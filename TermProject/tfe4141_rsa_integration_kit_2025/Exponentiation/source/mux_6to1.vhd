@@ -33,7 +33,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity mux_6to1 is
     generic(
-        C_block_size : integer:= 256
+        C_block_size : integer:= 254;
+        Read_out_signed_bit: integer := 254 
+    -- implimentasjon constraint, for testing av system må vi bruke 255 lines, som reusltat av 255 pins på brette.
     );
     Port (
            s0          : in std_logic_vector( C_block_size downto 0);
@@ -60,27 +62,26 @@ begin
 -- if s2 is a postiv number we whant to keep it.
 
 --mux 1
-Muxed_s0_s2 <= s2 when s2(256) = '0' else s0;
+Muxed_s0_s2 <= s2 when s2(-1) = '0' else s0;
 
 -- are theese to different from eachother?
 --mux 2
-Muxed_s0_s2_s4 <=  s4 when s4(256) = '0' else Muxed_s0_s2;
+Muxed_s0_s2_s4 <=  s4 when s4(Read_out_signed_bit) = '0' else Muxed_s0_s2;
 
---mux 3 s1 , s3 ,s3(256)
-Muxed_s1_s3 <= s3 when s3(256) = '0' else s1;
+--mux 3 s1 , s3 ,s3(Read_out_signed_bit)
+Muxed_s1_s3 <= s3 when s3(Read_out_signed_bit) = '0' else s1;
 
 --mux 4 
-Muxed_s1_s3_s5 <= s5 when s5(256) = '0' else  Muxed_s1_s3;
+Muxed_s1_s3_s5 <= s5 when s5(Read_out_signed_bit) = '0' else  Muxed_s1_s3;
 
 -- når mux controll er 1 må den velge verdi med b i. 
 --mux 5 (Muxed_s0_s2_s4, Muxed_s1_s3_s5, mux_control)
-R_new <= Muxed_s1_s3_s5 when mux_control = '0' else Muxed_s0_s2_s4;
-
+R_new <=  Muxed_s0_s2_s4 when mux_control = '0' else Muxed_s1_s3_s5;
 
 -- first mux for normal series, R or R-N
---Mux_nr_1: process(s0 , s2 , s2(256)) 
+--Mux_nr_1: process(s0 , s2 , s2(Read_out_signed_bit)) 
 --begin 
---    case s2(256) is 
+--    case s2(Read_out_signed_bit) is 
 --        when '0' => Muxed_s0_s2 <= s2;
 --        when '1' => 
 --           Muxed_s0_s2 <= s0;
@@ -90,9 +91,9 @@ R_new <= Muxed_s1_s3_s5 when mux_control = '0' else Muxed_s0_s2_s4;
 --end process Mux_nr_1;
 
 -- Second mux for normal series R-2n or others
---Mux_nr_2: process(Muxed_s0_s2, s4, s4(256))
+--Mux_nr_2: process(Muxed_s0_s2, s4, s4(Read_out_signed_bit))
 --begin 
---    case s4(256) is 
+--    case s4(Read_out_signed_bit) is 
 --        when '0' => 
 --            Muxed_s0_s2_s4 <= Muxed_s0_s2;
 --        when '1' => 
@@ -103,9 +104,9 @@ R_new <= Muxed_s1_s3_s5 when mux_control = '0' else Muxed_s0_s2_s4;
 --end process Mux_nr_2;
 
 ---- Deciding between R+B or R+B-N. First mux for B series 
---Mux_nr_3_B: process(s1 , s3 ,s3(256)) -- s3(256)
+--Mux_nr_3_B: process(s1 , s3 ,s3(Read_out_signed_bit)) -- s3(Read_out_signed_bit)
 --begin 
---    case s3(256) is 
+--    case s3(Read_out_signed_bit) is 
 --        when '0' => 
 --            Muxed_s1_s3 <= s1;
 --        when '1' => 
@@ -117,9 +118,9 @@ R_new <= Muxed_s1_s3_s5 when mux_control = '0' else Muxed_s0_s2_s4;
 
 --
 ---- deciding if R+B-2n, or other last mux for B serien. 
---Mux_nr_4_B: process(Muxed_s1_s3 , s5 ,s5(256)) -- s5(256)
+--Mux_nr_4_B: process(Muxed_s1_s3 , s5 ,s5(Read_out_signed_bit)) -- s5(Read_out_signed_bit)
 --begin 
---    case s5(256) is 
+--    case s5(Read_out_signed_bit) is 
 --        when '0' => 
 --            Muxed_s1_s3_s5 <= Muxed_s1_s3;
 --        when '1' => 
