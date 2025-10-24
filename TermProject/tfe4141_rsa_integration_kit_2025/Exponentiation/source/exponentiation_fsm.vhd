@@ -42,65 +42,61 @@ entity exponentiation_fsm is
         n               : in std_logic_vector(C_block_size-1 downto 0);
         
         ready_out       : in std_logic;
+        valid_in        : in std_logic;
+        
+        ready_in        : out std_logic;
         valid_out       : out std_logic;
         load_result     : out std_logic
         );
 end exponentiation_fsm;
 
 architecture expFsmBehave of exponentiation_fsm is
-    signal counter, counter_new : std_logic_vector(C_block_size-1 downto 0);
+    signal counter : std_logic_vector(C_block_size-1 downto 0);
     
     type state_type is (RESET, COUNTING, FINISHED);
     signal current_state, next_state : state_type;
 begin
-    
-    -- counter register
-    process (clk, reset_n)
-    begin 
-        if rising_edge(clk) then 
-            if (reset_n = '0') then
-                counter <= (others => '0');
-            else
-                counter <= counter_new;
-            end if;
-         end if;
-    end process;
-
-   counter_new  <= std_logic_vector(unsigned(counter) + 1);
-
-   load_result   <= '1' when counter = n else '0';
-   
    
  ------ State machine ------
- 
-   process (clk, reset_n, load_result, ready_out) 
+   NextState: process (current_state, load_result, ready_out, valid_in) 
    begin
-        case state is 
+        case current_state is 
             when RESET =>
-                if (reset_n = '0') then
-                    next_state <= RESET;
-                else 
-                    next_state <= COUNTING;
+                ready_in    <= '1';
+                valid_out   <= '0';
+                counter     <= (others => '0');
+                load_result <= '0';
+                    
+                if (valid_in = '1' and reset_n = '1') then 
+                    next_state  <= COUNTING;
+                else
+                    next_state  <= RESET;
                 end if;
                 
             when COUNTING =>
+                ready_in    <= '0';
+                valid_out   <= '0';
+                
                 if (reset_n = '0') then
                     next_state <= RESET;
                 else
-                    if (load_result = '0') then
+                    if (counter = n) then
+                        load_result <= '1';
+                        next_state  <= FINISHED;
+                    else
                         next_state <= COUNTING;
-                    else 
-                        valid_out  <= '1';
-                        next_state <= FINISHED;
                     end if;
                 end if;
        
              when FINISHED =>
+                ready_in    <= '0';
+                valid_out   <= '1';
+                load_result <= '0';
+                
                 if (reset_n = '0' or ready_out = '1') then
-                    valid_out <= '0';
-                    next_state <= RESET;
+                    next_state  <= RESET;
                 else 
-                    next_state <= FINISHED;
+                    next_state  <= FINISHED;
                 end if;
                 
              when others =>
@@ -108,12 +104,24 @@ begin
         end case;
    end process;
    
-   -- Updating state
-   process (clk) 
-   begin
-        if rising_edge(clk) then
-            current_state <= next_state;
-        end if;
-   end process;
+   
+  SyncState: process (clk, reset_n) 
+  begin
+    if(reset_n = '0') then
+        current_state <= RESET;
+    elsif rising_edge(clk) then
+        current_state <= next_state;
+    end if;
+  end process SyncState;
+  
+  SyncCounter: process (clk, reset_n) 
+  begin
+    if (reset_n = '0') then 
+        counter <= (others => '0');
+    elsif rising_edge(clk) then
+        counter <= std_logic_vector(unsigned(counter) + 1);
+    end if;
+  end process SyncCounter;
+ 
 
 end expFsmBehave;

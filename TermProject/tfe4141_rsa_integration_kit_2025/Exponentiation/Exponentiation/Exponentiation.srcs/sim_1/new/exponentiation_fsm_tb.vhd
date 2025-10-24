@@ -38,8 +38,8 @@ generic (
 end exponentiation_fsm_tb;
 
 architecture expFsm_tbBehave of exponentiation_fsm_tb is
-    signal n : std_logic_vector(C_block_size downto 0); 
-    signal clk, reset_n, valid_out, ready_out, load_result : std_logic;
+    signal n : std_logic_vector(C_block_size-1 downto 0); 
+    signal clk, reset_n, valid_out, valid_in, ready_out, ready_in, load_result : std_logic;
     constant clk_period : time := 5 ns;
     
     function is_all_zero(vec: std_logic_vector) return boolean is 
@@ -62,16 +62,20 @@ DUT: entity work.exponentiation_fsm
         reset_n         => reset_n,
         clk             => clk,
         n               => n,
-        valid_out       => valid_out,
+        
         ready_out       => ready_out,
-        load_result
+        valid_in        => valid_in,
+        
+        ready_in        => ready_in,
+        valid_out       => valid_out,
+        load_result     => load_result
     );
     
 clk_process : process 
 begin 
-    clk <= '0';
-    wait for clk_period / 2;
     clk <= '1';
+    wait for clk_period / 2;
+    clk <= '0';
     wait for clk_period / 2;
 end process;
 
@@ -79,6 +83,7 @@ test_process : process
 begin
     reset_n     <= '0';
     ready_out   <= '0';
+    valid_in    <= '0';
     
     -- setting n = 8
     n       <= (others => '0'); 
@@ -86,17 +91,15 @@ begin
     
     wait for clk_period;
     
-    assert load_result = '0' report "load_result = 1 after reset" severity error;
+    assert valid_out = '0' report "valid_out is not reset when in reset state" severity error;
+    assert ready_in = '1' report "ready_in is not 1 when in reset state" severity error;
+    assert load_result = '0' report "load_result is not 0 when in reset state" severity error;
     
-    reset_n         <= '1';
+    reset_n     <= '1';
+    valid_in    <= '1';
+    ready_out   <= '1';
     
-    wait for clk_period*8; -- after a total of 9 cycles 
-    
-    assert valid_out = '1' report "valid_out not 1 after n+1 cycles" severity error;
-    
-    ready_out <= '1';
-    
-    wait for clk_period*3;
+    wait for clk_period*10;
     
     report "----- Test done ----" severity note; 
     
