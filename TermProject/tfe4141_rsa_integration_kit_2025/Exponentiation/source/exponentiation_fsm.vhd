@@ -54,8 +54,7 @@ entity exponentiation_fsm is
         mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
         mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
         
-        counter         : out std_logic_vector(C_block_size-1 downto 0);
-        a_reg           : out std_logic_vector(C_block_size-1 downto 0)
+      
         );
 end exponentiation_fsm;
 
