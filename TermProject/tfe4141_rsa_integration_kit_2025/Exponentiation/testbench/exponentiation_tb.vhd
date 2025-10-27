@@ -9,36 +9,37 @@ use ieee.std_logic_1164.all;
 
 
 architecture expBehave of exponentiation_tb is 
-		valid_in	:  STD_LOGIC;
-		ready_in	:  STD_LOGIC;
+	--port(;
+		constant C_block_size : integer := 256;
+		constant clk_period   : time 	:= 10ns;
+
+		signal valid_in 	  :  STD_LOGIC;
+		signal ready_in  	  :  STD_LOGIC;
 
 		--input data
-		a           :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	    b           :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-        c           :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+		signal a, b, c        :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
 		
 		--ouput controll
-		ready_out	:  STD_LOGIC;
-		valid_out	:  STD_LOGIC;
+		signal ready_out	  :  STD_LOGIC;
+		signal valid_out	  :  STD_LOGIC;
 
 		--output data
-		result_R 	:  STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-		result_P 	:  STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		signal result_R 	  :  STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		signal result_P 	  :  STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		n           :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		n_neg       :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		signal n              :  STD_LOGIC_VECTOR ( C_block_size downto-1 0 );
+		signal n_neg          :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
          
 		--utility
-		clk 		:  STD_LOGIC;
-		reset_n 	:  STD_LOGIC;
+		signal clk 		      :  STD_LOGIC;
+		signal reset_n 	      :  STD_LOGIC;
 
 		-- Internal Signal
 		signal s0, s1 ,s2 ,s3 ,s4, s5, R_new: std_logic_vector(C_block_size downto 0);
-		constant C_block_size := 256;
 
+begin 
 
-begin
 a_clock : process
 begin
     clk <= '1';
@@ -47,45 +48,43 @@ begin
     wait for clk_period/2;
 end process  a_clock;
 
-begin
-	DUT : entity work.exponentiation
-		port map (
 
-		--input controll
-			valid_in   =>   valid_in,
-			ready_in   =>   ready_in,
+DUT : entity work.exponentiation
+	port map (
+	--input controll
+		valid_in   =>   valid_in,
+		ready_in   =>   ready_in,
 
-		--input data
-			a 		   =>   a,
-			b 		   =>   b,
-			c 		   =>   c,
-		--ouput controll
-			ready_out  =>   ready_out,
-			valid_out  =>   valid_out,
+	--input data
+		a 		   =>   a,
+		b 		   =>   b,
+		c 		   =>   c,
+	--ouput controll
+		ready_out  =>   ready_out,
+		valid_out  =>   valid_out,
 
-		--output data
-			result_R   =>   moduluresult_Rs,
-			result_P   =>   result_P,
+	--output data
+		result_R   =>   moduluresult_Rs,
+		result_P   =>   result_P,
 
-		--modulus
-			n          =>   n,
-			n_neg      =>   n_neg,
+	--modulus
+		n          =>   n,
+		n_neg      =>   n_neg,
 
-		--utility
-			clk        =>   clk,
-			reset_n    =>   reset_n,
+	--utility
+		clk        =>   clk,
+		reset_n    =>   reset_n,
 
-		-- Internal Signal
-			s0         =>   s0,
-			s1         =>   s1,
-			s2         =>   s2,
-			s3         =>   s3,
-			s4         =>   s4,
-			s5         =>   s5,
-			R_new      =>   R_new      
-	);
-
-end expBehave;
+	-- Internal Signal
+		s0         =>   s0,
+		s1         =>   s1,
+		s2         =>   s2,
+		s3         =>   s3,
+		s4         =>   s4,
+		s5         =>   s5,
+		R_new      =>   R_new      
+);
+--end expBehave;
 
 
 test_of_exponentiation : process
@@ -96,15 +95,59 @@ begin
 -- styre signaler fra FSM
 -- ready_in, valid_out, load_result
 
-valid_out
-reset_n --lav
+-- is it possible to writte the state out in the testbench.
+
 
 wait for clk_period;
--- first test, what happens if handshake is not good. 
+
+
+--test_zero sett all to zero
+valid_in <= '0';
+
+a 			<= (others => '0');
+b 			<= (others => '0');
+c 			<= (others => '0');
+
+ready_out 	<= '0';
+
+--n			<= (others => '0');
+n			<= (others => '1');
+
+
+n_neg 		<= (others => '1') ;
+n_neg(C_block_size) <= '1';
+
+reset_n 	<= '1';
+
+wait for clk_period;
+ 
+-- first test, does it work as it is supposed to?
+-- A message with just a nuumber, 
+
+valid_in <= '1';
+-- ready_in is output
+
+a 			<= (others => '0');
+a(2)		<= '1';
+b 			<= (others => '0');
+b(1)		<= '1';
+c 			<= (others => '0');
+c(0)		<= '1';
+
+wait for clk_period;
+
+-- third test, try to reset
+
+reset_n <= '1';
+
+
+--fourth test and more copilot assisted :)
+ 
+--Second test what happens if handshake is not good. 
 -- handsake should be valid when ready and valid are high
 
-end process
+end process;
 
 
 
-end exponentiation_tb
+end expBehave;
