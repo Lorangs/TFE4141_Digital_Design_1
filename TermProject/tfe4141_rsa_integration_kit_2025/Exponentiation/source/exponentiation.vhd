@@ -11,19 +11,23 @@ entity exponentiation is
 		ready_in	: out STD_LOGIC;
 
 		--input data
-		message 	: in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-		key 		: in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-
+		a           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+	    b           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+        c           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+		
 		--ouput controll
 		ready_out	: in STD_LOGIC;
 		valid_out	: out STD_LOGIC;
 
 		--output data
-		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		result_R 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		result_P 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		modulus 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-
+		 n           : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		 n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+         
+         
 		--utility
 		clk 		: in STD_LOGIC;
 		reset_n 	: in STD_LOGIC
@@ -33,7 +37,5 @@ end exponentiation;
 
 architecture expBehave of exponentiation is
 begin
-	result <= message xor modulus;
-	ready_in <= ready_out;
-	valid_out <= valid_in;
+	
 end expBehave;
