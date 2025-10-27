@@ -40,34 +40,41 @@ entity exponentiation_fsm is
         reset_n         : in std_logic;
         clk             : in std_logic;
         n               : in std_logic_vector(C_block_size-1 downto 0);
+        a               : in std_logic_vector(C_block_size-1 downto 0);
         
         ready_out       : in std_logic;
         valid_in        : in std_logic;
         
         ready_in        : out std_logic;
         valid_out       : out std_logic;
-        load_result     : out std_logic
+        
+        mux_ctrl_P_in   : in std_logic_vector(3 downto 0);
+        mux_ctrl_R_in   : in std_logic_vector(3 downto 0);
+        
+        mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
+        mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
+        
+        counter         : out std_logic_vector(C_block_size-1 downto 0);
+        a_reg           : out std_logic_vector(C_block_size-1 downto 0)
         );
 end exponentiation_fsm;
 
 architecture expFsmBehave of exponentiation_fsm is
-    signal counter : std_logic_vector(C_block_size-1 downto 0);
+   -- signal a_reg : std_logic_vector(C_block_size-1 downto 0);
     
     type state_type is (RESET, COUNTING, FINISHED);
     signal current_state, next_state : state_type;
 begin
    
- ------ State machine ------
-   NextState: process (current_state, load_result, ready_out, valid_in) 
+   
+   NextState: process (current_state, ready_out, valid_in, a_reg(255), mux_ctrl_P_in, mux_ctrl_R_in) 
    begin
         case current_state is 
             when RESET =>
                 ready_in    <= '1';
                 valid_out   <= '0';
-                counter     <= (others => '0');
-                load_result <= '0';
                     
-                if (valid_in = '1' and reset_n = '1') then 
+                if (valid_in = '1') then 
                     next_state  <= COUNTING;
                 else
                     next_state  <= RESET;
@@ -77,23 +84,36 @@ begin
                 ready_in    <= '0';
                 valid_out   <= '0';
                 
-                if (reset_n = '0') then
-                    next_state <= RESET;
+                -- Mux control
+                mux_ctrl_P_out(0) <= not(a_reg(255));
+                mux_ctrl_P_out(1) <= ( not(a_reg(255)) and mux_ctrl_P_in(3) and not(mux_ctrl_P_in(1)) ) 
+                                    or ( a_reg(255) and mux_ctrl_P_in(2) and not(mux_ctrl_P_in(0)) );
+                mux_ctrl_P_out(2) <= ( not(a_reg(255)) and not(mux_ctrl_P_in(3)) ) 
+                                    or ( a_reg(255) and  not(mux_ctrl_P_in(2)) );
+                                
+                mux_ctrl_R_out(0) <= not(a_reg(255));
+                mux_ctrl_R_out(1) <= ( not(a_reg(255)) and mux_ctrl_R_in(3) and not(mux_ctrl_R_in(1)) ) 
+                                 or ( a_reg(255) and mux_ctrl_R_in(2) and not(mux_ctrl_R_in(0)) );
+                mux_ctrl_R_out(2) <= ( not(a_reg(255)) and not(mux_ctrl_R_in(3)) ) 
+                                 or ( a_reg(255) and  not(mux_ctrl_R_in(2)) );                
+                
+                
+                if (counter = n) then
+                    next_state  <= FINISHED; 
                 else
-                    if (counter = n) then
-                        load_result <= '1';
-                        next_state  <= FINISHED;
-                    else
-                        next_state <= COUNTING;
-                    end if;
+                    next_state <= COUNTING;
                 end if;
+                
        
              when FINISHED =>
                 ready_in    <= '0';
                 valid_out   <= '1';
-                load_result <= '0';
                 
-                if (reset_n = '0' or ready_out = '1') then
+                -- Hold result value
+                mux_ctrl_P_out <= "000"; 
+                mux_ctrl_R_out <= "000"; 
+                
+                if (ready_out = '1') then
                     next_state  <= RESET;
                 else 
                     next_state  <= FINISHED;
@@ -104,24 +124,41 @@ begin
         end case;
    end process;
    
-   
   SyncState: process (clk, reset_n) 
   begin
-    if(reset_n = '0') then
-        current_state <= RESET;
-    elsif rising_edge(clk) then
-        current_state <= next_state;
-    end if;
+        if rising_edge(clk) then
+            if(reset_n = '0') then
+                current_state <= RESET;
+            else
+                current_state <= next_state;
+            end if;
+        end if;
   end process SyncState;
   
   SyncCounter: process (clk, reset_n) 
   begin
-    if (reset_n = '0') then 
-        counter <= (others => '0');
-    elsif rising_edge(clk) then
-        counter <= std_logic_vector(unsigned(counter) + 1);
-    end if;
+        if rising_edge(clk) then
+            case( current_state ) is
+                when COUNTING =>
+                    counter <= std_logic_vector(unsigned(counter) + 1);
+    
+                when others =>
+                    counter <= (others => '0');
+            end case ;
+        end if;
   end process SyncCounter;
- 
+  
+   ShiftA: process (clk, reset_n, a)
+    begin
+        if rising_edge(clk) then
+            case( current_state ) is
+                when COUNTING =>
+                    a_reg <= STD_LOGIC_VECTOR(shift_left(unsigned(a_reg), 1));  -- Shift left by 1 bit 
+    
+                when others =>
+                    a_reg <= a;
+            end case ;
+        end if;
+    end process;
 
 end expFsmBehave;
