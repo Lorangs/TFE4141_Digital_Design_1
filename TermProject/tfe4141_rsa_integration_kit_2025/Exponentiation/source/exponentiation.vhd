@@ -20,17 +20,21 @@ entity exponentiation is
 		valid_out	: out STD_LOGIC;
 
 		--output data
-		result_R 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-		result_P 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		result_R 	: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		result_P 	: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		 n           : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		 n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		n           : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
          
          
 		--utility
 		clk 		: in STD_LOGIC;
-		reset_n 	: in STD_LOGIC
+		reset_n 	: in STD_LOGIC;
+
+		-- Internal Signal
+		signal s0, s1 ,s2 ,s3 ,s4, s5, R_new: std_logic_vector(C_block_size downto 0)
+
 	);
 end exponentiation;
 
