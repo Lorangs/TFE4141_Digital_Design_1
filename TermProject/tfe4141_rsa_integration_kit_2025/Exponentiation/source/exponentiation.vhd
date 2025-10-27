@@ -24,7 +24,7 @@ entity exponentiation is
 		result_P 	: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		n           : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		n           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
 		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
          
          
