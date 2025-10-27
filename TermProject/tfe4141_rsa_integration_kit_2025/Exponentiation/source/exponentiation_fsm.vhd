@@ -53,20 +53,20 @@ entity exponentiation_fsm is
         
         mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
         mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
-        
-      
+         
+        counter         : out std_logic_vector(C_block_size-1 downto 0)
         );
 end exponentiation_fsm;
 
 architecture expFsmBehave of exponentiation_fsm is
-   -- signal a_reg : std_logic_vector(C_block_size-1 downto 0);
+   signal a_reg : std_logic_vector(C_block_size-1 downto 0);
     
     type state_type is (RESET, COUNTING, FINISHED);
     signal current_state, next_state : state_type;
 begin
    
    
-   NextState: process (current_state, ready_out, valid_in, a_reg(255), mux_ctrl_P_in, mux_ctrl_R_in) 
+   NextState: process (current_state, counter, ready_out, valid_in, a_reg(255), mux_ctrl_P_in, mux_ctrl_R_in) 
    begin
         case current_state is 
             when RESET =>
