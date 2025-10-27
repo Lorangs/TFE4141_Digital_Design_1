@@ -37,20 +37,20 @@ entity calculations is
 		C_block_size : integer := 256
 	);
     Port ( 
-           b       : in     std_logic_vector( C_block_size-1 downto 0 );
-           n_neg   : in     std_logic_vector( C_block_size downto 0 );
+           b        : in     std_logic_vector( C_block_size-1 downto 0 );
+           n_neg    : in     std_logic_vector( C_block_size downto 0 );
            
-           clk     : in     std_logic;
-           reset_n : in     std_logic;
+           clk      : in     std_logic;
+           reset_n  : in     std_logic;
            
-           R_new : in     std_logic_vector( C_block_size-1 downto 0 );
+           R_new    : in     std_logic_vector( C_block_size-1 downto 0 );
            
-           s0      : out    std_logic_vector( C_block_size downto 0 );
-           s1      : out    std_logic_vector( C_block_size downto 0 );
-           s2      : inout  std_logic_vector( C_block_size downto 0 );
-           s3      : out    std_logic_vector( C_block_size downto 0 );
-           s4      : inout  std_logic_vector( C_block_size downto 0 );
-           s5      : out    std_logic_vector( C_block_size downto 0 )
+           s0       : out    std_logic_vector( C_block_size downto 0 );
+           s1       : out    std_logic_vector( C_block_size downto 0 );
+           s2       : inout  std_logic_vector( C_block_size downto 0 );
+           s3       : out    std_logic_vector( C_block_size downto 0 );
+           s4       : inout  std_logic_vector( C_block_size downto 0 );
+           s5       : out    std_logic_vector( C_block_size downto 0 )
           );
 end calculations;
 
@@ -95,11 +95,11 @@ mux <= b when reset_n = '0' else R_temp;
 
 
 s0 <= R_temp;
-s1 <= std_logic_vector(signed(R_temp) + signed('0' & b));
-s2 <= std_logic_vector(signed(mux) + signed(n_neg)); 
-s3 <= std_logic_vector(signed(R_temp) + signed(b_minus_n));
-s4 <= std_logic_vector(signed(mux) + shift_left(signed(n_neg), 1));
-s5 <= std_logic_vector(signed(R_temp) + signed(b_minus_2n));
+s1 <= std_logic_vector(signed(R_temp)   + signed('0' & b));
+s2 <= std_logic_vector(signed(mux)      + signed(n_neg)); 
+s3 <= std_logic_vector(signed(R_temp)   + signed(b_minus_n));
+s4 <= std_logic_vector(signed(mux)      + shift_left(signed(n_neg), 1));
+s5 <= std_logic_vector(signed(R_temp)   + signed(b_minus_2n));
 
 
 end calcBehave;

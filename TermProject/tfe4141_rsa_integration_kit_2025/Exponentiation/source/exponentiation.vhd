@@ -94,8 +94,8 @@ begin
 			valid_in        => valid_in,
 			ready_in        => ready_in,
 			valid_out       => valid_out,
-			mux_ctrl_P_in   => s11[256] & s10[256] & s9[256] & s8[256],
-			mux_ctrl_R_in   => s5[256]  & s4[256]  & s3[256] & s2[256],
+			mux_ctrl_P_in   => s11(256) & s10(256) & s9(256) & s8(256),
+			mux_ctrl_R_in   => s5(256)  & s4(256)  & s3(256) & s2(256),
 			mux_ctrl_P_out  => mux_ctrl_P_out,
 			mux_ctrl_R_out  => mux_ctrl_R_out,
 		);
