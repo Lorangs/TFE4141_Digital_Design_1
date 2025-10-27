@@ -31,11 +31,20 @@ Thumbs.db
 
 # Example: Ignore entire directories
 # installation_description/
-# ole_tester_ting/
+ole_tester_ting/
+Forelsening/
 
 # Example: Ignore specific file patterns in directories
 # oving/*/project_*/
 # oving/*/*.xpr
 # TermProject/*/cleanup.tcl
+
+# Ignore all .tcl and .txt files inside TermProject/ (recursive)
+# - Matches TermProject/some.tcl, TermProject/subdir/foo.tcl, etc.
 TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.cache/
 TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.xpr/
+TermProject/tfe4141_rsa_integration_kit_2025/Master_Constraints/
+TermProject/tfe4141_rsa_integration_kit_2025/RSA_soc/
+
+TermProject/**/*.txt
+TermProject/**/*.tcl
