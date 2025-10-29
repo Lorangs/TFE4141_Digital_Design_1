@@ -78,8 +78,8 @@ signal 	exp_valid_out,
 		exp_valid_in, 
 		exp_ready_in, 
 		exp_ready_out, 
-		exp_new_msg_neg,
-	: std_logic;
+		exp_new_msg_neg
+	 : std_logic;
 
 begin
 
@@ -98,13 +98,15 @@ begin
 			if reset_n = '0' then
 				P_current <= (others => '0');
 				R_current <= (others => '0');
-			elseif exp_valid_out = '1' then
+			elsif (exp_valid_out = '1') then
 				if exp_new_msg_neg = '1' then
 					P_current <= msgin_data;
-					R_current <= (others => 0 ) & '1';		-- LSB set to 1
+					R_current <= (0 => '1', others => '0');		-- LSB set to 1
 				else
-				P_current <= P_next;
-				R_current <= R_next;
+                    P_current <= P_next;
+                    R_current <= R_next;
+				end if;
+			end if;
 		end if;
 	end process;
 
@@ -113,9 +115,9 @@ begin
 		if rising_edge(clk) then
 			if reset_n = '0' then
 				e_current <= (others => '0');
-			else
-
-			
+			end if;
+	    end if;
+	end process;		
 	-----------------------------------------------------------------------------
 	-- Exponentiation module instantiation
 	-----------------------------------------------------------------------------
@@ -134,7 +136,7 @@ begin
 			valid_in    => exp_valid_in,
 			ready_out   => exp_ready_out,
 			valid_out   => exp_valid_out,
-			ready_in    => exp_ready_in
+			ready_in    => exp_ready_in,
 			result_P    => P_next,
 			result_R    => R_next
 		);
@@ -159,7 +161,7 @@ begin
 			valid_out      => msgout_valid,
 			ready_in       => msgin_ready,
 			valid_in       => msgin_valid,
-			ready_out      => msgout_ready,
+			ready_out      => exp_ready_out,
 			new_msg_neg    => open
 		);
 end rtl;
