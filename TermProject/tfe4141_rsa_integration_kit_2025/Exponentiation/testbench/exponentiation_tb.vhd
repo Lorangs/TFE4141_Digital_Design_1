@@ -51,7 +51,6 @@ end process  a_clock;
 
 
 
-
 DUT : entity work.exponentiation
 	generic map(
 		C_block_size => C_block_size
@@ -161,8 +160,6 @@ reset_n <= '1';
 -- handsake should be valid when ready and valid are high
 -- what happens if there is an unexcpeted invalid signal?
 -- 
-
-
 
 
 
