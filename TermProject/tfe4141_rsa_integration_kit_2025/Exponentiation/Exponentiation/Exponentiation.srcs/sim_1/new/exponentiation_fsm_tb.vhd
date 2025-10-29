@@ -117,9 +117,15 @@ begin
     mux_ctrl_P_in <= "1010";
     mux_ctrl_R_in <= "1010";
     
-    wait for clk_period*7;
+    wait for clk_period*10;
     
+    assert ready_in = '0' report "ready_in was not 0 when in counting state" severity error;
     assert counter = n report "counter is not n after n+1 cycles" severity error;
+
+    wait for clk_period;
+
+    assert valid_out = '1' report "valid_out was not 1 one clock period after the counter was done" severity error;
+
      
     report "----- Test done ----" severity note; 
     

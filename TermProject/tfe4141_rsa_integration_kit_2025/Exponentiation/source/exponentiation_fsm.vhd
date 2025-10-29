@@ -23,10 +23,6 @@ library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
 --library UNISIM;
@@ -55,7 +51,7 @@ entity exponentiation_fsm is
         mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
          
         counter         : out std_logic_vector(C_block_size-1 downto 0)
-        );
+    );
 end exponentiation_fsm;
 
 architecture expFsmBehave of exponentiation_fsm is
@@ -83,20 +79,25 @@ begin
                 ready_in    <= '0';
                 valid_out   <= '0';
                 
-                -- Mux control
-                mux_ctrl_P_out(0) <= not(a_reg(255));
-                mux_ctrl_P_out(1) <= ( not(a_reg(255)) and mux_ctrl_P_in(3) and not(mux_ctrl_P_in(1)) ) 
-                                    or ( a_reg(255) and mux_ctrl_P_in(2) and not(mux_ctrl_P_in(0)) );
-                mux_ctrl_P_out(2) <= ( not(a_reg(255)) and not(mux_ctrl_P_in(3)) ) 
-                                    or ( a_reg(255) and  not(mux_ctrl_P_in(2)) );
+                -- Mux control P
+                mux_ctrl_P_out(0) <=    not ( a_reg(255) );
+
+                mux_ctrl_P_out(1) <=        ( not(a_reg(255))   and mux_ctrl_P_in(3) and not(mux_ctrl_P_in(1)) ) 
+                                        or  ( a_reg(255)        and mux_ctrl_P_in(2) and not(mux_ctrl_P_in(0)) );
+
+                mux_ctrl_P_out(2) <=        ( not(a_reg(255))   and not(mux_ctrl_P_in(3)) ) 
+                                        or  ( a_reg(255)        and not(mux_ctrl_P_in(2)) );
                                 
-                mux_ctrl_R_out(0) <= not(a_reg(255));
-                mux_ctrl_R_out(1) <= ( not(a_reg(255)) and mux_ctrl_R_in(3) and not(mux_ctrl_R_in(1)) ) 
-                                 or ( a_reg(255) and mux_ctrl_R_in(2) and not(mux_ctrl_R_in(0)) );
-                mux_ctrl_R_out(2) <= ( not(a_reg(255)) and not(mux_ctrl_R_in(3)) ) 
-                                 or ( a_reg(255) and  not(mux_ctrl_R_in(2)) );                
+                -- Mux control R
+                mux_ctrl_R_out(0) <=    not ( a_reg(255) );
+
+                mux_ctrl_R_out(1) <=        ( not(a_reg(255))   and mux_ctrl_R_in(3) and not(mux_ctrl_R_in(1)) ) 
+                                        or  ( a_reg(255)        and mux_ctrl_R_in(2) and not(mux_ctrl_R_in(0)) );
+
+                mux_ctrl_R_out(2) <=        ( not(a_reg(255))   and not(mux_ctrl_R_in(3)) ) 
+                                        or  ( a_reg(255)        and not(mux_ctrl_R_in(2)) );                
                 
-                
+                -- Check if counting is finished                     
                 if (counter = n) then
                     next_state  <= FINISHED; 
                 else
@@ -112,7 +113,7 @@ begin
                 mux_ctrl_P_out <= "000"; 
                 mux_ctrl_R_out <= "000"; 
                 
-                if (ready_out = '1') then
+                if( ready_out = '1' ) then
                     next_state  <= RESET;
                 else 
                     next_state  <= FINISHED;
@@ -126,7 +127,7 @@ begin
   SyncState: process (clk, reset_n) 
   begin
         if rising_edge(clk) then
-            if(reset_n = '0') then
+            if( reset_n = '0' ) then
                 current_state <= RESET;
             else
                 current_state <= next_state;
@@ -137,12 +138,12 @@ begin
   SyncCounter: process (clk, reset_n) 
   begin
         if rising_edge(clk) then
-            case( current_state ) is
+            case current_state is
                 when COUNTING =>
-                    counter <= std_logic_vector(unsigned(counter) + 1);
+                    counter <= std_logic_vector( unsigned( counter ) + 1 );
     
                 when others =>
-                    counter <= (others => '0');
+                    counter <= ( others => '0' );
             end case ;
         end if;
   end process SyncCounter;
@@ -150,9 +151,9 @@ begin
    ShiftA: process (clk, reset_n, a)
     begin
         if rising_edge(clk) then
-            case( current_state ) is
+            case current_state is
                 when COUNTING =>
-                    a_reg <= STD_LOGIC_VECTOR(shift_left(unsigned(a_reg), 1));  -- Shift left by 1 bit 
+                    a_reg <= STD_LOGIC_VECTOR( shift_left( unsigned( a_reg ), 1 ) );  -- Shift left by 1 bit 
     
                 when others =>
                     a_reg <= a;
