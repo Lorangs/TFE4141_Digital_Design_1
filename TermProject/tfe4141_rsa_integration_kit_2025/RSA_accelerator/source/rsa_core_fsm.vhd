@@ -21,6 +21,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.Numeric_STD.all;
+
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -33,7 +35,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity rsa_core_fsm is
     generic (
-        C_BLOCK_SIZE : integer := 256
+        C_block_size : integer := 256
     );
 
     Port ( 
@@ -58,7 +60,9 @@ entity rsa_core_fsm is
             ready_in          : in STD_LOGIC;
             valid_in          : out STD_LOGIC;
             ready_out         : out STD_LOGIC;
-            new_msg_neg       : out STD_LOGIC
+            new_msg_neg       : out STD_LOGIC;
+            
+            count             : inout std_logic_vector(C_block_size-1 downto 0)
         );
 end rsa_core_fsm;
 
@@ -66,8 +70,8 @@ architecture rsa_core_fsm_behave of rsa_core_fsm is
 
     type state_type is (LOAD_NEW_MSG, COUNT_WAIT, COUNT_FIN_PARTIAL, FINISHED);
     signal current_state, next_state    : state_type;
-    signal count                        : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-    signal n                            : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := C_BLOCK_SIZE - 1;
+    --signal count                        : std_logic_vector(C_block_size-1 downto 0);
+    signal n                            : std_logic_vector(C_block_size-1 downto 0) := std_logic_vector(to_unsigned(C_block_size, C_block_size));
 
 begin
 
@@ -145,7 +149,7 @@ begin
     begin
             if rising_edge(clk) then
                 if( reset_n = '0' ) then
-                    current_state <= RESET;
+                    current_state <= LOAD_NEW_MSG;
                 else
                     current_state <= next_state;
                 end if;
