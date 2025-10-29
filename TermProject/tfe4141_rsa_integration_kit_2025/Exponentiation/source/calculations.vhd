@@ -91,7 +91,7 @@ end process;
 
 
 -- Mux 
-mux <= b when reset_n = '0' else R_temp;
+mux <= ('0' & b) when reset_n = '0' else R_temp;
 
 
 s0 <= R_temp;
