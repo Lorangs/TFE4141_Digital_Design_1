@@ -27,20 +27,34 @@ entity exponentiation is
 		n           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
 		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
          
-         
 		--utility
 		clk 		: in STD_LOGIC;
 		reset_n 	: in STD_LOGIC;
+		
+		--internal signals available for testing
+		s0          : inout std_logic_vector( C_block_size downto 0 );
+        s1          : inout std_logic_vector( C_block_size downto 0 );
+        s2          : inout std_logic_vector( C_block_size downto 0 );
+        s3          : inout std_logic_vector( C_block_size downto 0 );
+        s4          : inout std_logic_vector( C_block_size downto 0 );
+        s5          : inout std_logic_vector( C_block_size downto 0 );
+        s6          : inout std_logic_vector( C_block_size downto 0 );
+        s7          : inout std_logic_vector( C_block_size downto 0 );
+        s8          : inout std_logic_vector( C_block_size downto 0 );
+        s9          : inout std_logic_vector( C_block_size downto 0 );
+        s10         : inout std_logic_vector( C_block_size downto 0 );
+        s11         : inout std_logic_vector( C_block_size downto 0 );
 
-		-- Internal Signal
-		signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11: std_logic_vector( C_block_size downto 0 );
-		signal mux_ctrl_P_out, mux_ctrl_R_out: std_logic_vector(2 downto 0)
+		mux_ctrl_P_out : inout std_logic_vector(2 downto 0);
+		mux_ctrl_R_out : inout std_logic_vector(2 downto 0)
 
 	);
 end exponentiation;
 
 
 architecture expBehave of exponentiation is
+		--signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11: std_logic_vector( C_block_size downto 0 );
+		--signal mux_ctrl_P_out, mux_ctrl_R_out: std_logic_vector(2 downto 0);
 begin
 	-- R Calculations module instantiation
 	calc_R: entity work.calculations	
@@ -81,7 +95,7 @@ begin
 		);
 
 	-- FSM module instantiation
-	exp_fsm: entitiy work.exponentiation_fsm
+	exp_fsm: entity work.exponentiation_fsm
 		generic map (
 			C_block_size => C_block_size
 		)
@@ -97,7 +111,7 @@ begin
 			mux_ctrl_P_in   => s11(256) & s10(256) & s9(256) & s8(256),
 			mux_ctrl_R_in   => s5(256)  & s4(256)  & s3(256) & s2(256),
 			mux_ctrl_P_out  => mux_ctrl_P_out,
-			mux_ctrl_R_out  => mux_ctrl_R_out,
+			mux_ctrl_R_out  => mux_ctrl_R_out
 		);
 	
 	exp_result: process(clk, reset_n, ready_out, valid_in, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, mux_ctrl_P_out, mux_ctrl_R_out)
