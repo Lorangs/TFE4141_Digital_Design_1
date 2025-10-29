@@ -2,12 +2,15 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity exponentiation_tb is
+	generic (
+		C_block_size : integer := 256
+	);
 end exponentiation_tb;
 
 
 architecture expBehave of exponentiation_tb is 
-	--port(;
-		constant C_block_size : integer := 256;
+	--port();
+		--constant C_block_size : integer := 256;
 		constant clk_period   : time 	:= 10ns;
 
 		signal valid_in 	  :  STD_LOGIC;
@@ -33,7 +36,8 @@ architecture expBehave of exponentiation_tb is
 		signal reset_n 	      :  STD_LOGIC;
 
 		-- Internal Signal
-		signal s0, s1 ,s2 ,s3 ,s4, s5, R_new: std_logic_vector(C_block_size downto 0);
+		signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11 : std_logic_vector(C_block_size downto 0);
+		signal mux_ctrl_P_out, mux_ctrl_R_out : std_logic_vector(2 downto 0);
 
 begin 
 
@@ -46,7 +50,12 @@ begin
 end process  a_clock;
 
 
+
+
 DUT : entity work.exponentiation
+	generic map(
+		C_block_size => C_block_size
+	)
 	port map (
 	--input controll
 		valid_in   =>   valid_in,
@@ -61,7 +70,7 @@ DUT : entity work.exponentiation
 		valid_out  =>   valid_out,
 
 	--output data
-		result_R   =>   moduluresult_Rs,
+		result_R   =>   result_R,
 		result_P   =>   result_P,
 
 	--modulus
@@ -84,11 +93,11 @@ DUT : entity work.exponentiation
 		s8         =>   s8,
 		s9         =>   s9,
 		s10        =>   s10,
-		s11         =>   s11,		
+		s11        =>   s11,		
 		mux_ctrl_R_out      =>   mux_ctrl_R_out,
 		mux_ctrl_P_out	=> mux_ctrl_P_out      
 );
---end expBehave;
+
 
 
 test_of_exponentiation : process
