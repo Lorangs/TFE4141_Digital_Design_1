@@ -58,74 +58,112 @@ entity rsa_core_fsm is
             ready_in          : in STD_LOGIC;
             valid_in          : out STD_LOGIC;
             ready_out         : out STD_LOGIC;
-            load_output_value : out STD_LOGIC;
-            new_msg           : out STD_LOGIC
+            new_msg_neg       : out STD_LOGIC
         );
 end rsa_core_fsm;
 
 architecture rsa_core_fsm_behave of rsa_core_fsm is
 
-    type state_type is (RESET, COUNTING, FINNISHED);
-    signal current_state    : state_type                                    := RESET;
-    signal next_state       : state_type                                    := RESET;
-    signal count            : std_logic_vector(C_BLOCK_SIZE-1 downto 0)     := (others => '0');
+    type state_type is (LOAD_NEW_MSG, COUNT_WAIT, COUNT_FIN_PARTIAL, FINISHED);
+    signal current_state, next_state    : state_type;
+    signal count                        : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+    signal n                            : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := C_BLOCK_SIZE - 1;
 
 begin
 
-    process(clk, current_state, msgin_valid, msgin_last, msgout_ready)
+    NextState: process (current_state, msgin_valid, msgin_last, msgout_ready)
     begin
-        if rising_edge(clk) then
-            case current_state is
-                when RESET =>
-                    rsa_status          <= '0';
-                    msgout_last         <= msgin_last;
-                    msgout_valid        <= '0';
+        case current_state is
+            when LOAD_NEW_MSG =>
+                rsa_status          <= '0';
+                msgin_ready         <= '1';   
+                msgout_last         <= msgin_last;
+                msgout_valid        <= '0';
+                valid_in            <= '0';
+                ready_out           <= '0';
+                new_msg_neg         <= '0';
 
-                    load_output_value   <= '0';
+                if msgin_valid = '1' and ready_in = '1' then
+                    count           <= ( others => '0' );
+                    next_state      <= COUNT_WAIT;  
+                else
+                    next_state      <= LOAD_NEW_MSG;
+                end if;
 
+            when COUNT_WAIT =>
+                
+                -- set outputs
+                rsa_status          <= '0';
+                msgin_ready         <= '0';
+                msgout_valid        <= '0';
+                valid_in            <= '1';
+                ready_out           <= '1';
+                new_msg_neg         <= '1';
+                
+                if valid_out = '1' then
+                    next_state      <= COUNT_FIN_PARTIAL;
+                else
+                    next_state      <= COUNT_WAIT;
+                end if;
 
-                    if msgin_valid = '1' then
-                        msgin_ready     <= '0';
-                        valid_in        <= '1';
-                        next_state      <= COUNTING;
-                        
+            when COUNT_FIN_PARTIAL =>
+                -- set outputs
+                rsa_status          <= '0';
+                msgin_ready         <= '0';
+                msgout_valid        <= '0';
+                valid_in            <= '0';
+                ready_out           <= '1';
+                new_msg_neg         <= '1';
+                
+                if ready_in = '1' then
+                    if count >= n then
+                        next_state      <= FINISHED;
                     else
-                        msgin_ready     <= '1';
-                        valid_in        <= '0';
-                        next_state      <= RESET;
-
-
+                        next_state      <= COUNT_WAIT;
                     end if;
+                else
+                    next_state      <= COUNT_FIN_PARTIAL;
+                end if;
+            when FINISHED =>
+                -- set outputs
+                rsa_status          <= '0';
+                msgin_ready         <= '0';
+                msgout_valid        <= '1';
+                valid_in            <= '0';
+                ready_out           <= '0';
+                new_msg_neg         <= '1';
 
-                when COUNTING =>
-                    if count = C_BLOCK_SIZE - 1 then
-                        msgout_valid    <= '1';                 
-                        count           <= (others => '0');     
-                        next_state      <= FINNISHED;           
-                    else 
-                        msgout_valid    <= '0';
-                        count           <= count + 1;   
-                        next_state      <= COUNTING;
-
-                        if valid_out = '1' and ready_in = '1' then
-                            new_msg     <= '1';
-                        else
-                            new_msg     <= '0';
-                        end if;
-                    end if;
-
-                when FINNISHED =>
-                    load_output_value   <= '1';
-
-                    if msgout_ready = '1' then
-                        msgin_ready     <= '1';
-                        next_state      <= RESET;
-                    else
-                        next_state      <= FINNISHED; 
-                    end if;
-            end case;
-
-            current_state <= next_state;
-        end if;
+                if msgout_ready = '1' then
+                    next_state      <= LOAD_NEW_MSG;
+                else
+                    next_state      <= FINISHED;
+                end if;
+        end case;
     end process;
+
+    SyncState: process (clk, reset_n) 
+    begin
+            if rising_edge(clk) then
+                if( reset_n = '0' ) then
+                    current_state <= RESET;
+                else
+                    current_state <= next_state;
+                end if;
+            end if;
+    end process SyncState;
+
+    SyncCounter: process (clk, reset_n) 
+    begin
+            if rising_edge(clk) then
+                if current_state = COUNT_FIN_PARTIAL and next_state = COUNT_WAIT then
+                    count <= std_logic_vector( unsigned( count ) + 1 );
+
+                elsif current_state = LOAD_NEW_MSG and next_state = COUNT_WAIT then
+                    count <= ( others => '0' );
+
+                else
+                    count <= count;
+                end if;
+            end if;
+    end process SyncCounter;
 end rsa_core_fsm_behave;
