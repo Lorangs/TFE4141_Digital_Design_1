@@ -68,9 +68,9 @@ end rsa_core;
 architecture rtl of rsa_core is
 signal 	n_neg : std_logic_vector(C_BLOCK_SIZE downto 0);
 signal 	P_current, 
-		P_next, 
+		exp_P_next, 
 		R_current, 
-		R_next, 
+		exp_R_next, 
 		e_current, 
 		e_next,
 
@@ -104,32 +104,42 @@ begin
 	Sync_P : process (clk, reset_n, P_next, exp_valid_out, exp_new_msg_neg, msgin_data)
 	begin
 		if rising_edge(clk) then
+
 			if reset_n = '0' then
 				P_current <= (others => '0');
+
 			elsif (exp_valid_out = '1') then
+
 				if exp_new_msg_neg = '1' then
 					P_current <= msgin_data;
+
 				else
-                    P_current <= P_next;
+                    P_current <= exp_P_next;
+					
 				end if;
 			end if;
 		end if;
 	end process;
 
-	
+
 	----------------------------
 	-- Sync R
 	----------------------------
-	Sync_R : process (clk, reset_n, R_next, exp_valid_out, exp_new_msg_neg, msgin_data)
+	Sync_R : process (clk, reset_n, R_next, exp_valid_out, exp_new_msg_neg, msgin_data, msgin_valid)
 	begin
 		if rising_edge(clk) then
 			if reset_n = '0' then
 				R_current <= (others => '0');
-			elsif (exp_valid_out = '1') then
+			elsif (exp_valid_out = '1' or msgin_valid = '1') then
+
 				if exp_new_msg_neg = '1' then
-					R_current <= (others => '0') & '1'; -- R = 1 at start of new message
-				else
-					R_current <= R_next;
+					R_current <= (others => '0') & '1'; 		-- R = 1 at start of new message
+				
+				elsif update_R_or_not = '1' then
+					R_current <= exp_R_next;
+				
+				else 
+					R_current <= R_current;
 				end if;
 			end if;
 		end if;
@@ -155,8 +165,8 @@ begin
 			ready_out   	=> exp_ready_out,
 			valid_out   	=> exp_valid_out,
 			ready_in    	=> exp_ready_in,
-			result_P    	=> P_next,
-			result_R    	=> R_next
+			result_P    	=> exp_P_next,
+			result_R    	=> expR_next
 		);
 
 	-----------------------------------------------------------------------------
