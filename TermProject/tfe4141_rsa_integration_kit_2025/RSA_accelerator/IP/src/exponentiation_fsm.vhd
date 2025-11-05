@@ -49,6 +49,8 @@ entity exponentiation_fsm is
         
         mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
         mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
+
+        mux_calculation : out std_logic;
          
         counter         : out std_logic_vector(C_block_size-1 downto 0)
     );
@@ -68,6 +70,7 @@ begin
             when RESET =>
                 ready_in    <= '1';
                 valid_out   <= '0';
+                mux_calculation <= '0';
                     
                 if (valid_in = '1') then 
                     next_state  <= COUNTING;
@@ -78,24 +81,25 @@ begin
             when COUNTING =>
                 ready_in    <= '0';
                 valid_out   <= '0';
+                mux_calculation <= '1';
                 
                 -- Mux control P
-                mux_ctrl_P_out(0) <=    not ( a_reg(255) );
+                mux_ctrl_P_out(0) <=    a_reg(255) ;
 
-                mux_ctrl_P_out(1) <=        ( not(a_reg(255))   and mux_ctrl_P_in(3) and not(mux_ctrl_P_in(1)) ) 
-                                        or  ( a_reg(255)        and mux_ctrl_P_in(2) and not(mux_ctrl_P_in(0)) );
+                mux_ctrl_P_out(1) <=    (a_reg(255) and mux_ctrl_P_in(3) and not(mux_ctrl_P_in(1)))
+                                        or (not(a_reg(255)) and mux_ctrl_P_in(2) and not(mux_ctrl_P_in(0)));
 
-                mux_ctrl_P_out(2) <=        ( not(a_reg(255))   and not(mux_ctrl_P_in(3)) ) 
-                                        or  ( a_reg(255)        and not(mux_ctrl_P_in(2)) );
+                mux_ctrl_P_out(2) <=    (a_reg(255)  and not(mux_ctrl_P_in(3))) 
+                                        or  (not(a_reg(255)) and not(mux_ctrl_P_in(2)));
                                 
                 -- Mux control R
-                mux_ctrl_R_out(0) <=    not ( a_reg(255) );
+                mux_ctrl_R_out(0) <=    a_reg(255) ;
 
-                mux_ctrl_R_out(1) <=        ( not(a_reg(255))   and mux_ctrl_R_in(3) and not(mux_ctrl_R_in(1)) ) 
-                                        or  ( a_reg(255)        and mux_ctrl_R_in(2) and not(mux_ctrl_R_in(0)) );
+                mux_ctrl_R_out(1) <=    (a_reg(255) and mux_ctrl_R_in(3) and not(mux_ctrl_R_in(1)) ) 
+                                        or  (not(a_reg(255)) and mux_ctrl_R_in(2) and not(mux_ctrl_R_in(0)) );
 
-                mux_ctrl_R_out(2) <=        ( not(a_reg(255))   and not(mux_ctrl_R_in(3)) ) 
-                                        or  ( a_reg(255)        and not(mux_ctrl_R_in(2)) );                
+                mux_ctrl_R_out(2) <=    (a_reg(255) and not(mux_ctrl_R_in(3))) 
+                                        or  (not(a_reg(255)) and not(mux_ctrl_R_in(2)));                
                 
                 -- Check if counting is finished                     
                 if (counter = n) then
@@ -108,6 +112,7 @@ begin
              when FINISHED =>
                 ready_in    <= '0';
                 valid_out   <= '1';
+                mux_calculation <= '1';
                 
                 -- Hold result value
                 mux_ctrl_P_out <= "000"; 

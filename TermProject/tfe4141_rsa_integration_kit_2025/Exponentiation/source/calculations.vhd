@@ -37,21 +37,23 @@ entity calculations is
 		C_block_size : integer := 256
 	);
     Port ( 
-           b            : in     std_logic_vector( C_block_size-1 downto 0 );
-           n_neg        : in     std_logic_vector( C_block_size downto 0 );
+           b                : in     std_logic_vector( C_block_size-1 downto 0 );
+           n_neg            : in     std_logic_vector( C_block_size downto 0 );
 
-           clk          : in     std_logic;
-           reset_n      : in     std_logic;
-           valid_out    : in     std_logic;
+           clk              : in     std_logic;
+           reset_n          : in     std_logic;
+           valid_out        : in     std_logic;
 
-           R_new        : in     std_logic_vector( C_block_size-1 downto 0 );
+           mux_calculation  : in     std_logic;
 
-           s0           : out    std_logic_vector( C_block_size downto 0 );
-           s1           : out    std_logic_vector( C_block_size downto 0 );
-           s2           : inout  std_logic_vector( C_block_size downto 0 );
-           s3           : out    std_logic_vector( C_block_size downto 0 );
-           s4           : inout  std_logic_vector( C_block_size downto 0 );
-           s5           : out    std_logic_vector( C_block_size downto 0 )
+           R_new            : in     std_logic_vector( C_block_size-1 downto 0 );
+
+           s0               : out    std_logic_vector( C_block_size downto 0 );
+           s1               : out    std_logic_vector( C_block_size downto 0 );
+           s2               : inout  std_logic_vector( C_block_size downto 0 );
+           s3               : out    std_logic_vector( C_block_size downto 0 );
+           s4               : inout  std_logic_vector( C_block_size downto 0 );
+           s5               : out    std_logic_vector( C_block_size downto 0 )
           );
 end calculations;
 
@@ -60,10 +62,10 @@ architecture calcBehave of calculations is
 begin
 
 -- R_reg register
-process (clk, reset_n, valid_out) 
+process (clk, mux_calculation, valid_out) 
 begin
     if rising_edge(clk) then
-        if (reset_n = '0') then 
+        if (mux_calculation = '0') then 
             R_temp <= (others => '0');
         elsif (valid_out = '1') then
             R_temp <= '0' & R_new;
@@ -100,7 +102,7 @@ end process;
 
 
 -- Mux 
-mux <= ('0' & b) when reset_n = '0' else R_temp;
+mux <= ('0' & b) when mux_calculation = '0' else R_temp;
 
 s0 <= R_temp;
 s1 <= std_logic_vector(signed(R_temp)   + signed('0' & b));

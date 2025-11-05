@@ -1,11 +1,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity exponentiation_tb is
 	generic (
 		C_block_size : integer := 256
 	);
 end exponentiation_tb;
+
 
 
 architecture expBehave of exponentiation_tb is 
@@ -40,14 +42,6 @@ architecture expBehave of exponentiation_tb is
 		signal mux_ctrl_P_out, mux_ctrl_R_out : std_logic_vector(2 downto 0);
 
 begin 
-
-a_clock : process
-begin
-    clk <= '1';
-    wait for clk_period/2;
-    clk <= '0';
-    wait for clk_period/2;
-end process  a_clock;
 
 
 
@@ -97,74 +91,76 @@ DUT : entity work.exponentiation
 		mux_ctrl_P_out	=> mux_ctrl_P_out      
 );
 
-
-
-test_of_exponentiation : process
+clk_process : process
 begin
--- signaler som ikke kommer fra FSM 
--- ready_in, reset_n
-
--- styre signaler fra FSM
--- ready_in, valid_out, load_result
-
--- is it possible to writte the state out in the testbench.
+    clk <= '1';
+    wait for clk_period/2;
+    clk <= '0';
+    wait for clk_period/2;
+end process clk_process;
 
 
-wait for clk_period;
+test_process: process
+begin
+
+	-- Start test with setting input values and resetting the module (reset_n = 0)
+
+	a 			<= std_logic_vector(to_unsigned(100, a'length)); -- a = 100 (1100100)
+	b 			<= std_logic_vector(to_unsigned(15, b'length)); -- b = 15
+	c 			<= std_logic_vector(to_unsigned(11, c'length)); -- c = 11
+	
+	n			<= std_logic_vector(to_unsigned(19, n'length)); -- n = 19
+	n_neg 		<= std_logic_vector(to_signed(-19, n_neg'length)); -- n_neg = 19
+
+	valid_in 	<= '0';
+	ready_out	<= '0';
+
+	reset_n 	<= '0'; 
+
+	wait for clk_period*2;
+
+	-- asserting reset values for s0-s11 (except for values we expect to be unknown - s3, s5, s9, s11)
+	assert to_integer(signed(s0)) = 0 report "s0 is not 0 when resetting" severity error;
+	assert s1 = ('0' & b) report "s1 is not b when resetting" severity error;
+	assert s2 = std_logic_vector(signed('0' & b) + signed(n_neg)) report "s2 is not b-n when resetting" severity error;
+	assert s4 = std_logic_vector(signed('0' & b) + signed(shift_left(signed(n_neg), 1))) report "s4 is not b-2n when resetting" severity error;
+	
+	assert to_integer(unsigned(s6)) = 0 report "s6 is not 0 when resetting" severity error;
+	assert s7 = ('0' & c) report "s7 is not c when resetting" severity error;
+	assert s8 = std_logic_vector(signed('0' & c) + signed(n_neg)) report "s8 is not c-n when resetting" severity error;
+	assert s10 = std_logic_vector(signed('0' & c) + signed(shift_left(signed(n_neg), 1))) report "s10 is not c-2n when resetting" severity error;
+
+	-- test if the signals stay the same when reset_n = 0, but valid_in is still 0 
+	reset_n		<= '1'; 
+	wait for clk_period*2;
+
+	-- checking if values of s0-s11 stay the same (except for the still unknown values - s3, s5, s9, s11)
+	assert to_integer(signed(s0)) = 0 report "s0 is not 0 when resetting" severity error;
+	assert s1 = ('0' & b) report "s1 is not b when resetting" severity error;
+	assert s2 = std_logic_vector(signed('0' & b) + signed(n_neg)) report "s2 is not b-n when resetting" severity error;
+	assert s4 = std_logic_vector(signed('0' & b) + signed(shift_left(signed(n_neg), 1))) report "s4 is not b-2n when resetting" severity error;
+	
+	assert to_integer(unsigned(s6)) = 0 report "s6 is not 0 when resetting" severity error;
+	assert s7 = ('0' & c) report "s7 is not c when resetting" severity error;
+	assert s8 = std_logic_vector(signed('0' & c) + signed(n_neg)) report "s8 is not c-n when resetting" severity error;
+	assert s10 = std_logic_vector(signed('0' & c) + signed(shift_left(signed(n_neg), 1))) report "s10 is not c-2n when resetting" severity error;
 
 
---test_zero sett all to zero
-valid_in <= '0';
+	valid_in	<= '1';
 
-a 			<= (others => '0');
-b 			<= (others => '0');
-c 			<= (others => '0');
+	wait for clk_period*20;
+    
+    
+    -- Check if result_R = a*b mod n and result_P = a*c mod n
+    report " ---- Checking final results ---- " severity note;
+    assert to_integer(unsigned(result_R)) = 18 report "result_R not correct - a*b mod n = 100*15 mod 256 = 220" severity error;
+    assert to_integer(unsigned(result_P)) = 17 report "result_P not correct - a*c mod n = 100*11 mod 256 = 76" severity error;
+	
+	
 
-ready_out 	<= '0';
-
---n			<= (others => '0');
-n			<= (others => '1');
-
-
-n_neg 		<= (others => '1') ;
-n_neg(C_block_size) <= '1';
-
-reset_n 	<= '1';
-
-wait for clk_period;
- 
--- first test, does it work as it is supposed to?
--- A message with just a nuumber, 
-
-valid_in <= '1';
--- ready_in is output
-
-a 			<= (others => '0');
-a(2)		<= '1';
-b 			<= (others => '0');
-b(1)		<= '1';
-c 			<= (others => '0');
-c(0)		<= '1';
-
-wait for clk_period;
-
--- third test, try to reset
-
-reset_n <= '1';
-
-
---fourth test and more copilot assisted :)
- 
--- forslag til tests
--- what happens if handshake is not good. 
--- handsake should be valid when ready and valid are high
--- what happens if there is an unexcpeted invalid signal?
--- 
-
-
-
-end process;
-
+    report "------ TEST COMPLETED -------" severity note;
+    wait; 
+end process test_process;
 
 
 end expBehave;

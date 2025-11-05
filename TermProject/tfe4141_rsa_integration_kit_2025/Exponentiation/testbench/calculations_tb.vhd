@@ -39,7 +39,7 @@ entity calculations_tb is
 end calculations_tb;
 
 architecture calc_tbBehave of calculations_tb is
-    signal reset_n, clk, valid_out : std_logic;
+    signal reset_n, clk, valid_out, mux_calculation : std_logic;
     signal  b, R_new               : std_logic_vector(C_block_size-1 downto 0);
     signal  b_minus_n, b_minus_2n, n_neg, s0, s1, s2, s3, s4, s5 : std_logic_vector (C_block_size downto 0);
     constant clk_period : time := 5 ns;
@@ -67,6 +67,8 @@ DUT : entity work.calculations
         clk     => clk,
         reset_n => reset_n,
         valid_out => valid_out,
+        
+        mux_calculation => mux_calculation,
     
         R_new   => R_new,
     
@@ -100,6 +102,9 @@ begin
     n_neg(256)  <= '1'; -- makes it negative
     n_neg(50)   <= '1';
     
+    mux_calculation <= '0';
+    valid_out <= '0';
+    
     reset_n <= '0';
     wait for clk_period; 
     
@@ -111,6 +116,8 @@ begin
 
     wait for clk_period/2;
     reset_n <= '1'; -- turn off reset
+    mux_calculation <= '1';
+    
     b_minus_n <= std_logic_vector(signed(b) + signed(n_neg));
     b_minus_2n <= std_logic_vector(signed(b) + shift_left(signed(n_neg), 1));
     
