@@ -72,17 +72,22 @@ signal 	P_current,
 		R_current, 
 		R_next, 
 		e_current, 
-		e_next 
+		e_next,
+
 	: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 signal 	exp_valid_out, 
 		exp_valid_in, 
 		exp_ready_in, 
 		exp_ready_out, 
-		exp_new_msg_neg
+		exp_new_msg_neg,
+		update_R_or_not 
 	 : std_logic;
 
 begin
 
+	----------------------------
+	-- Negate N
+	----------------------------
 	Negate_N : process (key_n, reset_n)
 	begin
 		if reset_n = '0' then
@@ -92,32 +97,45 @@ begin
 		end if;
 	end process;
 
-	Sync_P_R_e : process (clk, reset_n, P_next, R_next)
+
+	----------------------------
+	-- Sync P
+	----------------------------
+	Sync_P : process (clk, reset_n, P_next, exp_valid_out, exp_new_msg_neg, msgin_data)
 	begin
 		if rising_edge(clk) then
 			if reset_n = '0' then
 				P_current <= (others => '0');
-				R_current <= (others => '0');
 			elsif (exp_valid_out = '1') then
 				if exp_new_msg_neg = '1' then
 					P_current <= msgin_data;
-					R_current <= (0 => '1', others => '0');		-- LSB set to 1
 				else
                     P_current <= P_next;
-                    R_current <= R_next;
 				end if;
 			end if;
 		end if;
 	end process;
 
-	Sync_e : process (clk, reset_n, key_e_d)
+	
+	----------------------------
+	-- Sync R
+	----------------------------
+	Sync_R : process (clk, reset_n, R_next, exp_valid_out, exp_new_msg_neg, msgin_data)
 	begin
 		if rising_edge(clk) then
 			if reset_n = '0' then
-				e_current <= (others => '0');
+				R_current <= (others => '0');
+			elsif (exp_valid_out = '1') then
+				if exp_new_msg_neg = '1' then
+					R_current <= (others => '0') & '1'; -- R = 1 at start of new message
+				else
+					R_current <= R_next;
+				end if;
 			end if;
-	    end if;
-	end process;		
+		end if;
+	end process;	
+
+
 	-----------------------------------------------------------------------------
 	-- Exponentiation module instantiation
 	-----------------------------------------------------------------------------
@@ -126,19 +144,19 @@ begin
 			C_block_size => C_BLOCK_SIZE
 		)
 		port map (
-			clk		 	=> clk,
-			reset_n     => exp_new_msg_neg,
-			n           => key_n,
-			n_neg	    => n_neg,
-			a           => P_current,
-			b           => P_current,
-			c 		 	=> R_current,	
-			valid_in    => exp_valid_in,
-			ready_out   => exp_ready_out,
-			valid_out   => exp_valid_out,
-			ready_in    => exp_ready_in,
-			result_P    => P_next,
-			result_R    => R_next
+			clk		 		=> clk,
+			reset_n     	=> exp_new_msg_neg,
+			n           	=> key_n,
+			n_neg	    	=> n_neg,
+			a           	=> P_current,
+			b           	=> P_current,
+			c 		 		=> R_current,	
+			valid_in    	=> exp_valid_in,
+			ready_out   	=> exp_ready_out,
+			valid_out   	=> exp_valid_out,
+			ready_in    	=> exp_ready_in,
+			result_P    	=> P_next,
+			result_R    	=> R_next
 		);
 
 	-----------------------------------------------------------------------------
@@ -149,19 +167,23 @@ begin
 			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
 		port map (
-			clk            => clk,
-			reset_n        => reset_n,
-			msgin_valid    => msgin_valid,
-			msgin_last     => msgin_last,
-			msgout_ready   => msgout_ready,
-			msgin_ready    => msgin_ready,
-			msgout_valid   => msgout_valid,
-			msgout_last    => msgout_last,
-			rsa_status     => rsa_status,
-			valid_out      => msgout_valid,
-			ready_in       => msgin_ready,
-			valid_in       => msgin_valid,
-			ready_out      => exp_ready_out,
-			new_msg_neg    => open
+			clk            	=> clk,
+			reset_n        	=> reset_n,
+			msgin_valid    	=> msgin_valid,
+			msgin_last     	=> msgin_last,
+			msgout_ready   	=> msgout_ready,
+			msgin_ready    	=> msgin_ready,
+			msgout_valid   	=> msgout_valid,
+			msgout_last    	=> msgout_last,
+			rsa_status     	=> rsa_status,
+
+			key_e_d        	=> key_e_d,
+			
+			valid_out      	=> exp_valid_out,
+			ready_in       	=> exp_ready_in,
+			valid_in       	=> exp_valid_in,
+			ready_out      	=> exp_ready_out,
+			new_msg_neg    	=> exp_new_msg_neg,
+			update_R_or_not => update_R_or_not
 		);
 end rtl;
