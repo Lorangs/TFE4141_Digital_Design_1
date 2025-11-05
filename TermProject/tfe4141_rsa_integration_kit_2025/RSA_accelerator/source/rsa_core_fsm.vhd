@@ -171,7 +171,7 @@ begin
             if current_state = COUNT_FIN_PARTIAL and next_state = COUNT_WAIT then
                 counter <= std_logic_vector( unsigned( counter ) + 1 );
 
-            elsif current_state = LOAD_NEW_MSG and next_state = COUNT_WAIT then
+            elsif current_state = LOAD_NEW_MSG then
                 counter <= ( others => '0' );
             else
                 counter <= counter;
@@ -192,8 +192,8 @@ begin
                 bit_shifted_key_e_d <= key_e_d;
 
             elsif current_state = COUNT_WAIT and next_state = COUNT_FIN_PARTIAL then
-                bit_shifted_key_e_d <= '0' & bit_shifted_key_e_d(C_block_size-2 downto 0);  -- shift right
-
+                bit_shifted_key_e_d <= shift_right(bit_shifted_key_e_d, 1);
+                
             else
                 bit_shifted_key_e_d <= bit_shifted_key_e_d;
             end if;
