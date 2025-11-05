@@ -42,9 +42,17 @@ Forelsening/
 # Ignore all .tcl and .txt files inside TermProject/ (recursive)
 # - Matches TermProject/some.tcl, TermProject/subdir/foo.tcl, etc.
 TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.cache/
+TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.hw/
 TermProject/tfe4141_rsa_integration_kit_2025/Exponentiation/Exponentiation/Exponentiation.xpr/
 TermProject/tfe4141_rsa_integration_kit_2025/Master_Constraints/
+TermProject/tfe4141_rsa_integration_kit_2025/RSA_accelerator/IP/
+TermProject/tfe4141_rsa_integration_kit_2025/RSA_accelerator/RSA_accelerator/RSA_accelerator.cache/
+TermProject/tfe4141_rsa_integration_kit_2025/RSA_accelerator/RSA_accelerator/RSA_accelerator.hw/
+TermProject/tfe4141_rsa_integration_kit_2025/RSA_accelerator/RSA_accelerator/RSA_accelerator.xpr/
 TermProject/tfe4141_rsa_integration_kit_2025/RSA_soc/
 
+# ignore all .tcl files globally (anywhere in the repository)
+*.tcl
+
+# ignore all .txt files in TermProject/ (anywhere in TermProject/)
 TermProject/**/*.txt
-TermProject/**/*.tcl
