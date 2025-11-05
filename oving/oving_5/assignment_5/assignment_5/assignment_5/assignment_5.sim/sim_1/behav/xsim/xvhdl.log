@@ -1,8 +1,0 @@
-INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/source/ALU.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'ALU'
-INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/source/controller.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'controller'
-INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/source/assignment_5.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'assignment_5'
-INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/susan/Documents/studiene/DDS1/TFE4141_Digital_Design_1/oving/oving_5/assignment_5/assignment_5/testbench/assignment_tb.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'assignment_5_tb'

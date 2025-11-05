@@ -1,9 +1,0 @@
-# compile vhdl design source files
-vhdl xil_defaultlib  \
-"assignment_5_tb_func_impl.vhd" \
-
-vhdl2008 xil_defaultlib  \
-"../../../../../../testbench/assignment_tb.vhd" \
-
-# Do not sort compile order
-nosort

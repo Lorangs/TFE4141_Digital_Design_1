@@ -1,8 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/oleja/Documents/7.semester/DDS1/Git/TFE4141_Digital_Design_1/ole_tutorial/project_2/project_2.srcs/sources_1/imports/hdl/FifoBuffer.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module FifoBuffer
-INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/oleja/Documents/7.semester/DDS1/Git/TFE4141_Digital_Design_1/ole_tutorial/project_2/project_2.srcs/sources_1/imports/hdl/async_fifo.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module async_fifo
-INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/oleja/Documents/7.semester/DDS1/Git/TFE4141_Digital_Design_1/ole_tutorial/project_2/project_2.srcs/sim_1/imports/hdl/bft_tb.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module bft_tb
-INFO: [VRFC 10-2263] Analyzing Verilog file "C:/Users/oleja/Documents/7.semester/DDS1/Git/TFE4141_Digital_Design_1/ole_tutorial/project_2/project_2.sim/sim_1/behav/xsim/glbl.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module glbl

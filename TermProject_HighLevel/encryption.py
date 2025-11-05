@@ -77,13 +77,9 @@ message = c**d % n
 print(f"cipher = {c}")
 print(f"decrypt= {message}")
 
-# Test the encryption and decryption algorithm
-cipher = encrypt(M, e, n)
-decyphered_message = encrypt(cipher, d, n)
-print(cipher)
-print(decyphered_message)
+print("Using mult_with_mod:")
+result_r = mult_with_mod(100, 15, 19)
+print(f"result R = {result_r}")
 
-cipher_v2 = encrypt_v2(M, e, n)
-decyphered_message_v2 = encrypt_v2(cipher_v2, d, n)
-print(cipher_v2)
-print(decyphered_message_v2)
+result_p = mult_with_mod(100, 11, 19)
+print(f"result P = {result_p}")
