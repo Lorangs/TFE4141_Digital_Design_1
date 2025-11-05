@@ -107,6 +107,7 @@ begin
     
     wait for clk_period;
     
+    
     assert valid_out = '0' report "valid_out is not reset when in reset state" severity error;
     assert ready_in = '1' report "ready_in is not 1 when in reset state" severity error;
     

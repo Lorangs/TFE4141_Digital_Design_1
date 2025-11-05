@@ -55,6 +55,7 @@ end exponentiation;
 architecture expBehave of exponentiation is
 		--signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11: std_logic_vector( C_block_size downto 0 );
 		--signal mux_ctrl_P_out, mux_ctrl_R_out: std_logic_vector(2 downto 0);
+		signal mux_calculation : std_logic;
 begin
 	-- R Calculations module instantiation
 	calc_R: entity work.calculations	
@@ -66,6 +67,7 @@ begin
 			n_neg   => n_neg,
 			clk     => clk,
 			reset_n => reset_n,
+			mux_calculation => mux_calculation,
 			valid_out => valid_out,
 			R_new   => result_R,
 			s0      => s0,
@@ -87,6 +89,7 @@ begin
 			clk		=> clk,
 			reset_n => reset_n,
 			valid_out => valid_out,
+			mux_calculation => mux_calculation, 
 			R_new   => result_P,
 			s0      => s6,
 			s1      => s7,
@@ -113,7 +116,8 @@ begin
 			mux_ctrl_P_in   => s11(256) & s10(256) & s9(256) & s8(256),
 			mux_ctrl_R_in   => s5(256)  & s4(256)  & s3(256) & s2(256),
 			mux_ctrl_P_out  => mux_ctrl_P_out,
-			mux_ctrl_R_out  => mux_ctrl_R_out
+			mux_ctrl_R_out  => mux_ctrl_R_out,
+			mux_calculation => mux_calculation
 		);
 	
 	exp_result: process(clk, reset_n, ready_out, valid_in, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, mux_ctrl_P_out, mux_ctrl_R_out)
