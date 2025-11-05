@@ -35,12 +35,12 @@ entity rsa_core_fsm is
            clk              : in STD_LOGIC;
            reset_n          : in STD_LOGIC;
            msgin_valid      : in STD_LOGIC;
-           msgin_last       : in STD_LOGIC;
            msgout_ready     : in STD_LOGIC;
+           msgin_last       : in STD_LOGIC;
            msgin_ready      : out STD_LOGIC;
            msgout_valid     : out STD_LOGIC;
            msgout_last      : out STD_LOGIC;
-           rsa_status       : out STD_LOGIC;
+           rsa_status       : out STD_LOGIC_VECTOR(31 downto 0);
 
            key_e_d          : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
@@ -52,7 +52,7 @@ entity rsa_core_fsm is
             valid_in          : out STD_LOGIC;
             ready_out         : out STD_LOGIC;
             new_msg_neg       : out STD_LOGIC;
-            update_R_or_not   : out STD_LOGIC;
+            update_R_or_not   : out STD_LOGIC
         );
 end rsa_core_fsm;
 
@@ -74,7 +74,7 @@ begin
         case current_state is
             when LOAD_NEW_MSG =>
                 -- set outputs
-                rsa_status          <= '0';
+                rsa_status          <= X"00000000";
                 msgin_ready         <= '1';   
                 msgout_last         <= msgin_last;
                 msgout_valid        <= '0';
@@ -91,7 +91,7 @@ begin
 
             when COUNT_WAIT =>
                 -- set outputs
-                rsa_status          <= '0';
+                rsa_status          <= X"00000000";
                 msgin_ready         <= '0';
                 msgout_valid        <= '0';
                 valid_in            <= '1';
@@ -108,7 +108,7 @@ begin
 
             when COUNT_FIN_PARTIAL =>
                 -- set outputs
-                rsa_status          <= '0';
+                rsa_status          <= X"00000000";
                 msgin_ready         <= '0';
                 msgout_valid        <= '0';
                 valid_in            <= '0';
@@ -130,7 +130,7 @@ begin
 
             when FINISHED =>
                 -- set outputs
-                rsa_status          <= '0';
+                rsa_status          <= X"00000000";
                 msgin_ready         <= '0';
                 msgout_valid        <= '1';
                 valid_in            <= '0';
@@ -192,8 +192,8 @@ begin
                 bit_shifted_key_e_d <= key_e_d;
 
             elsif current_state = COUNT_WAIT and next_state = COUNT_FIN_PARTIAL then
-                bit_shifted_key_e_d <= shift_right(bit_shifted_key_e_d, 1);
-                
+                bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d), 1 ) );
+
             else
                 bit_shifted_key_e_d <= bit_shifted_key_e_d;
             end if;
