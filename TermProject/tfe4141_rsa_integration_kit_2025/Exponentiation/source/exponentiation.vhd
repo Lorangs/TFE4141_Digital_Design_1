@@ -46,7 +46,9 @@ entity exponentiation is
         s11         : inout std_logic_vector( C_block_size downto 0 );
 
 		mux_ctrl_P_out : inout std_logic_vector(2 downto 0);
-		mux_ctrl_R_out : inout std_logic_vector(2 downto 0)
+		mux_ctrl_R_out : inout std_logic_vector(2 downto 0);
+
+		bit_shifted_a : out std_logic_vector( C_block_size-1 downto 0 )
 
 	);
 end exponentiation;
@@ -109,6 +111,7 @@ begin
 			clk             => clk,
 			n               => n,
 			a               => a,
+			bit_shifted_a   => bit_shifted_a,
 			ready_out       => ready_out,
 			valid_in        => valid_in,
 			ready_in        => ready_in,

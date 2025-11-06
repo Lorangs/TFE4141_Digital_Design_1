@@ -39,6 +39,7 @@ architecture expBehave of exponentiation_tb is
 
 		-- Internal Signal
 		signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11 : std_logic_vector(C_block_size downto 0);
+		signal bit_shifted_a : std_logic_vector( C_block_size-1 downto 0 );
 		signal mux_ctrl_P_out, mux_ctrl_R_out : std_logic_vector(2 downto 0);
 
 begin 
@@ -88,7 +89,9 @@ DUT : entity work.exponentiation
 		s10        =>   s10,
 		s11        =>   s11,		
 		mux_ctrl_R_out      =>   mux_ctrl_R_out,
-		mux_ctrl_P_out	=> mux_ctrl_P_out      
+		mux_ctrl_P_out	=> mux_ctrl_P_out,
+		bit_shifted_a => bit_shifted_a
+
 );
 
 clk_process : process
@@ -109,8 +112,8 @@ begin
 	b 			<= std_logic_vector(to_unsigned(15, b'length)); -- b = 15
 	c 			<= std_logic_vector(to_unsigned(11, c'length)); -- c = 11
 	
-	n			<= std_logic_vector(to_unsigned(19, n'length)); -- n = 19
-	n_neg 		<= std_logic_vector(to_signed(-19, n_neg'length)); -- n_neg = 19
+	n			<= std_logic_vector(to_unsigned(256, n'length)); -- n = 256
+	n_neg 		<= std_logic_vector(to_signed(-256, n_neg'length)); -- n_neg = 256
 
 	valid_in 	<= '0';
 	ready_out	<= '0';

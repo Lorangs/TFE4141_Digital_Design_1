@@ -39,11 +39,34 @@ generic (
 end exponentiation_fsm_tb;
 
 architecture expFsm_tbBehave of exponentiation_fsm_tb is
-    signal n, a, counter : std_logic_vector(C_block_size-1 downto 0); 
-    signal mux_ctrl_P_in, mux_ctrl_R_in : std_logic_vector(3 downto 0);
-    signal mux_ctrl_P_out, mux_ctrl_R_out : std_logic_vector(2 downto 0);
-    signal clk, reset_n, valid_out, valid_in, ready_out, ready_in : std_logic;
-    constant clk_period : time := 5 ns;
+    signal 
+            n, 
+            a, 
+            bit_shifted_a,
+            counter 
+        : std_logic_vector(C_block_size-1 downto 0) := (others => '0'); 
+
+    signal 
+            mux_ctrl_P_in, 
+            mux_ctrl_R_in 
+        : std_logic_vector(3 downto 0) := (others => '0');
+    
+    signal  mux_ctrl_P_out, 
+            mux_ctrl_R_out 
+        : std_logic_vector(2 downto 0)  := (others => '0');
+
+    signal  
+            clk, 
+            reset_n, 
+            valid_out, 
+            valid_in, 
+            ready_out, 
+            ready_in 
+        : std_logic;
+
+    constant 
+            clk_period 
+        : time := 5 ns;
     
     function is_all_zero(vec: std_logic_vector) return boolean is 
     begin   
@@ -66,7 +89,8 @@ DUT: entity work.exponentiation_fsm
         clk             => clk,
         n               => n,
         a               => a,
-        
+        bit_shifted_a     => bit_shifted_a,
+
         ready_out       => ready_out,
         valid_in        => valid_in,
         
