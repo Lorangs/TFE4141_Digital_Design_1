@@ -61,7 +61,7 @@ architecture expFsm_tbBehave of exponentiation_fsm_tb is
             valid_out, 
             valid_in, 
             ready_out, 
-            ready_in 
+            ready_in
         : std_logic;
 
     constant 

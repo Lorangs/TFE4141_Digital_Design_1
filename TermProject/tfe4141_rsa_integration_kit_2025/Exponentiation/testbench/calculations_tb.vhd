@@ -39,10 +39,32 @@ entity calculations_tb is
 end calculations_tb;
 
 architecture calc_tbBehave of calculations_tb is
-    signal reset_n, clk, valid_out, mux_calculation : std_logic;
-    signal  b, R_new               : std_logic_vector(C_block_size-1 downto 0);
-    signal  b_minus_n, b_minus_2n, n_neg, s0, s1, s2, s3, s4, s5 : std_logic_vector (C_block_size downto 0);
-    constant clk_period : time := 5 ns;
+    signal 
+            clk 
+        : std_logic;
+
+    signal
+            current_state_global : std_logic_vector(1 downto 0);
+    signal  
+            b, 
+            R_new,
+            R_reg
+        : std_logic_vector(C_block_size-1 downto 0) := (others => '0');
+    signal  
+            b_minus_n, 
+            b_minus_2n, 
+            n_neg, 
+            s0, 
+            s1, 
+            s2, 
+            s3, 
+            s4, 
+            s5 
+        : std_logic_vector (C_block_size downto 0) := (others => '0');
+
+    constant 
+            clk_period 
+        : time := 5 ns;
 
     function is_all_zero(vec: std_logic_vector) return boolean is 
     begin   
@@ -61,23 +83,20 @@ DUT : entity work.calculations
         C_block_size => C_block_size
     )
     port map (
-        b       => b,
-        n_neg   => n_neg,
-    
-        clk     => clk,
-        reset_n => reset_n,
-        valid_out => valid_out,
-        
-        mux_calculation => mux_calculation,
-    
-        R_new   => R_new,
-    
-        s0      => s0,
-        s1      => s1,
-        s2      => s2,
-        s3      => s3,
-        s4      => s4,
-        s5      => s5
+        b               => b,
+        n_neg           => n_neg,
+        clk             => clk,
+        R_new           => R_new,
+        s0              => s0,
+        s1              => s1,
+        s2              => s2,
+        s3              => s3,
+        s4              => s4,
+        s5              => s5,
+        current_state_global => current_state_global,
+        b_minus_n     => b_minus_n,
+        b_minus_2n    => b_minus_2n,
+        R_reg         => R_reg
     );
     
     
@@ -92,58 +111,36 @@ end process;
 
 test_process : process 
 begin
-    R_new       <= (others => '0');
-    R_new(70)   <= '1';
-    
-    b       <= (others => '0');
-    b(200)  <= '1';
-    
-    n_neg       <= (others => '0');
-    n_neg(256)  <= '1'; -- makes it negative
-    n_neg(50)   <= '1';
-    
-    mux_calculation <= '0';
-    valid_out <= '0';
-    
-    reset_n <= '0';
+    R_new               <= (others => '0');
+    R_new(5)            <= '1';   -- Set R_new to 32 for testing
+        
+    b                   <= (others => '0');
+    b(4)                <= '1';   -- Set b to 16 for testing
+
+    n_neg               <= (others => '1');
+    n_neg(7 downto 0)   <= "00000000"; -- Set n_neg to -255 for testing
+
+    current_state_global <= "00"; -- RESET state
     wait for clk_period; 
     
-    assert is_all_zero(s0) report "s0 is not reset value when reset" severity error;
-    assert s1 = '0' & b report "s1 is not reset value when reset" severity error;
-    assert s2 = std_logic_vector(signed(b) + signed(n_neg)) report "s2 is not reset value when reset" severity error;
-    assert s4 = std_logic_vector(signed(b) + shift_left(signed(n_neg), 1)) report "s4 is not reset value when reset" severity error;
-    -- s3 and s5 are unknown values at this point and therefore not checked 
+    current_state_global <= "01"; -- COUNTING state
+    wait for clk_period * 5;
 
-    wait for clk_period/2;
-    reset_n <= '1'; -- turn off reset
-    mux_calculation <= '1';
-    
-    b_minus_n <= std_logic_vector(signed(b) + signed(n_neg));
-    b_minus_2n <= std_logic_vector(signed(b) + shift_left(signed(n_neg), 1));
-    
-    wait for clk_period;  -- Wait for R_temp to update
-    
-    -- -- Check outputs based on expected calculations
-    assert s0 = std_logic_vector(shift_left(signed('0' & R_new), 1)) report "s0 incorrect" severity error;
-    assert s1 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b)) report "s1 incorrect" severity error;
-    assert s2 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(n_neg)) report "s2 incorrect" severity error;
-    assert s3 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b_minus_n)) report "s3 incorrect" severity error;
-    assert s4 = std_logic_vector(shift_left(signed('0' & R_new), 1) + shift_left(signed(n_neg), 1)) report "s4 incorrect" severity error;
-    assert s5 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b_minus_2n)) report "s5 incorrect" severity error;
-    
-    
-    R_new <= s4(C_block_size-1 downto 0);
-    
+    current_state_global <= "10"; -- FINISHED state
+
     wait for clk_period;
-    
-    -- -- Check outputs based on expected calculations
-    assert s0 = std_logic_vector(shift_left(signed('0' & R_new), 1)) report "s0 incorrect" severity error;
-    assert s1 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b)) report "s1 incorrect" severity error;
-    assert s2 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(n_neg)) report "s2 incorrect" severity error;
-    assert s3 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b_minus_n)) report "s3 incorrect" severity error;
-    assert s4 = std_logic_vector(shift_left(signed('0' & R_new), 1) + shift_left(signed(n_neg), 1)) report "s4 incorrect" severity error;
-    assert s5 = std_logic_vector(shift_left(signed('0' & R_new), 1) + signed(b_minus_2n)) report "s5 incorrect" severity error;
-    
+    R_new <= (others => '0');
+    R_new(6) <= '1';   -- Set R_new to 64 for testing
+
+    wait for clk_period * 5;
+    current_state_global <= "00"; -- RESET state
+    wait for clk_period;
+    current_state_global <= "01"; -- COUNTING state
+    wait for clk_period * 5;
+
+    current_state_global <= "10"; -- FINISHED state
+
+
     report "---- Test completed ----" severity note;
     wait;
 

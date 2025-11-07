@@ -23,92 +23,115 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
 
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity calculations is
     generic (
 		C_block_size : integer := 256
 	);
     Port ( 
-           b                : in     std_logic_vector( C_block_size-1 downto 0 );
-           n_neg            : in     std_logic_vector( C_block_size downto 0 );
+        clk              : in     std_logic;
+    
+        b                : in     std_logic_vector( C_block_size-1 downto 0 );
+        R_new            : in     std_logic_vector( C_block_size-1 downto 0 );
+        n_neg            : in     std_logic_vector( C_block_size downto 0 );
+        s0               : out    std_logic_vector( C_block_size downto 0 );
+        s1               : out    std_logic_vector( C_block_size downto 0 );
+        s2               : out  std_logic_vector( C_block_size downto 0 );
+        s3               : out    std_logic_vector( C_block_size downto 0 );
+        s4               : out  std_logic_vector( C_block_size downto 0 );
+        s5               : out    std_logic_vector( C_block_size downto 0 );
 
-           clk              : in     std_logic;
-           reset_n          : in     std_logic;
-           valid_out        : in     std_logic;
+        -- for testing purposes
+        R_reg            : inout  std_logic_vector( C_block_size-1 downto 0 );
+        b_minus_n        : inout  std_logic_vector( C_block_size downto 0 );
+        b_minus_2n       : inout  std_logic_vector( C_block_size downto 0);
 
-           mux_calculation  : in     std_logic;
-
-           R_new            : in     std_logic_vector( C_block_size-1 downto 0 );
-
-           s0               : out    std_logic_vector( C_block_size downto 0 );
-           s1               : out    std_logic_vector( C_block_size downto 0 );
-           s2               : inout  std_logic_vector( C_block_size downto 0 );
-           s3               : out    std_logic_vector( C_block_size downto 0 );
-           s4               : inout  std_logic_vector( C_block_size downto 0 );
-           s5               : out    std_logic_vector( C_block_size downto 0 )
-          );
+        -- States encoded as 2-bit std_logic_vector
+        -- 00 = RESET, 01 = COUNTING, 10 = FINISHED, 11 = UNUSED
+        current_state_global : in std_logic_vector(1 downto 0)
+    );
 end calculations;
 
 architecture calcBehave of calculations is
-    signal R_temp, mux, b_minus_n, b_minus_2n, n_2 : std_logic_vector( C_block_size downto 0 );
+    --signal R_reg : std_logic_vector( C_block_size-1 downto 0 );
+    --signal 
+    --    b_minus_n,
+    --    b_minus_2n
+    --: std_logic_vector( C_block_size downto 0 );
 begin
 
--- R_reg register
-process (clk, mux_calculation, valid_out) 
-begin
-    if rising_edge(clk) then
-        if (mux_calculation = '0') then 
-            R_temp <= (others => '0');
-        elsif (valid_out = '1') then
-            R_temp <= '0' & R_new;
-        else 
-            R_temp <= std_logic_vector(shift_left(signed('0' & R_new), 1));
+    ---------------------------------------
+    -- R_reg register
+    ---------------------------------------
+    Sync_R_reg: process (clk, current_state_global, R_new) 
+    begin
+        if rising_edge(clk) then
+            case current_state_global is
+                when "00" =>  -- RESET
+                    R_reg <= (others => '0');
+
+                when "01" =>  -- COUNTING
+                    R_reg <= std_logic_vector(shift_left(signed(R_new), 1));
+              
+                when others =>  -- FINISHED or UNUSED
+                    R_reg <= R_reg;
+            end case;
         end if;
-    end if;
-end process;
+    end process;
 
 
--- b-n register
-process (clk, reset_n) 
-begin
-    if rising_edge(clk) then
-        if (reset_n = '0') then
-            b_minus_n <= s2;
-        else 
-            b_minus_n <= b_minus_n;
+    ---------------------------------------
+    -- b-n register
+    ---------------------------------------
+    Sync_b_minus_n:process (clk, current_state_global, b, n_neg) 
+    begin
+        if rising_edge(clk) then
+            case current_state_global is
+                when "00" =>  -- RESET
+                    b_minus_n <= std_logic_vector(signed('0' & b) + signed(n_neg));
+
+                when "01" =>  -- COUNTING
+                    b_minus_n <= b_minus_n; 
+              
+                when others =>  -- FINISHED or UNUSED
+                    b_minus_n <= ( others => '0' );
+
+            end case;
         end if;
-    end if;
-end process;
+    end process;    
 
--- b-2n register
-process (clk, reset_n)
-begin 
-    if rising_edge(clk) then
-        if (reset_n = '0') then
-            b_minus_2n <= s4;
-        else
-            b_minus_2n <= b_minus_2n;     
+
+    ---------------------------------------
+    -- b-2n register
+    ---------------------------------------
+    Sync_b_minus_2n: process (clk, current_state_global, b, n_neg)
+    begin 
+        if rising_edge(clk) then
+            case current_state_global is
+                when "00" =>  -- RESET
+                    b_minus_2n <= std_logic_vector(signed('0' & b) + shift_left(signed(n_neg), 1));
+                
+                when "01" =>  -- COUNTING
+                    b_minus_2n <= b_minus_2n;
+                
+                when others =>  -- FINISHED or UNUSED
+                    b_minus_2n <= ( others => '0' );
+            
+            end case;
         end if;
-    end if;
-end process; 
+    end process; 
 
 
--- Mux 
-mux <= ('0' & b) when mux_calculation = '0' else R_temp;
-
-s0 <= R_temp;
-s1 <= std_logic_vector(signed(R_temp)   + signed('0' & b));
-s2 <= std_logic_vector(signed(mux)      + signed(n_neg)); 
-s3 <= std_logic_vector(signed(R_temp)   + signed(b_minus_n));
-s4 <= std_logic_vector(signed(mux)      + shift_left(signed(n_neg), 1));
-s5 <= std_logic_vector(signed(R_temp)   + signed(b_minus_2n));
+    ---------------------------------------
+    -- Calculations
+    ---------------------------------------
+    s0 <= '0' & R_reg;
+    s1 <= std_logic_vector( signed('0' & R_reg) + signed('0' & b) );
+    s2 <= std_logic_vector( signed('0' & R_reg) + signed(n_neg) );
+    s3 <= std_logic_vector( signed('0' & R_reg) + signed(b_minus_n) );
+    s4 <= std_logic_vector( signed('0' & R_reg) + shift_left(signed(n_neg), 1) );
+    s5 <= std_logic_vector( signed('0' & R_reg) + signed(b_minus_2n) );
+    
 
 end calcBehave;
