@@ -192,6 +192,9 @@ begin
 	ready_out	<= '0';
 	reset_n 	<= '0';
 
+	-----------------------------------------
+	-- New input values after reset
+	-----------------------------------------
 	a 			<= std_logic_vector(to_unsigned(120, a'length)); -- a = 120 (1111000)
 	b 			<= std_logic_vector(to_unsigned(385, b'length)); -- b = 385 (110000001)
 	c 			<= std_logic_vector(to_unsigned(77, c'length)); -- c = 77 (1001101)

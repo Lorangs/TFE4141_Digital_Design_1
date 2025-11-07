@@ -1,6 +1,26 @@
+---------------------------------------------
+-- Entity Declaration
+
+-- This module performs modular exponentiation using
+-- the blakley method. It computes both R and P values
+-- simultaneously to optimize performance.
+
+-- Computes:
+-- R = (a * b) mod n, if e == 1, else R = b
+-- P = (a * c) mod n
+
+-- The module assumes constant inputs during operation.
+-- Do not change inputs until valid_out is high.
+
+
+---------------------------------------------
+
+
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
+
 
 entity exponentiation is
 	generic (
@@ -62,38 +82,33 @@ end exponentiation;
 
 
 architecture expBehave of exponentiation is
-		--signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11: std_logic_vector( C_block_size downto 0 );
-		--signal mux_ctrl_P_out, mux_ctrl_R_out: std_logic_vector(2 downto 0);
-
-		-- Internal Signals. States encoded as 2-bit std_logic_vector
-		-- 00 = RESET, 01 = COUNTING, 10 = FINISHED, 11 = UNUSED
-		--signal current_state_global 	: std_logic_vector(1 downto 0);
-
-		-- Input registers to hold values of a, b, c
-
-		
+	-------------------------------------------
+	-- Signal Declarations
+	-- 
+	-- Add any internal signals here when testing is done
+	-------------------------------------------
 begin
-
 
     -------------------------------------------
     -- Calculate summations for R
     -------------------------------------------
-    s0  <= std_logic_vector( '0' & shift_left( unsigned( result_R ), 1) );
-    s1  <= std_logic_vector( unsigned('0' & shift_left( unsigned( result_R ), 1)) + unsigned('0' & b) );
-    s2  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_R ), 1)) + signed( n_neg ) );
-    s3  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_R ), 1)) + signed('0' & b) + signed( n_neg ) ); 
-    s4  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_R ), 1)) + shift_left( signed( n_neg ), 1 ) );
-    s5  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_R ), 1)) + signed('0' & b) + shift_left( signed( n_neg ), 1 ) );
+    s0  <= std_logic_vector( 		 '0' & shift_left( unsigned( result_R ), 1) );
+    s1  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) );
+    s2  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( n_neg ) );
+    s3  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) + signed( n_neg ) ); 
+    s4  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + shift_left( signed( n_neg ), 1 ) );
+    s5  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) + shift_left( signed( n_neg ), 1 ) );
 
     -------------------------------------------
     -- Calculate summations for P
     -------------------------------------------
-    s6  <= std_logic_vector( '0' & shift_left( unsigned( result_P ), 1) );
-    s7  <= std_logic_vector( unsigned('0' & shift_left( unsigned( result_P ), 1)) + unsigned('0' & c) );
-    s8  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_P ), 1)) + signed( n_neg ) );
-    s9  <= std_logic_vector( signed('0'   & shift_left( unsigned( result_P ), 1)) + signed('0' & c) + signed( n_neg ) ); 
-    s10 <= std_logic_vector( signed('0'   & shift_left( unsigned( result_P ), 1)) + shift_left( signed( n_neg ), 1 ) );
-    s11 <= std_logic_vector( signed('0'   & shift_left( unsigned( result_P ), 1)) + signed('0' & c) + shift_left( signed( n_neg ), 1 ) );
+    s6  <= std_logic_vector( 		 '0' & shift_left( unsigned( result_P ), 1) );
+    s7  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) );
+    s8  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( n_neg ) );
+    s9  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) + signed( n_neg ) );
+    s10 <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + shift_left( signed( n_neg ), 1 ) );
+    s11 <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) + shift_left( signed( n_neg ), 1 ) );
+
 
 	------------------------------------------
 	-- FSM module instantiation
@@ -112,8 +127,8 @@ begin
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
 			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(256)  & s4(256)  & s3(256) & s2(256),
-			mux_ctrl_P_in  			=> s11(256) & s10(256) & s9(256) & s8(256),
+			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
 			current_state 			=> current_state,
@@ -140,17 +155,17 @@ begin
 						case mux_ctrl_R_out is
 							when "000" =>
 								result_R <= s0(C_block_size-1 downto 0);
-							when "001" =>
+							when "001" => 	
 								result_R <= s1(C_block_size-1 downto 0);
-							when "010" =>
+							when "010" =>	
 								result_R <= s2(C_block_size-1 downto 0);
-							when "011" =>
+							when "011" =>	
 								result_R <= s3(C_block_size-1 downto 0);
-							when "100" =>
+							when "100" =>	
 								result_R <= s4(C_block_size-1 downto 0);
 							when "101" =>
 								result_R <= s5(C_block_size-1 downto 0);
-							when others =>
+							when others =>	-- should not occur
 								result_R <= (others => '0');
 						end case;
 					end if;
@@ -158,22 +173,21 @@ begin
 					case mux_ctrl_P_out is
 						when "000" =>
 							result_P <= s6(C_block_size-1 downto 0);
-						when "001" =>
+						when "001" =>	
 							result_P <= s7(C_block_size-1 downto 0);
-						when "010" =>
+						when "010" =>	
 							result_P <= s8(C_block_size-1 downto 0);
-						when "011" =>
+						when "011" =>	
 							result_P <= s9(C_block_size-1 downto 0);
-						when "100" =>
+						when "100" =>	
 							result_P <= s10(C_block_size-1 downto 0);
-						when "101" =>
+						when "101" =>	
 							result_P <= s11(C_block_size-1 downto 0);
-						when others =>
+						when others =>	-- should not occur
 							result_P <= (others => '0');
 					end case;
 	
-				when "10" =>  -- FINISHED
-					-- Hold result values
+				when "10" =>  -- FINISHED, hold values 
 					result_R <= result_R;
 					result_P <= result_P;
 				

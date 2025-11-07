@@ -1,32 +1,20 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 15.10.2025 15:27:47
--- Design Name: 
--- Module Name: exponentiation_fsm - expFsmBehave
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
+------------------------------------------
+-- Exponentiation FSM VHDL Module
+
+-- This module implements the finite state machine (FSM) for controlling the
+-- modular exponentiation process. It manages the states of the operation,
+-- including resetting, counting through the bits of the exponent, and
+-- signaling when the computation is finished.
+
+-- assumes constant inputs during operation.
+-- Do not change inputs until valid_out is high.
+------------------------------------------
 
 
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity exponentiation_fsm is
     generic (
@@ -72,6 +60,8 @@ architecture expFsmBehave of exponentiation_fsm is
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
     signal next_state : std_logic_vector(1 downto 0);
 
+    -- Add any internal signals here when testing is done
+
 begin
     -----------------------------------------
     -- Next State Logic. Combinational process to determine next state.
@@ -107,13 +97,12 @@ begin
                 ready_in    <= '0';
                 valid_out   <= '0';
 
-                ----------------------------------
-                -- Determine which summation to pass through to the outputs P_result and R_result.
-                -- Based on the MSB of bit_shifted_a and the signs of the perfomed summations. See high-level code for details.
-                ----------------------------------
-                if (bit_shifted_a(255) = '1') then
-                    -- Only summation S1, S3 and S5 possible for R and S7, S9 and S11 for P
+                ----------------------------------------------------------------------------------
+                -- Determine Mux Control Outputs
 
+                -- If a(255) = '1'  --> possible outputs: S1, S3, S5 for R and S7, S9, S11 for P
+                ----------------------------------------------------------------------------------
+                if (bit_shifted_a(255) = '1') then
                     -- Mux control R
                     if ( mux_ctrl_R_in(3) = '0') then       -- If R + b - 2*n >= 0
                         mux_ctrl_R_out <= "101";            -- Select S5: R = R + b - 2*n
@@ -125,7 +114,6 @@ begin
                         mux_ctrl_R_out <= "001";            -- Select S1: R = R + b
 
                     end if;
-
 
                     -- Mux control P
                     if ( mux_ctrl_P_in(3) = '0') then       -- If P + b - 2*n >= 0
@@ -139,8 +127,11 @@ begin
 
                     end if;
 
+
+                ----------------------------------------------------------------------------------
+                -- Else             --> possible outputs: S0, S2, S4 for R and S6, S8, S10 for P
+                ----------------------------------------------------------------------------------
                 else
-                    -- Only summation S2, S4 and S6 possible for R and S8, S10 and S12 for P
 
                     -- Mux control R
                     if ( mux_ctrl_R_in(2) = '0') then       -- If R - 2*n >= 0
@@ -169,7 +160,9 @@ begin
                 end if;
                         
 
-                -- Check if counting is finished                     
+                ----------------------------------------------
+                -- Next State Transition Check           
+                ----------------------------------------------       
                 if (counter >= n_minus_1 ) then
                     next_state  <= "10";  -- FINISHED state
                 else
@@ -180,7 +173,7 @@ begin
             ---------------------
             -- FINISHED State
             ---------------------
-             when "10" =>  -- FINISHED
+            when "10" =>  -- FINISHED
                 -- Set outputs
                 ready_in    <= '0';
                 valid_out   <= '1';
@@ -199,10 +192,10 @@ begin
             ------------------
             -- Default case
             ------------------
-             when others =>
+            when others =>
                 next_state <= "00"; -- RESET state 
         end case;
-   end process;
+    end process;
    
 
     -----------------------------------------
@@ -221,23 +214,24 @@ begin
     end process SyncState;
   
 
-  -----------------------------------------
-  -- Counter Control. Increments during COUNTING state.
-  -- In other states, resets to zero.
-  -----------------------------------------
-  SyncCounter: process (clk, reset_n, current_state) 
-  begin
-        if rising_edge(clk) then
-            case current_state is
-                when "01" =>    -- COUNTING
-                    counter <= std_logic_vector( unsigned( counter ) + 1 );
-    
-                when others =>
-                    counter <= ( others => '0' );
-            end case ;
-        end if;
-  end process SyncCounter;  
+    -----------------------------------------
+    -- Counter Control. Increments during COUNTING state.
+    -- In other states, resets to zero.
+    -----------------------------------------
+    SyncCounter: process (clk, reset_n, current_state) 
+    begin
+            if rising_edge(clk) then
+                case current_state is
+                    when "01" =>    -- COUNTING
+                        counter <= std_logic_vector( unsigned( counter ) + 1 );
+        
+                    when others =>
+                        counter <= ( others => '0' );
+                end case ;
+            end if;
+    end process SyncCounter;  
   
+
     -----------------------------------------
     -- Shift A register. Shifts left during COUNTING state.
     -- In other states, loads input a.
