@@ -32,171 +32,220 @@ entity rsa_core_fsm is
         ------------------------------------
         -- External Interface Signals
         ------------------------------------
-           clk              : in STD_LOGIC;
-           reset_n          : in STD_LOGIC;
-           msgin_valid      : in STD_LOGIC;
-           msgout_ready     : in STD_LOGIC;
-           msgin_last       : in STD_LOGIC;
-           msgin_ready      : out STD_LOGIC;
-           msgout_valid     : out STD_LOGIC;
-           msgout_last      : out STD_LOGIC;
-           rsa_status       : out STD_LOGIC_VECTOR(31 downto 0);
+        clk                 : in std_logic;
+        reset_n             : in std_logic;
 
-           key_e_d          : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+        -- handshaking signals with external module.
+        msgout_ready        : in std_logic;
+        msgout_valid        : out std_logic;
+        msgin_ready         : out std_logic;
+        msgin_valid         : in std_logic;
+        msgin_last          : in std_logic;
 
-        ------------------------------------
-        -- Internal Interface Signals
-        ------------------------------------
-            valid_out         : in STD_LOGIC;
-            ready_in          : in STD_LOGIC;
-            valid_in          : out STD_LOGIC;
-            ready_out         : out STD_LOGIC;
-            new_msg_neg       : out STD_LOGIC;
-            update_R_or_not   : out STD_LOGIC
-        );
+        -- handshaking signals with exponentiation module.
+        exp_ready_in        : in std_logic;
+        exp_valid_in        : out std_logic;
+        exp_ready_out       : out std_logic;
+        exp_valid_out       : in std_logic;
+        exp_reset_neg       : out std_logic;
+
+        -- RSA status signal
+        rsa_status          : out std_logic_vector(31 downto 0);
+
+        -- modulus 
+        n                   : in std_logic_vector(C_block_size-1 downto 0);  
+
+        -- exponent bits
+        key_e_d_reg         : in std_logic_vector(C_block_size-1 downto 0);
+        key_e_d_LSB         : out std_logic;     
+        
+        current_state       : inout std_logic_vector(1 downto 0);
+
+        -- internal signals for testing
+        counter             : inout std_logic_vector(C_block_size-1 downto 0 )
+    );
 end rsa_core_fsm;
 
 architecture rsa_core_fsm_behave of rsa_core_fsm is
+    ------------------------------------------------------------------------
+    -- RESET = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
+    -------------------------------------------------------------------------
+    signal next_state                   : std_logic_vector(1 downto 0);
 
-    type state_type is (LOAD_NEW_MSG, COUNT_WAIT, COUNT_FIN_PARTIAL, FINISHED);
-    signal current_state, next_state    : state_type                                := LOAD_NEW_MSG;
-    signal counter                      : std_logic_vector(9 downto 0)              := (others => '0');  -- enough to count to 512 (we need to count 257)
-    signal n                            : std_logic_vector(C_block_size-1 downto 0) := std_logic_vector(to_unsigned(C_block_size, C_block_size));
     signal bit_shifted_key_e_d          : std_logic_vector(C_block_size-1 downto 0);
 
 begin
 
+    --------------------------------------
+    -- RSA Status Signal.
+    --------------------------------------
+    rsa_status <= (others => '0');
+
+    ---------------------------------------
+    -- Bit shift key_e_d to get LSB
+    ---------------------------------------
+    key_e_d_LSB <= bit_shifted_key_e_d(0);
+
+    bit_shift_e_d_Process: process (clk, current_state, key_e_d_reg)
+    begin
+        if rising_edge(clk) then
+            case current_state is 
+                when "00" =>-- LOAD_NEW_MSG
+                    bit_shifted_key_e_d <= key_e_d_reg;
+
+                when "10" =>  -- COUNT_FIN_PARTIAL
+                    bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
+
+                when others => -- COUNT_WAIT, FINISHED
+                    bit_shifted_key_e_d <= bit_shifted_key_e_d;
+            end case;
+        end if;
+    end process bit_shift_e_d_Process;
+
+
+    -----------------------------------
+    -- Current and Next State Syncronization
+    -----------------------------------
+    CurrentState: process (clk, reset_n, next_state)
+    begin
+        if rising_edge(clk) then
+            if (reset_n = '0') then
+                current_state <= "00"; -- LOAD_NEW_MSG state
+            else
+                current_state <= next_state;
+            end if;
+        end if;
+    end process CurrentState;
+
+
     -----------------------------------
     -- Next State Logic
     -----------------------------------
-    NextState: process (current_state, msgin_valid, msgin_last, msgout_ready)
+    NextState: process (clk, current_state, msgin_valid, msgin_last, msgout_ready, exp_ready_out, exp_valid_in, counter, n)
     begin
-        case current_state is
-            when LOAD_NEW_MSG =>
-                -- set outputs
-                rsa_status          <= X"00000000";
-                msgin_ready         <= '1';   
-                msgout_last         <= msgin_last;
-                msgout_valid        <= '0';
-                valid_in            <= '0';
-                ready_out           <= '0';
-                new_msg_neg         <= '0';
+        case current_state is 
 
-                -- check for transition
-                if msgin_valid = '1' and ready_in = '1' then
-                    next_state      <= COUNT_WAIT;  
+            -------------------
+            -- LOAD_NEW_MSG State
+            -------------------
+            when "00" =>    -- LOAD_NEW_MSG
+                ----------------------------------------------
+                -- Set outputs
+                ----------------------------------------------
+                msgin_ready    <= '1';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '0';
+
+
+                ----------------------------------------------
+                -- Next State Transition Check           
+                ----------------------------------------------
+                if (msgin_valid = '1' and exp_ready_in = '1') then
+                    next_state  <= "01";  -- COUNT_WAIT state
                 else
-                    next_state      <= LOAD_NEW_MSG;
+                    next_state <= "00";   -- remain in LOAD_NEW_MSG state
                 end if;
 
-            when COUNT_WAIT =>
-                -- set outputs
-                rsa_status          <= X"00000000";
-                msgin_ready         <= '0';
-                msgout_valid        <= '0';
-                valid_in            <= '1';
-                ready_out           <= '1';
-                new_msg_neg         <= '1';
-                
+            ---------------------
+            -- COUNT_WAIT State
+            ---------------------
+            when "01" =>  -- COUNT_WAIT
+                -----------------------------------
+                -- Set outputs
+                -----------------------------------
+                msgin_ready    <= '0';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '1';
+                exp_ready_out  <= '1';
+                exp_reset_neg  <= '1';
 
-                -- check for transition
-                if valid_out = '1' then
-                    next_state      <= COUNT_FIN_PARTIAL;
+                -----------------------------------
+                -- Next State Transition Check
+                -----------------------------------
+                if ( exp_valid_out = '0' ) then
+                    next_state  <= "01";  -- COUNT_WAIT state
                 else
-                    next_state      <= COUNT_WAIT;
+                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
                 end if;
 
-            when COUNT_FIN_PARTIAL =>
-                -- set outputs
-                rsa_status          <= X"00000000";
-                msgin_ready         <= '0';
-                msgout_valid        <= '0';
-                valid_in            <= '0';
-                ready_out           <= '1';
-                new_msg_neg         <= '1';
-                
+            ---------------------
+            -- COUNT_FIN_PARTIAL State
+            ---------------------
+            when "10" =>  -- COUNT_FIN_PARTIAL
+                -----------------------------------
+                -- Set outputs
+                -----------------------------------
+                msgin_ready    <= '0';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '1';
+                exp_reset_neg  <= '1';
 
-                -- check for transition
-                if ready_in = '1' then
-                    if counter >= n then     
-                        next_state      <= FINISHED;
+                -----------------------------------
+                -- Next State Transition Check
+                -----------------------------------
+                if (exp_ready_in = '0') then -- Should never happen. The counter will be out of sync.
+                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
-                    else
-                        next_state      <= COUNT_WAIT;
-                    end if;
-                else
-                    next_state      <= COUNT_FIN_PARTIAL;
+                elsif ( counter < n ) then
+                    next_state <= "01";  -- COUNT_WAIT state
+
+                else 
+                    next_state  <= "11";  -- FINISHED state
+
                 end if;
 
-            when FINISHED =>
-                -- set outputs
-                rsa_status          <= X"00000000";
-                msgin_ready         <= '0';
-                msgout_valid        <= '1';
-                valid_in            <= '0';
-                ready_out           <= '0';
-                new_msg_neg         <= '1';
+            -------------------
+            -- FINISHED State
+            -------------------
+            when "11" =>  -- FINISHED
+                -----------------------------------
+                -- Set outputs
+                -----------------------------------
+                msgin_ready    <= '0';
+                msgout_valid   <= '1';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '1';
 
-                -- check for transition
-                if msgout_ready = '1' then
-                    next_state      <= LOAD_NEW_MSG;
+                -----------------------------------
+                -- Next State Transition Check
+                -----------------------------------
+                if( msgout_ready = '1' ) then
+                    next_state  <= "00";  -- LOAD_NEW_MSG state
+
                 else
-                    next_state      <= FINISHED;
+                    next_state  <= "11";  -- FINISHED state
+
                 end if;
+            
+
+            when others =>  -- default case
+                next_state <= "00"; -- LOAD_NEW_MSG state
         end case;
-    end process;
-
-
-    -----------------------------------
-    -- Sync current state with next state
-    -----------------------------------
-    SyncState: process (clk, reset_n) 
-    begin
-            if rising_edge(clk) then
-                if( reset_n = '0' ) then
-                    current_state <= LOAD_NEW_MSG;
-                else
-                    current_state <= next_state;
-                end if;
-            end if;
-    end process SyncState;
-
+    end process NextState;
 
     -----------------------------------
     -- Sync counter
     -----------------------------------
-    SyncCounter: process (clk, reset_n) 
+    SyncCounter: process (clk, next_state, counter) 
     begin
         if rising_edge(clk) then
-            if current_state = COUNT_FIN_PARTIAL and next_state = COUNT_WAIT then
-                counter <= std_logic_vector( unsigned( counter ) + 1 );
+            case next_state is
+                when "00" => -- LOAD_NEW_MSG
+                    counter <= (others => '0');
 
-            elsif current_state = LOAD_NEW_MSG then
-                counter <= ( others => '0' );
-            else
-                counter <= counter;
-            end if;
+                when "10" => -- COUNT_FIN_PARTIAL
+                    counter <= std_logic_vector( unsigned( counter ) + 1);
+
+                when others => -- COUNT_WAIT, FINISHED
+                    counter <= counter;
+            end case;
         end if;
     end process SyncCounter;
 
 
-    -----------------------------------
-    -- Sync bit_shifted_key_e_d and update_R_or_not
-    -----------------------------------
-    SyncUpdate_R_or_not: process (clk, reset_n, key_e_d)
-    begin
-        if rising_edge(clk) then
-            update_R_or_not <= bit_shifted_key_e_d(0);
 
-            if current_state = LOAD_NEW_MSG then
-                bit_shifted_key_e_d <= key_e_d;
-
-            elsif current_state = COUNT_WAIT and next_state = COUNT_FIN_PARTIAL then
-                bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d), 1 ) );
-
-            else
-                bit_shifted_key_e_d <= bit_shifted_key_e_d;
-            end if;
-        end if;
-    end process SyncUpdate_R_or_not;
 end rsa_core_fsm_behave;

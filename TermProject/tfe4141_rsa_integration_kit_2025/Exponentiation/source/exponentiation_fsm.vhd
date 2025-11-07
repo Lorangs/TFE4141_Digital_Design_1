@@ -26,7 +26,7 @@ entity exponentiation_fsm is
         clk             : in std_logic;
 
         -- modulus
-        n_minus_1       : in std_logic_vector(C_block_size-1 downto 0);
+        n               : in std_logic_vector(C_block_size-1 downto 0);
 
         -- input data
         a               : in std_logic_vector(C_block_size-1 downto 0);
@@ -52,7 +52,7 @@ entity exponentiation_fsm is
         current_state  : inout std_logic_vector(1 downto 0);
 
         -- counter
-        counter         : out std_logic_vector(C_block_size-1 downto 0)
+        counter        : out std_logic_vector(C_block_size-1 downto 0)
     );
 end exponentiation_fsm;
 
@@ -61,6 +61,7 @@ architecture expFsmBehave of exponentiation_fsm is
     signal next_state : std_logic_vector(1 downto 0);
 
     -- Add any internal signals here when testing is done
+
 
 begin
     -----------------------------------------
@@ -82,6 +83,10 @@ begin
                 mux_ctrl_P_out <= "111"; 
                 mux_ctrl_R_out <= "111";
                     
+
+                --------------------------------
+                -- Next State Transition Check
+                --------------------------------
                 if (valid_in = '1') then 
                     next_state  <= "01"; -- COUNTING state
                 else
@@ -163,7 +168,7 @@ begin
                 ----------------------------------------------
                 -- Next State Transition Check           
                 ----------------------------------------------       
-                if (counter >= n_minus_1 ) then
+                if (counter = n ) then
                     next_state  <= "10";  -- FINISHED state
                 else
                     next_state <= "01";  -- COUNTING state
@@ -195,7 +200,7 @@ begin
             when others =>
                 next_state <= "00"; -- RESET state 
         end case;
-    end process;
+    end process NextState;
    
 
     -----------------------------------------
@@ -217,18 +222,19 @@ begin
     -----------------------------------------
     -- Counter Control. Increments during COUNTING state.
     -- In other states, resets to zero.
+    -- Uses next_state signal from Next State Logic.
     -----------------------------------------
-    SyncCounter: process (clk, reset_n, current_state) 
+    SyncCounter: process (clk, reset_n, next_state) 
     begin
-            if rising_edge(clk) then
-                case current_state is
-                    when "01" =>    -- COUNTING
-                        counter <= std_logic_vector( unsigned( counter ) + 1 );
-        
-                    when others =>
-                        counter <= ( others => '0' );
-                end case ;
-            end if;
+        if rising_edge(clk) then
+            case next_state is
+                when "01" =>    -- COUNTING
+                    counter <= std_logic_vector( unsigned( counter ) + 1 );
+    
+                when others =>
+                    counter <= ( others => '0' );
+            end case ;
+        end if;
     end process SyncCounter;  
   
 
@@ -249,7 +255,7 @@ begin
                 when others => -- FINISHED and UNUSED
                     bit_shifted_a <= bit_shifted_a;
 
-            end case ;
+            end case;
         end if;
     end process;
 

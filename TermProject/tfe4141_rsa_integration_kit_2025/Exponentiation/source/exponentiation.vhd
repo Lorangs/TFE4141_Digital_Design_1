@@ -48,7 +48,6 @@ entity exponentiation is
 		--modulus
 		n           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
 		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		n_minus_1   : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
          
 		--utility
 		clk 		: in STD_LOGIC;
@@ -87,27 +86,38 @@ architecture expBehave of exponentiation is
 	-- 
 	-- Add any internal signals here when testing is done
 	-------------------------------------------
+
+	signal bit_shifted_R : STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+	signal bit_shifted_P : STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+	signal n_2_neg	: STD_LOGIC_VECTOR ( C_block_size downto 0 );
 begin
+
+	-------------------------------------------
+	-- Shifted versions of R, P, and n_neg
+	-------------------------------------------
+	bit_shifted_R 	<= std_logic_vector( shift_left( unsigned( result_R ), 1) );
+	bit_shifted_P 	<= std_logic_vector( shift_left( unsigned( result_P ), 1) );
+	n_2_neg 		<= std_logic_vector( shift_left( unsigned( n_neg ), 1) );
 
     -------------------------------------------
     -- Calculate summations for R
     -------------------------------------------
-    s0  <= std_logic_vector( 		 '0' & shift_left( unsigned( result_R ), 1) );
-    s1  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) );
-    s2  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( n_neg ) );
-    s3  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) + signed( n_neg ) ); 
-    s4  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + shift_left( signed( n_neg ), 1 ) );
-    s5  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_R ), 1)) + signed( '0' & b ) + shift_left( signed( n_neg ), 1 ) );
+    s0  <= std_logic_vector( 		 '0' & bit_shifted_R );
+    s1  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) );
+    s2  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_neg ) );
+    s3  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) + signed( n_neg ) ); 
+    s4  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_2_neg ) );
+    s5  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) + signed( n_2_neg ) );
 
     -------------------------------------------
     -- Calculate summations for P
     -------------------------------------------
-    s6  <= std_logic_vector( 		 '0' & shift_left( unsigned( result_P ), 1) );
-    s7  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) );
-    s8  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( n_neg ) );
-    s9  <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) + signed( n_neg ) );
-    s10 <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + shift_left( signed( n_neg ), 1 ) );
-    s11 <= std_logic_vector( signed( '0' & shift_left( unsigned( result_P ), 1)) + signed( '0' & c ) + shift_left( signed( n_neg ), 1 ) );
+    s6  <= std_logic_vector( 		 '0' & bit_shifted_P );
+    s7  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) );
+    s8  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_neg ) );
+    s9  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) + signed( n_neg ) );
+    s10 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_2_neg ) );
+    s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) + signed( n_2_neg ) );
 
 
 	------------------------------------------
@@ -120,7 +130,7 @@ begin
 		port map (
 			reset_n        			=> reset_n,
 			clk            			=> clk,
-			n_minus_1      			=> n_minus_1,
+			n		      			=> n,
 			a              			=> a,
 			bit_shifted_a  			=> bit_shifted_a,
 			ready_out      			=> ready_out,

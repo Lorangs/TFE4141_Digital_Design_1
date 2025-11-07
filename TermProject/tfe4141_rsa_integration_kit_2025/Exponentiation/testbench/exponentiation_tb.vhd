@@ -11,7 +11,7 @@ end exponentiation_tb;
 
 
 architecture expBehave of exponentiation_tb is 
-	--port();
+
 		--constant C_block_size : integer := 256;
 		constant clk_period   : time 	:= 10ns;
 
@@ -33,7 +33,6 @@ architecture expBehave of exponentiation_tb is
 		--modulus
 		signal n              :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0);
 		signal n_neg          :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		signal n_minus_1      :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0);
          
 		--utility
 		signal clk 		      :  STD_LOGIC;
@@ -84,7 +83,6 @@ DUT : entity work.exponentiation
 	--modulus
 		n          =>   n,
 		n_neg      =>   n_neg,
-		n_minus_1  =>   n_minus_1,
 
 	--utility
 		clk        =>   clk,
