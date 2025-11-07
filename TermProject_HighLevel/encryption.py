@@ -31,7 +31,7 @@ def encrypt(M, e, n):
     for i in range(n):
         if (e >> i) & 1:
             c = mult_with_mod(c, P, n)
-        P = mult_with_mod(P ,P ,n)
+        P = mult_with_mod(P ,P ,n)  
     return c
 
 # mulig forbedring av mult_with_mod. Slå sammen to blokker til en.
@@ -40,7 +40,7 @@ def mult_with_mod_v2(a, b, c, e, n):
     R = 0
     Q = 0
 
-    for i in range(n):
+    for i in range(n):                              
         R = R << 1
         Q = Q << 1
 
@@ -77,9 +77,9 @@ message = c**d % n
 print(f"cipher = {c}")
 print(f"decrypt= {message}")
 
+# R = 100 * 15 mod 256 = 220
+# P = 100 * 11 mod 256 = 76
 print("Using mult_with_mod:")
-result_r = mult_with_mod(100, 15, 19)
+result_r = mult_with_mod_v2(100, 15, 11, 1, 256)
 print(f"result R = {result_r}")
 
-result_p = mult_with_mod(100, 11, 19)
-print(f"result P = {result_p}")
