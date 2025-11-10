@@ -51,7 +51,7 @@ entity exponentiation is
          
 		--utility
 		clk 		: in STD_LOGIC;
-		reset_n 	: in STD_LOGIC;
+		reset_neg 	: in STD_LOGIC;
 		
 		--internal signals available for testing
 		s0          : inout std_logic_vector( C_block_size downto 0 );
@@ -74,7 +74,12 @@ entity exponentiation is
 
 		current_state : inout std_logic_vector(1 downto 0);
 
-		counter : inout std_logic_vector(C_block_size-1 downto 0)
+		counter : inout std_logic_vector(C_block_size-1 downto 0);
+
+		b_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		b_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		c_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		c_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 )
 
 	);
 end exponentiation;
@@ -87,9 +92,9 @@ architecture expBehave of exponentiation is
 	-- Add any internal signals here when testing is done
 	-------------------------------------------
 
-	signal bit_shifted_R : STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal bit_shifted_P : STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal n_2_neg	: STD_LOGIC_VECTOR ( C_block_size downto 0 );
+	signal bit_shifted_R 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+	signal bit_shifted_P 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+	signal n_2_neg			: STD_LOGIC_VECTOR ( C_block_size downto 0 );
 begin
 
 	-------------------------------------------
@@ -97,7 +102,7 @@ begin
 	-------------------------------------------
 	bit_shifted_R 	<= std_logic_vector( shift_left( unsigned( result_R ), 1) );
 	bit_shifted_P 	<= std_logic_vector( shift_left( unsigned( result_P ), 1) );
-	n_2_neg 		<= std_logic_vector( shift_left( unsigned( n_neg ), 1) );
+	n_2_neg 		<= std_logic_vector( shift_left( signed( n_neg ), 1) );
 
     -------------------------------------------
     -- Calculate summations for R
@@ -105,9 +110,9 @@ begin
     s0  <= std_logic_vector( 		 '0' & bit_shifted_R );
     s1  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) );
     s2  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_neg ) );
-    s3  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) + signed( n_neg ) ); 
+    s3  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_n ) ); 
     s4  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_2_neg ) );
-    s5  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) + signed( n_2_neg ) );
+    s5  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_2n ) );
 
     -------------------------------------------
     -- Calculate summations for P
@@ -115,10 +120,30 @@ begin
     s6  <= std_logic_vector( 		 '0' & bit_shifted_P );
     s7  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) );
     s8  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_neg ) );
-    s9  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) + signed( n_neg ) );
+    s9  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_n ) );
     s10 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_2_neg ) );
-    s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) + signed( n_2_neg ) );
+    s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_2n ) );
 
+
+
+	-----------------------------------------
+	-- Calculate b minus n and b minus 2n, c minus n and c minus 2n
+	-- When in RESET state
+	-----------------------------------------
+	PreCalculations: process(current_state, b, c, n_2_neg, n_neg)
+	begin
+		if current_state = "00" then  -- RESET state
+			b_minus_n   <= std_logic_vector( signed( '0' & b ) + signed( n_neg ) );
+			b_minus_2n  <= std_logic_vector( signed( '0' & b ) + signed( n_2_neg ) );
+			c_minus_n   <= std_logic_vector( signed( '0' & c ) + signed( n_neg ) );
+			c_minus_2n  <= std_logic_vector( signed( '0' & c ) + signed( n_2_neg ) );
+		else
+			b_minus_n   <= b_minus_n;
+			b_minus_2n  <= b_minus_2n;
+			c_minus_n   <= c_minus_n;
+			c_minus_2n  <= c_minus_2n;
+		end if;
+	end process;
 
 	------------------------------------------
 	-- FSM module instantiation
@@ -128,7 +153,7 @@ begin
 			C_block_size => C_block_size
 		)
 		port map (
-			reset_n        			=> reset_n,
+			reset_neg        			=> reset_neg,
 			clk            			=> clk,
 			n		      			=> n,
 			a              			=> a,

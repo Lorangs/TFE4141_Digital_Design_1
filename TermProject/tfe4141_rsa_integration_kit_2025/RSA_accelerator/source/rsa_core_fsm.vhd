@@ -118,74 +118,79 @@ begin
     end process CurrentState;
 
 
-    -----------------------------------
-    -- Next State Logic
-    -----------------------------------
-    NextState: process (clk, current_state, msgin_valid, msgin_last, msgout_ready, exp_ready_out, exp_valid_in, counter, n)
+    ------------------------------------
+    -- Set Outputs based on current state
+    ------------------------------------
+    OutputLogic: process (current_state)
     begin
-        case current_state is 
-
-            -------------------
-            -- LOAD_NEW_MSG State
-            -------------------
-            when "00" =>    -- LOAD_NEW_MSG
-                ----------------------------------------------
-                -- Set outputs
-                ----------------------------------------------
+        case current_state is  
+        
+            when "00" =>  -- LOAD_NEW_MSG
                 msgin_ready    <= '1';
                 msgout_valid   <= '0';
                 exp_valid_in   <= '0';
                 exp_ready_out  <= '0';
                 exp_reset_neg  <= '0';
 
-
-                ----------------------------------------------
-                -- Next State Transition Check           
-                ----------------------------------------------
-                if (msgin_valid = '1' and exp_ready_in = '1') then
-                    next_state  <= "01";  -- COUNT_WAIT state
-                else
-                    next_state <= "00";   -- remain in LOAD_NEW_MSG state
-                end if;
-
-            ---------------------
-            -- COUNT_WAIT State
-            ---------------------
             when "01" =>  -- COUNT_WAIT
-                -----------------------------------
-                -- Set outputs
-                -----------------------------------
                 msgin_ready    <= '0';
                 msgout_valid   <= '0';
                 exp_valid_in   <= '1';
                 exp_ready_out  <= '1';
                 exp_reset_neg  <= '1';
 
-                -----------------------------------
-                -- Next State Transition Check
-                -----------------------------------
-                if ( exp_valid_out = '0' ) then
-                    next_state  <= "01";  -- COUNT_WAIT state
-                else
-                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
-                end if;
-
-            ---------------------
-            -- COUNT_FIN_PARTIAL State
-            ---------------------
             when "10" =>  -- COUNT_FIN_PARTIAL
-                -----------------------------------
-                -- Set outputs
-                -----------------------------------
                 msgin_ready    <= '0';
                 msgout_valid   <= '0';
                 exp_valid_in   <= '0';
                 exp_ready_out  <= '1';
                 exp_reset_neg  <= '1';
 
-                -----------------------------------
-                -- Next State Transition Check
-                -----------------------------------
+            when "11" =>  -- FINISHED
+                msgin_ready    <= '0';
+                msgout_valid   <= '1';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '1';
+
+            when others =>  -- default case
+                msgin_ready    <= '1';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '0';
+
+        end case;
+    end process OutputLogic;
+
+
+    -----------------------------------
+    -- Next State Logic
+    -----------------------------------
+    NextState: process (current_state, msgin_valid, exp_ready_in, exp_valid_out, msgout_ready, counter, n)
+    begin
+        case current_state is 
+
+            when "00" =>   -- LOAD_NEW_MSG
+
+                if (msgin_valid = '1' and exp_ready_in = '1') then
+                    next_state  <= "01";  -- COUNT_WAIT state
+                else
+                    next_state <= "00";   -- remain in LOAD_NEW_MSG state
+                end if;
+
+
+            when "01" =>  -- COUNT_WAIT
+
+                if ( exp_valid_out = '0' ) then
+                    next_state  <= "01";  -- COUNT_WAIT state
+                else
+                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
+                end if;
+
+
+            when "10" =>  -- COUNT_FIN_PARTIAL
+
                 if (exp_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
@@ -197,22 +202,9 @@ begin
 
                 end if;
 
-            -------------------
-            -- FINISHED State
-            -------------------
-            when "11" =>  -- FINISHED
-                -----------------------------------
-                -- Set outputs
-                -----------------------------------
-                msgin_ready    <= '0';
-                msgout_valid   <= '1';
-                exp_valid_in   <= '0';
-                exp_ready_out  <= '0';
-                exp_reset_neg  <= '1';
 
-                -----------------------------------
-                -- Next State Transition Check
-                -----------------------------------
+            when "11" =>  -- FINISHED
+
                 if( msgout_ready = '1' ) then
                     next_state  <= "00";  -- LOAD_NEW_MSG state
 
@@ -224,26 +216,33 @@ begin
 
             when others =>  -- default case
                 next_state <= "00"; -- LOAD_NEW_MSG state
+
         end case;
     end process NextState;
 
+    
     -----------------------------------
     -- Sync counter
     -----------------------------------
-    SyncCounter: process (clk, next_state, counter) 
+    SyncCounter: process (current_state, next_state) 
     begin
-        if rising_edge(clk) then
-            case next_state is
-                when "00" => -- LOAD_NEW_MSG
-                    counter <= (others => '0');
+        case current_state is
+            when "00" => -- LOAD_NEW_MSG
+                counter <= (others => '0');
 
-                when "10" => -- COUNT_FIN_PARTIAL
+            when "10" => -- COUNT_FIN_PARTIAL
+
+                if next_state = "01" then   -- transition to COUNT_WAIT
                     counter <= std_logic_vector( unsigned( counter ) + 1);
 
-                when others => -- COUNT_WAIT, FINISHED
+                else
                     counter <= counter;
-            end case;
-        end if;
+                
+                end if;
+
+            when others => -- COUNT_WAIT, FINISHED
+                counter <= counter;
+        end case;
     end process SyncCounter;
 
 

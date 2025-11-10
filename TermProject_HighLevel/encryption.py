@@ -38,11 +38,11 @@ def encrypt(M, e, n):
 # a er felles for begge blokkene, b og c er individuelle.
 def mult_with_mod_v2(a, b, c, e, n):
     R = 0
-    Q = 0
+    P = 0
 
     for i in range(n):                              
         R = R << 1
-        Q = Q << 1
+        P = P << 1
 
         if (a >> (n-1-i) & 1):
             R += b
@@ -52,23 +52,22 @@ def mult_with_mod_v2(a, b, c, e, n):
             R -= 2*n
         if R >= n:
             R -= n
-        if Q >= 2*n:
-            Q -= 2*n
-        if Q >= n:
-            Q -= n
+        if P >= 2*n:
+            P -= 2*n
+        if P >= n:
+            P -= n
 
     if e == 0:
         R = b
-    return R, Q
+    return R, P
 
 def encrypt_v2(M, e, n):
-    c = 1
+    R = 1
     P = M
     for i in range(n):
         x = (e >> i) & 1
-        c, P = mult_with_mod_v2(P, c, P, x, n)
-    return c
-
+        R, P = mult_with_mod_v2(P, R, P, x, n)
+    return R
 
 
 # Calculate expected cipher and decrypted message

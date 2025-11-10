@@ -83,6 +83,7 @@ architecture rtl of rsa_core is
 	signal exp_valid_in       : std_logic;
 	signal exp_ready_out      : std_logic;
 	signal exp_reset_neg      : std_logic;
+
 	signal exp_R_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	signal exp_P_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	signal exp_e_d            : std_logic;				-- exponent bit (LSB first)
@@ -223,6 +224,10 @@ begin
 			s9          	=> open,
 			s10         	=> open,
 			s11         	=> open,
+			b_minus_n   	=> open,
+			b_minus_2n  	=> open,
+			c_minus_n   	=> open,
+			c_minus_2n  	=> open,
 			mux_ctrl_P_out 	=> open,
 			mux_ctrl_R_out 	=> open,
 			bit_shifted_a  	=> open,

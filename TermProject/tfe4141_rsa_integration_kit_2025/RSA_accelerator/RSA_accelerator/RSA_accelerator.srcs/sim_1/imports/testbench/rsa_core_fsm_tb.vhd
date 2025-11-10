@@ -75,8 +75,13 @@ architecture rsa_core_fsm_tbBehave of rsa_core_fsm_tb is
     signal counter             : std_logic_vector(C_block_size-1 downto 0 );
 
 
-    constant clk_period 
-        : time := 5 ns;
+    constant clk_period         : time := 5 ns;
+
+    -- State constants for readability
+    constant LOAD_NEW_MSG      : std_logic_vector(1 downto 0) := "00";
+    constant COUNT_WAIT        : std_logic_vector(1 downto 0) := "01";
+    constant COUNT_FIN_PARTIAL : std_logic_vector(1 downto 0) := "10";
+    constant FINISHED          : std_logic_vector(1 downto 0) := "11";
 
 begin
 
@@ -140,23 +145,241 @@ begin
     -- Test procedure and stimulus process here
     --------------------------------------------------
     test_process : process
+
+        -- Helper procedure to check outputs in each state
+        procedure check_state_outputs(
+            expected_state           : std_logic_vector(1 downto 0);
+            expected_msgin_ready     : std_logic;
+            expected_msgout_valid    : std_logic;
+            expected_exp_valid_in    : std_logic;
+            expected_exp_ready_out   : std_logic;
+            expected_exp_reset_neg   : std_logic
+        ) is
+        begin
+            wait for clk_period/4; -- Wait for outputs to settle
+            
+            assert current_state = expected_state
+                report "State check failed: expected " & integer'image(to_integer(unsigned(expected_state))) &
+                       " got " & integer'image(to_integer(unsigned(current_state))) severity error;
+
+            assert msgin_ready = expected_msgin_ready
+                report "msgin_ready check failed in state " & integer'image(to_integer(unsigned(current_state))) severity error;
+
+            assert msgout_valid = expected_msgout_valid
+                report "msgout_valid check failed in state " & integer'image(to_integer(unsigned(current_state))) severity error;
+
+            assert exp_valid_in = expected_exp_valid_in
+                report "exp_valid_in check failed in state " & integer'image(to_integer(unsigned(current_state))) severity error;
+
+            assert exp_ready_out = expected_exp_ready_out
+                report "exp_ready_out check failed in state " & integer'image(to_integer(unsigned(current_state))) severity error;
+
+            assert exp_reset_neg = expected_exp_reset_neg
+                report "exp_reset_neg check failed in state " & integer'image(to_integer(unsigned(current_state))) severity error;
+        end procedure;
+
     begin
-        -- Reset the DUT
-        reset_n <= '0';
-        wait for clk_period * 2;
-        reset_n <= '1';
-        wait for clk_period * 2;
+        report "Starting RSA Core FSM Testbench" severity note;
 
-        -- Set inputs
-        n			<= std_logic_vector(to_unsigned(256, n'length)); -- n = 256
-        key_e_d_reg	<= std_logic_vector(to_unsigned(65537, key_e_d_reg'length)); -- e = 65537
-    
-        msgin_valid     <= '1';
-        exp_ready_in    <= '1';
+        -- initialize inputs
+        reset_n         <= '0';
+        msgout_ready    <= '0';
+        msgin_valid     <= '0';
+        msgin_last      <= '0';
+        exp_ready_in    <= '0';
         exp_valid_out   <= '0';
+        n               <= std_logic_vector(to_unsigned(256, n'length));
+        key_e_d_reg     <= std_logic_vector(to_unsigned(65537, key_e_d_reg'length));
 
-        -- Wait for some time to observe behavior
-        wait for clk_period * 300;
+        ----------------------------------------
+        -- Test case 1: Reset Functionality
+        ----------------------------------------
+        report "TEST CASE 1: Reset Functionality" severity note;
+        wait for clk_period * 2;
+
+        -- Check that FSM is in LOAD_NEW_MSG state after reset
+        assert current_state = LOAD_NEW_MSG
+            report "FSM did not enter LOAD_NEW_MSG state after reset" severity error;
+        assert unsigned(counter) = 0
+            report "Counter not reset to 0 after reset" severity error;
+
+        reset_n <= '1';
+        wait for clk_period;
+
+        report "TEST CASE 1 PASSED: Reset functionality verified" severity note;
+
+
+        ----------------------------------------
+        -- Test case 2: LOAD_NEW_MSG state behavior
+        ----------------------------------------
+        report "TEST CASE 2: LOAD_NEW_MSG state behavior" severity note;
+
+        -- Check outputs in LOAD_NEW_MSG state
+        check_state_outputs(
+            LOAD_NEW_MSG,
+            '1',  -- expected_msgin_ready
+            '0',  -- expected_msgout_valid
+            '0',  -- expected_exp_valid_in
+            '0',  -- expected_exp_ready_out
+            '0'   -- expected_exp_reset_neg
+        );
+
+        -- Test staying in LOAD_NEW_MSG state when msgin_valid = '0' or exp_ready_in = '0'
+        msgin_valid  <= '0';
+        exp_ready_in <= '0';
+        wait for clk_period;
+        assert current_state = LOAD_NEW_MSG
+            report "TEST CASE 2 FAILED: FSM incorrectly left LOAD_NEW_MSG state when msgin_valid = '0' or exp_ready_in = '0'" severity error;
+
+
+        msgin_valid  <= '1';
+        exp_ready_in <= '0';
+        wait for clk_period;
+        assert current_state = LOAD_NEW_MSG
+            report "TEST CASE 2 FAILED: FSM incorrectly left LOAD_NEW_MSG state when exp_ready_in = '0'" severity error;
+
+        msgin_valid  <= '0';
+        exp_ready_in <= '1';
+        wait for clk_period;
+        assert current_state = LOAD_NEW_MSG
+            report "TEST CASE 2 FAILED: FSM incorrectly left LOAD_NEW_MSG state when msgin_valid = '0'" severity error;
+
+
+        -- Test transition to COUNT_WAIT
+        msgin_valid  <= '1';
+        exp_ready_in <= '1';
+        wait for clk_period;
+        assert current_state = COUNT_WAIT
+            report "TEST CASE 2 FAILED: FSM did not transition to COUNT_WAIT state when msgin_valid = '1' and exp_ready_in = '1'" severity error;
+
+
+        report "TEST CASE 2 PASSED: LOAD_NEW_MSG state behavior verified" severity note;
+
+
+
+        ----------------------------------------
+        -- TEST CASE 3: COUNT_WAIT state behavior
+        ----------------------------------------
+        report "TEST CASE 3: COUNT_WAIT state behavior" severity note;
+
+        -- Check outputs in COUNT_WAIT state
+        check_state_outputs(
+            COUNT_WAIT,
+            '0',  -- expected_msgin_ready
+            '0',  -- expected_msgout_valid
+            '1',  -- expected_exp_valid_in
+            '1',  -- expected_exp_ready_out
+            '1'   -- expected_exp_reset_neg
+        );
+
+        -- Test staying in COUNT_WAIT state when exp_valid_out = '0'
+        exp_valid_out <= '0';
+        wait for clk_period;
+        assert current_state = COUNT_WAIT
+            report "TEST CASE 3 FAILED: FSM incorrectly left COUNT_WAIT state when exp_valid_out = '0'" severity error;
+        
+        -- Test transition to COUNT_FIN_PARTIAL
+        exp_valid_out <= '1';
+        wait for clk_period;
+        assert current_state = COUNT_FIN_PARTIAL
+            report "TEST CASE 3 FAILED: FSM did not transition to COUNT_FIN_PARTIAL state when exp_valid_out = '1'" severity error;
+
+        report "TEST CASE 3 PASSED: COUNT_WAIT state behavior verified" severity note;
+
+        ----------------------------------------
+        -- TEST CASE 4: COUNT_FIN_PARTIAL state behavior
+        ----------------------------------------
+        report "TEST CASE 4: COUNT_FIN_PARTIAL state behavior" severity note;
+
+        -- Check outputs in COUNT_FIN_PARTIAL state
+        check_state_outputs(
+            COUNT_FIN_PARTIAL,
+            '0',  -- expected_msgin_ready
+            '0',  -- expected_msgout_valid
+            '0',  -- expected_exp_valid_in
+            '1',  -- expected_exp_ready_out
+            '1'   -- expected_exp_reset_neg
+        );
+
+        -- Test counter increment in COUNT_FIN_PARTIAL state
+        assert unsigned(counter) = 1
+            report "TEST CASE 4 FAILED: Counter did not increment in COUNT_FIN_PARTIAL state" severity error;
+        
+
+        -- Test staying in COUNT_FIN_PARTIAL state when counter < n and exp_ready_in = '0'
+        exp_ready_in <= '0';
+        wait for clk_period;
+        assert current_state = COUNT_FIN_PARTIAL
+            report "TEST CASE 4 FAILED: FSM incorrectly left COUNT_FIN_PARTIAL state when counter < n and exp_ready_in = '0'" severity error;
+        
+        assert unsigned(counter) = 1
+            report "TEST CASE 4 FAILED: Counter incremented while staying in COUNT_FIN_STATE more than one cycle." severity error;
+
+
+        exp_ready_in <= '1';
+        report "TEST CASE 4 PASSED: COUNT_FIN_PARTIAL state behavior verified" severity note;
+
+        ----------------------------------------
+        -- TEST CASE 5: COUNT_FIN_PARTIAL loop to FINISHED state behavior
+        ----------------------------------------
+        report "TEST CASE 5: FINISHED state behavior" severity note;
+
+        -- counter to n-1 to trigger transition to FINISHED state
+        while unsigned(counter) < unsigned(n) loop
+
+            -- COUNT_FIN_PARTIAL -> COUNT_WAIT
+            exp_valid_out <= '0';
+            wait for clk_period;
+            assert current_state = COUNT_WAIT
+                report "TEST CASE 5 FAILED: FSM did not transition back to COUNT_WAIT state from COUNT_FIN_PARTIAL when exp_valid_out = '0'" severity error;
+
+            -- COUNT_WAIT -> COUNT_FIN_PARTIAL
+            exp_valid_out <= '1';
+            wait for clk_period;
+            assert current_state = COUNT_FIN_PARTIAL
+                report "TEST CASE 5 FAILED: FSM did not transition to COUNT_FIN_PARTIAL state from COUNT_WAIT when exp_valid_out = '1'" severity error;
+
+            wait for clk_period; -- Increment counter
+        end loop;
+
+
+        wait for clk_period;
+        assert current_state = FINISHED
+            report "TEST CASE 5 FAILED: FSM did not transition to FINISHED state when counter = n" severity error;
+        
+
+        --------------------------------------------------------
+        -- TEST CASE 6: FINISHED state behavior and reset
+        --------------------------------------------------------
+        report "TEST CASE 6: FINISHED state behavior and reset" severity note;
+
+        -- Check outputs in FINISHED state
+        check_state_outputs(
+            FINISHED,
+            '0',  -- expected_msgin_ready
+            '1',  -- expected_msgout_valid
+            '0',  -- expected_exp_valid_in
+            '0',  -- expected_exp_ready_out
+            '1'   -- expected_exp_reset_neg
+        );
+
+        -- Stay in FINISHED state when msgout_ready = '0'
+        msgout_ready <= '0';
+        wait for clk_period;
+        assert current_state = FINISHED
+            report "TEST CASE 6 FAILED: FSM incorrectly left FINISHED state when msgout_ready = '0'" severity error;
+        
+        -- Transition to LOAD_NEW_MSG when msgout_ready = '1'
+        msgout_ready <= '1';
+        wait for clk_period;
+        assert current_state = LOAD_NEW_MSG
+            report "TEST CASE 6 FAILED: FSM did not transition to LOAD_NEW_MSG state when msgout_ready = '1'" severity error;
+
+        --- Check that counter is reset to 0
+        assert unsigned(counter) = 0
+            report "TEST CASE 6 FAILED: Counter not reset to 0 after transitioning to LOAD_NEW_MSG state" severity error;       
+
+        report "TEST CASE 6 PASSED: FINISHED state behavior and reset verified" severity note;
 
 
     end process;
