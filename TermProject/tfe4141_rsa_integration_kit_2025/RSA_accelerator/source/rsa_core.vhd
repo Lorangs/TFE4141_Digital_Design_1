@@ -16,6 +16,8 @@
 --   Replace/change this module so that it implements the function
 --   C = M**key_e mod key_n.
 --------------------------------------------------------------------------------
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -64,7 +66,7 @@ entity rsa_core is
 
 
 		-----------------------------------------------------------------------------
-		-- Internal signals for testing
+		-- Internal signals for testing. Can be moved to signal interface when testing is done.
 		-----------------------------------------------------------------------------
 		counter				  : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		
@@ -74,7 +76,32 @@ entity rsa_core is
 		
 		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 		msgin_data_reg   : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0')
+		
+		-- Exponentiation module signals
+		exp_valid_out      : inout std_logic;
+		exp_ready_in       : inout std_logic;
+		exp_valid_in       : inout std_logic;
+		exp_ready_out      : inout std_logic;
+		exp_reset_neg      : inout std_logic;
+
+		exp_R_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_P_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_e_d            : inout std_logic;				-- exponent bit (LSB first)
+
+
+		---- can be deleted when testing is done ----
+		exp_counter			: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+
+		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
+		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+
+		-- Registers for storing input signals
+		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		n_neg_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);
+		msgin_last_reg   : inout std_logic := '0'
 
 	);
 end rsa_core;
@@ -88,30 +115,7 @@ architecture rtl of rsa_core is
 
 
 
-		-- Exponentiation module signals
-	signal exp_valid_out      : std_logic;
-	signal exp_ready_in       : std_logic;
-	signal exp_valid_in       : std_logic;
-	signal exp_ready_out      : std_logic;
-	signal exp_reset_neg      : std_logic;
-
-	signal exp_R_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal exp_P_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal exp_e_d            : std_logic;				-- exponent bit (LSB first)
-
-
-	---- can be deleted when testing is done ----
-	signal exp_counter			: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal exp_current_state	: std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-
-		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
-	signal result_P          : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-
-	-- Registers for storing input signals
-	signal key_e_d_reg      : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-	signal key_n_reg        : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-	signal n_neg_reg        : std_logic_vector(C_BLOCK_SIZE downto 0);
-	signal msgin_last_reg   : std_logic := '0';
+	
 
 begin
 	----------------------------

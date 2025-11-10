@@ -103,20 +103,6 @@ begin
     end process bit_shift_e_d_Process;
 
 
-    -----------------------------------
-    -- Current and Next State Syncronization
-    -----------------------------------
-    CurrentState: process (clk, reset_neg, next_state)
-    begin
-        if rising_edge(clk) then
-            if (reset_neg = '0') then
-                current_state <= "00"; -- LOAD_NEW_MSG state
-            else
-                current_state <= next_state;
-            end if;
-        end if;
-    end process CurrentState;
-
 
     ------------------------------------
     -- Set Outputs based on current state
@@ -162,6 +148,23 @@ begin
 
         end case;
     end process OutputLogic;
+
+
+    -----------------------------------
+    -- Current and Next State Syncronization
+    -----------------------------------
+    CurrentState: process (clk, reset_neg, next_state)
+    begin
+        if rising_edge(clk) then
+            if (reset_neg = '0') then
+                current_state <= "00"; -- LOAD_NEW_MSG state
+
+            else
+                current_state <= next_state;
+
+            end if;
+        end if;
+    end process CurrentState;
 
 
     -----------------------------------

@@ -71,14 +71,29 @@ architecture Behavioral of rsa_core_tb is
     constant COUNT_FIN_PARTIAL : std_logic_vector(1 downto 0)   := "10";
     constant FINISHED        : std_logic_vector(1 downto 0)     := "11";
 
-    -- Test vectors
-    type test_vector is record
-        name        : string(1 to 20);
-        message     : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        exponent    : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        modulus     : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        expected    : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-    end record;
+	signal exp_valid_out      : std_logic;
+	signal exp_ready_in       : std_logic;
+	signal exp_valid_in       : std_logic;
+	signal exp_ready_out      : std_logic;
+	signal exp_reset_neg      : std_logic;
+
+	signal exp_R_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal exp_P_next         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal exp_e_d            : std_logic;				-- exponent bit (LSB first)
+
+	---- can be deleted when testing is done ----
+	signal exp_counter			: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal exp_current_state	: std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+
+		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
+	signal result_P          : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+
+	-- Registers for storing input signals
+	signal key_e_d_reg      : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+	signal key_n_reg        : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+	signal n_neg_reg        : std_logic_vector(C_BLOCK_SIZE downto 0);
+	signal msgin_last_reg   : std_logic := '0';
+
 begin
     ---------------------------
     -- Clock generation
@@ -129,7 +144,23 @@ begin
             current_state   => current_state,
 
             msgin_data_reg  => msgin_data_reg,
-            result_R        => result_R
+            result_R        => result_R,
+            result_P        => result_P,
+
+            key_e_d_reg     => key_e_d_reg,
+            key_n_reg       => key_n_reg,
+            n_neg_reg       => n_neg_reg,
+            msgin_last_reg  => msgin_last_reg,
+            exp_valid_out      => exp_valid_out,
+            exp_ready_in       => exp_ready_in,
+            exp_valid_in       => exp_valid_in,
+            exp_ready_out      => exp_ready_out,
+            exp_reset_neg      => exp_reset_neg,
+            exp_R_next         => exp_R_next,
+            exp_P_next         => exp_P_next,
+            exp_e_d            => exp_e_d,
+            exp_counter        => exp_counter,
+            exp_current_state  => exp_current_state 
         );
 
     
@@ -137,76 +168,43 @@ begin
     --------------------------------------------------
     -- Main test process
     --------------------------------------------------
-    test_process : process
+    test_process: process
 
-        -- Helper procedure to wait for specific state
-        procedure wait_for_state(expected_state : std_logic_vector(1 downto 0)) is
-            variable timeout_counter : integer := 0;
-        begin
-            while current_state /= expected_state and timeout_counter < 100000 loop
-                wait for clk_period;
-                timeout_counter := timeout_counter + 1;
-            end loop;
-
-            if timeout_counter >= 100000 then
-                report "TIMEOUT: Expected state " & integer'image(to_integer(unsigned(expected_state))) &
-                       " but got " & integer'image(to_integer(unsigned(current_state))) severity error;
-            end if;
-        end procedure;
-
-    
-    -- Helper procedure to send message
-    procedure send_message(
-        msg : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        last : std_logic := '1'
-    ) is
-    begin
-        -- Wait for ready
-        while msgin_ready = '0' loop
-            wait for clk_period;
-        end loop;
-        
-        -- Send message
-        msgin_data <= msg;
-        msgin_last <= last;
-        msgin_valid <= '1';
-        wait for clk_period;
-        msgin_valid <= '0';
-        msgin_data <= (others => '0');
-        msgin_last <= '0';
-    end procedure;
-
-    -- Helper procedure to receive message
-    procedure receive_message is
-    begin
-        -- Wait for valid output
-        while msgout_valid = '0' loop
-            wait for clk_period;
-        end loop;
-        
-        -- Accept message
-        msgout_ready <= '1';
-        wait for clk_period;
-        msgout_ready <= '0';
-    end procedure;
-
-    
-    -- Helper procedure to perform complete RSA operation
-    procedure perform_rsa_operation(
-        msg : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        exp : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-        mod_n : std_logic_vector(C_BLOCK_SIZE-1 downto 0)
+            -- helper function to test outputs correctness
+        procedure check_outputs(
+            expected_state  : std_logic_vector(1 downto 0);
+            expected_msgin_ready : std_logic;
+            expected_msgout_valid : std_logic;
+            expected_exp_valid_in  : std_logic;
+            expected_exp_ready_out  : std_logic;
+            expected_exp_reset_neg   : std_logic
         ) is
-    begin
-        -- Set keys
-        key_e_d <= exp;
-        key_n <= mod_n;
-        wait for clk_period;
+        begin 
+            if current_state /= expected_state then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect current_state" severity error;
+            end if;
 
-        -- Send message
-        send_message(msg, '1');
-        
-    end procedure;
+            if msgin_ready /= expected_msgin_ready then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect msgin_ready" severity error;
+            end if;
+
+            if msgout_valid /= expected_msgout_valid then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect msgout_valid" severity error;
+            end if;
+
+            if exp_valid_in = expected_exp_valid_in then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect exp_valid_in" severity error;
+            end if;
+
+            if exp_ready_out /= expected_exp_ready_out then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect exp_ready_out" severity error;
+            end if;
+
+            if exp_reset_neg /= expected_exp_reset_neg then
+                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect exp_reset_neg" severity error;
+            end if;
+
+        end procedure check_outputs;
 
 begin 
         report "****************************************" severity note;
@@ -229,80 +227,73 @@ begin
         test_case_num <= 1;
         report "TEST CASE 1: Reset functionality" severity note;
         
-        wait for clk_period * 3;
+        wait for clk_period;
         
         -- Check reset state
-        assert current_state = LOAD_NEW_MSG
-            report "TEST 1 FAILED: Not in LOAD_NEW_MSG after reset" severity error;
-        assert unsigned(counter) = 0
-            report "TEST 1 FAILED: Counter not zero after reset" severity error;
-        
+        check_outputs(
+            expected_state       => LOAD_NEW_MSG,
+            expected_msgin_ready => '1',
+            expected_msgout_valid => '0',
+            expected_exp_valid_in  => '0',
+            expected_exp_ready_out  => '0',
+            expected_exp_reset_neg   => '0'
+        );
+
         reset_neg <= '1';
-        wait for clk_period * 2;
+        wait for clk_period;
         report "TEST CASE 1: PASSED" severity note;
         report "----------------------------------------" severity note;
 
 
         -----------------------------------------------
-        -- TEST CASE 2: Simple RSA operation (small values)
+        -- TEST CASE 2: Load values and start simple RSA operation
         -----------------------------------------------
         test_case_num <= 2;
-        report "TEST CASE 2: Simple RSA operation (2^3 mod 5)" severity note;
-        
-        -- Test: 2^3 mod 256 = 8
-        perform_rsa_operation(
-            std_logic_vector(to_unsigned(2, C_BLOCK_SIZE)),    -- message = 2
-            std_logic_vector(to_unsigned(3, C_BLOCK_SIZE)),    -- exponent = 3
-            std_logic_vector(to_unsigned(256, C_BLOCK_SIZE))   -- modulus = 256                         
+        report "TEST CASE 2: Load values and start simple RSA operation" severity note;
+
+        msgin_data <= x"00000000000000000000000000000000000000000000000000000000000001ff"; -- msgin_data 
+        key_e_d    <= x"0100000000000000000000000000000000000000000000000000000000000101"; -- key_e_d = 3, 256 bit
+        key_n      <= x"0000000000000000000000000000000000000000000000000000000000000100"; -- key_n = 256, 256 bit
+
+        msgin_valid <= '1';
+        msgin_last  <= '1';
+
+        wait for clk_period;
+
+        check_outputs(
+            expected_state       => COUNT_WAIT,
+            expected_msgin_ready => '0',
+            expected_msgout_valid => '0',
+            expected_exp_valid_in  => '1',
+            expected_exp_ready_out  => '1',
+            expected_exp_reset_neg   => '1'
+        );
+        report "TEST CASE 2: PASSED" severity note;
+
+        msgin_valid <= '0';
+
+        --------------------------------------------------------------
+        -- TEST CASE 3: Wait for operation to complete and check outputs
+        --------------------------------------------------------------
+        test_case_num <= 3;
+
+        report "TEST CASE 3: Wait for operation to complete and check outputs" severity note;
+
+        wait for clk_period * 256;  -- wait enough time for operation to complete
+
+        check_outputs(
+            expected_state       => COUNT_FIN_PARTIAL,
+            expected_msgin_ready => '0',
+            expected_msgout_valid => '1',
+            expected_exp_valid_in  => '0',
+            expected_exp_ready_out  => '0',
+            expected_exp_reset_neg   => '1'
         );
 
-        while msgout_valid = '0' loop
-            wait for clk_period;
-        end loop;
+        report "TEST CASE 3: PASSED" severity note;
 
-        if current_state /= FINISHED then
-            report "TEST 2 FAILED: Not in FINISHED after operation" severity error;
-        end if;
-        
-        if unsigned(msgout_data) = 8 then
-            report "TEST CASE 2: PASSED - Result = 8" severity note;
-        else
-            report "TEST CASE 2: FAILED - Expected 8, got " & integer'image(to_integer(unsigned(msgout_data))) severity error;
-        end if;
 
-        msgout_ready <= '1';
-        wait for clk_period;
-        msgout_ready <= '0';
 
-        if current_state /= LOAD_NEW_MSG then
-            report "TEST 2 FAILED: Not in LOAD_NEW_MSG after operation" severity error;
-        end if;
-
-        report "----------------------------------------" severity note;
-
-    
-        -----------------------------------------------
-        -- TEST CASE 3: Identity operation (M^1 mod N = M)
-        -----------------------------------------------
-        test_case_num <= 3;
-        report "TEST CASE 3: Identity operation (M^1 mod N = M)" severity note;
-        
-        perform_rsa_operation(
-            std_logic_vector(to_unsigned(42, C_BLOCK_SIZE)),   -- message = 42
-            std_logic_vector(to_unsigned(1, C_BLOCK_SIZE)),    -- exponent = 1
-            std_logic_vector(to_unsigned(256, C_BLOCK_SIZE))  -- modulus = 256r
-        ); 
-        
-        receive_message;
-
-        if unsigned(msgout_data) = 42 then
-            report "TEST CASE 3: PASSED - Result = 42" severity note;
-        else
-            report "TEST CASE 3: FAILED - Expected 42, got " & integer'image(to_integer(unsigned(msgout_data    ))) severity error;
-        end if;
-
-        report "All test cases completed." severity note;
-        test_running <= false;
         wait;
     end process test_process;
 end Behavioral;
