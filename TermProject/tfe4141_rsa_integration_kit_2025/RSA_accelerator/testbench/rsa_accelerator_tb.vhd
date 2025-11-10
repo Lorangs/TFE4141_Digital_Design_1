@@ -32,7 +32,7 @@ architecture struct of rsa_accelerator_tb is
 	-- Clocks and reset
 	-----------------------------------------------------------------------------
 	signal clk              : std_logic;
-	signal reset_n          : std_logic;
+	signal reset_neg          : std_logic;
 
 	-----------------------------------------------------------------------------
 	-- Slave msgin interface
@@ -313,17 +313,17 @@ begin
 	clk_gen: process is
 	begin
 		clk <= '1';
-		wait for 6 ns;
+		wait for 5 ns;
 		clk <= '0';
-		wait for 6 ns;
+		wait for 5 ns;
 	end process;
 
-	-- reset_n generator
+	-- reset_neg generator
 	reset_gen: process is
 	begin
-		reset_n <= '0';
+		reset_neg <= '0';
 		wait for 20 ns;
-		reset_n <= '1';
+		reset_neg <= '1';
 		wait;
 	end process;
 
@@ -331,10 +331,10 @@ begin
 	-- testcase_control
 	-- Process that sets up the correct keys and initializes the testcases.
 	-----------------------------------------------------------------------------
-	testcase_control: process(clk, reset_n)
+	testcase_control: process(clk, reset_neg)
 	begin
 
-		if (reset_n = '0') then
+		if (reset_neg = '0') then
 			tc_ctrl_state          <= e_TC_START_TC;
 			key_n                  <= (others => '0');
 			key_e_d                <= (others => '0');
@@ -401,7 +401,7 @@ begin
 	-- msgin_bfm
 	-- Process that sends messages into the rsa_core
 	-----------------------------------------------------------------------------
-	msgin_bfm: process(clk, reset_n)
+	msgin_bfm: process(clk, reset_neg)
 		variable msgin_valid_ready: std_logic_vector(1 downto 0);
 		variable seed1, seed2     : positive;   -- seed values for random generator
 		variable rand             : real;       -- random real-number value in range 0 to 1.0
@@ -409,7 +409,7 @@ begin
 		variable input_message    : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	begin
 
-		if (reset_n = '0') then
+		if (reset_neg = '0') then
 			-- Drive the inputs of rsa_core to default values
 			msgin_valid   <= '0';
 			msgin_data    <= (others => '0');
@@ -483,7 +483,7 @@ begin
 	-- msgout_bfm
 	-- Process that receives messages from the rsa_core
 	-----------------------------------------------------------------------------
-	msgout_bfm: process(clk, reset_n)
+	msgout_bfm: process(clk, reset_neg)
 		variable msgout_valid_ready    : std_logic_vector(1 downto 0);
 		variable seed1, seed2          : positive;   -- seed values for random generator
 		variable rand                  : real;       -- random real-number value in range 0 to 1.0
@@ -491,7 +491,7 @@ begin
 		variable expected_msgout_data  : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	begin
 
-		if (reset_n = '0') then
+		if (reset_neg = '0') then
 			-- Drive the inputs of rsa_core to default values
 			msgout_ready   <= '0';
 			msgout_counter <= (others => '0');
@@ -553,7 +553,7 @@ begin
 							if(endfile(tc_otp)) then
 								msgout_state <= e_MSGOUT_COMPLETED;
 								all_output_messages_received <= '1';
-							end if;
+								end if;
 
 					end case;
 
@@ -578,7 +578,7 @@ u_rsa_core : entity work.rsa_core
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
 		clk                    => clk,
-		reset_n                => reset_n,
+		reset_neg              => reset_neg,
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface

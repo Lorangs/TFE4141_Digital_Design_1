@@ -372,9 +372,11 @@ begin
         
         -- Transition to LOAD_NEW_MSG when msgout_ready = '1'
         msgout_ready <= '1';
-        wait for clk_period;
+        wait for 3*clk_period/2;
         assert current_state = LOAD_NEW_MSG
             report "TEST CASE 6 FAILED: FSM did not transition to LOAD_NEW_MSG state when msgout_ready = '1'" severity error;
+
+        wait for clok_period/2;
 
         --- Check that counter is reset to 0
         assert unsigned(counter) = 0
@@ -383,6 +385,7 @@ begin
         report "TEST CASE 6 PASSED: FINISHED state behavior and reset verified" severity note;
 
 
+        wait;
     end process;
 
 end rsa_core_fsm_tbBehave;

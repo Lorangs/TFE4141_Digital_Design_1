@@ -33,7 +33,7 @@ entity rsa_core_fsm is
         -- External Interface Signals
         ------------------------------------
         clk                 : in std_logic;
-        reset_n             : in std_logic;
+        reset_neg             : in std_logic;
 
         -- handshaking signals with external module.
         msgout_ready        : in std_logic;
@@ -106,10 +106,10 @@ begin
     -----------------------------------
     -- Current and Next State Syncronization
     -----------------------------------
-    CurrentState: process (clk, reset_n, next_state)
+    CurrentState: process (clk, reset_neg, next_state)
     begin
         if rising_edge(clk) then
-            if (reset_n = '0') then
+            if (reset_neg = '0') then
                 current_state <= "00"; -- LOAD_NEW_MSG state
             else
                 current_state <= next_state;

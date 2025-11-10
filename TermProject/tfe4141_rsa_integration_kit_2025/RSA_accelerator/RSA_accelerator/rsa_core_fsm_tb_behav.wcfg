@@ -3,139 +3,79 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="rsa_core_fsm_tb_behav.wdb" id="1">
+      <db_ref path="rsa_accelerator_tb_behav.wdb" id="1">
          <top_modules>
-            <top_module name="rsa_core_fsm_tb" />
+            <top_module name="rsa_accelerator_tb" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="25.333 ns"></ZoomStartTime>
-      <ZoomEndTime time="61.734 ns"></ZoomEndTime>
-      <Cursor1Time time="55.000 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="146.401 ns"></ZoomEndTime>
+      <Cursor1Time time="0.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="159"></NameColumnWidth>
-      <ValueColumnWidth column_width="138"></ValueColumnWidth>
+      <ValueColumnWidth column_width="134"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="20" />
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/clk">
+   <WVObjectSize size="14" />
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/msgin_ready">
-      <obj_property name="ElementShortName">msgin_ready</obj_property>
-      <obj_property name="ObjectShortName">msgin_ready</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/msgout_valid">
-      <obj_property name="ElementShortName">msgout_valid</obj_property>
-      <obj_property name="ObjectShortName">msgout_valid</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/exp_valid_in">
-      <obj_property name="ElementShortName">exp_valid_in</obj_property>
-      <obj_property name="ObjectShortName">exp_valid_in</obj_property>
-      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/exp_ready_out">
-      <obj_property name="ElementShortName">exp_ready_out</obj_property>
-      <obj_property name="ObjectShortName">exp_ready_out</obj_property>
-      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/exp_reset_neg">
-      <obj_property name="ElementShortName">exp_reset_neg</obj_property>
-      <obj_property name="ObjectShortName">exp_reset_neg</obj_property>
-      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/msgout_ready">
-      <obj_property name="ElementShortName">msgout_ready</obj_property>
-      <obj_property name="ObjectShortName">msgout_ready</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/msgin_valid">
-      <obj_property name="ElementShortName">msgin_valid</obj_property>
-      <obj_property name="ObjectShortName">msgin_valid</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/msgin_last">
-      <obj_property name="ElementShortName">msgin_last</obj_property>
-      <obj_property name="ObjectShortName">msgin_last</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/exp_ready_in">
-      <obj_property name="ElementShortName">exp_ready_in</obj_property>
-      <obj_property name="ObjectShortName">exp_ready_in</obj_property>
-      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/exp_valid_out">
-      <obj_property name="ElementShortName">exp_valid_out</obj_property>
-      <obj_property name="ObjectShortName">exp_valid_out</obj_property>
-      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/rsa_core_fsm_tb/key_e_d_reg">
-      <obj_property name="ElementShortName">key_e_d_reg[255:0]</obj_property>
-      <obj_property name="ObjectShortName">key_e_d_reg[255:0]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
-      <obj_property name="CustomSignalColor">#808000</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/key_e_d_LSB">
-      <obj_property name="ElementShortName">key_e_d_LSB</obj_property>
-      <obj_property name="ObjectShortName">key_e_d_LSB</obj_property>
-      <obj_property name="CustomSignalColor">#808000</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/rsa_core_fsm_tb/current_state">
-      <obj_property name="ElementShortName">current_state[1:0]</obj_property>
-      <obj_property name="ObjectShortName">current_state[1:0]</obj_property>
-      <obj_property name="Radix">BINARYRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/rsa_core_fsm_tb/counter">
-      <obj_property name="ElementShortName">counter[255:0]</obj_property>
-      <obj_property name="ObjectShortName">counter[255:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="other" fp_name="/rsa_core_fsm_tb/C_block_size">
-      <obj_property name="ElementShortName">C_block_size</obj_property>
-      <obj_property name="ObjectShortName">C_block_size</obj_property>
-      <obj_property name="CustomSignalColor">#808080</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="other" fp_name="/rsa_core_fsm_tb/clk_period">
-      <obj_property name="ElementShortName">clk_period</obj_property>
-      <obj_property name="ObjectShortName">clk_period</obj_property>
-      <obj_property name="CustomSignalColor">#808080</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/rsa_core_fsm_tb/rsa_status">
-      <obj_property name="ElementShortName">rsa_status[31:0]</obj_property>
-      <obj_property name="ObjectShortName">rsa_status[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-      <obj_property name="CustomSignalColor">#808080</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/rsa_core_fsm_tb/n">
-      <obj_property name="ElementShortName">n[255:0]</obj_property>
-      <obj_property name="ObjectShortName">n[255:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-      <obj_property name="CustomSignalColor">#808080</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/rsa_core_fsm_tb/reset_n">
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/reset_n">
       <obj_property name="ElementShortName">reset_n</obj_property>
       <obj_property name="ObjectShortName">reset_n</obj_property>
-      <obj_property name="CustomSignalColor">#808080</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgin_valid">
+      <obj_property name="ElementShortName">msgin_valid</obj_property>
+      <obj_property name="ObjectShortName">msgin_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgin_ready">
+      <obj_property name="ElementShortName">msgin_ready</obj_property>
+      <obj_property name="ObjectShortName">msgin_ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgin_last">
+      <obj_property name="ElementShortName">msgin_last</obj_property>
+      <obj_property name="ObjectShortName">msgin_last</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgout_last">
+      <obj_property name="ElementShortName">msgout_last</obj_property>
+      <obj_property name="ObjectShortName">msgout_last</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgout_valid">
+      <obj_property name="ElementShortName">msgout_valid</obj_property>
+      <obj_property name="ObjectShortName">msgout_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/rsa_accelerator_tb/msgout_ready">
+      <obj_property name="ElementShortName">msgout_ready</obj_property>
+      <obj_property name="ObjectShortName">msgout_ready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/rsa_accelerator_tb/msgin_data">
+      <obj_property name="ElementShortName">msgin_data[255:0]</obj_property>
+      <obj_property name="ObjectShortName">msgin_data[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/rsa_accelerator_tb/msgout_data">
+      <obj_property name="ElementShortName">msgout_data[255:0]</obj_property>
+      <obj_property name="ObjectShortName">msgout_data[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/rsa_accelerator_tb/key_e_d">
+      <obj_property name="ElementShortName">key_e_d[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_e_d[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/rsa_accelerator_tb/key_n">
+      <obj_property name="ElementShortName">key_n[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_n[255:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/rsa_accelerator_tb/rsa_status">
+      <obj_property name="ElementShortName">rsa_status[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rsa_status[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/rsa_accelerator_tb/tc_ctrl_state">
+      <obj_property name="ElementShortName">tc_ctrl_state</obj_property>
+      <obj_property name="ObjectShortName">tc_ctrl_state</obj_property>
    </wvobject>
 </wave_config>

@@ -10,15 +10,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="145.601 ns"></ZoomEndTime>
-      <Cursor1Time time="2,677.000 ns"></Cursor1Time>
+      <ZoomStartTime time="1,199.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,272.201 ns"></ZoomEndTime>
+      <Cursor1Time time="2,617.800 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="159"></NameColumnWidth>
-      <ValueColumnWidth column_width="138"></ValueColumnWidth>
+      <ValueColumnWidth column_width="134"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="31" />
+   <WVObjectSize size="35" />
    <wvobject type="logic" fp_name="/exponentiation_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -203,6 +203,34 @@
    <wvobject type="array" fp_name="/exponentiation_tb/n_neg">
       <obj_property name="ElementShortName">n_neg[256:0]</obj_property>
       <obj_property name="ObjectShortName">n_neg[256:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#808080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/b_minus_n">
+      <obj_property name="ElementShortName">b_minus_n[256:0]</obj_property>
+      <obj_property name="ObjectShortName">b_minus_n[256:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#808080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/b_minus_2n">
+      <obj_property name="ElementShortName">b_minus_2n[256:0]</obj_property>
+      <obj_property name="ObjectShortName">b_minus_2n[256:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#808080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/c_minus_n">
+      <obj_property name="ElementShortName">c_minus_n[256:0]</obj_property>
+      <obj_property name="ObjectShortName">c_minus_n[256:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#808080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/c_minus_2n">
+      <obj_property name="ElementShortName">c_minus_2n[256:0]</obj_property>
+      <obj_property name="ObjectShortName">c_minus_2n[256:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
       <obj_property name="CustomSignalColor">#808080</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>

@@ -43,7 +43,7 @@ architecture rsa_core_fsm_tbBehave of rsa_core_fsm_tb is
 
     -- External Interface Signals
     signal clk                 : std_logic  := '0';
-    signal reset_n             : std_logic  := '0';
+    signal reset_neg             : std_logic  := '0';
 
     -- handshaking signals with external module.
     signal msgout_ready        : std_logic  := '0';
@@ -106,7 +106,7 @@ begin
         port map (
             -- External Interface Signals
             clk                 => clk,
-            reset_n             => reset_n,
+            reset_neg             => reset_neg,
 
             -- handshaking signals with external module.
             msgout_ready        => msgout_ready,
@@ -182,7 +182,7 @@ begin
         report "Starting RSA Core FSM Testbench" severity note;
 
         -- initialize inputs
-        reset_n         <= '0';
+        reset_neg         <= '0';
         msgout_ready    <= '0';
         msgin_valid     <= '0';
         msgin_last      <= '0';
@@ -203,7 +203,7 @@ begin
         assert unsigned(counter) = 0
             report "Counter not reset to 0 after reset" severity error;
 
-        reset_n <= '1';
+        reset_neg <= '1';
         wait for clk_period;
 
         report "TEST CASE 1 PASSED: Reset functionality verified" severity note;
@@ -371,17 +371,20 @@ begin
         
         -- Transition to LOAD_NEW_MSG when msgout_ready = '1'
         msgout_ready <= '1';
-        wait for clk_period;
+        wait for 3*clk_period/2;
         assert current_state = LOAD_NEW_MSG
             report "TEST CASE 6 FAILED: FSM did not transition to LOAD_NEW_MSG state when msgout_ready = '1'" severity error;
 
+        
         --- Check that counter is reset to 0
         assert unsigned(counter) = 0
             report "TEST CASE 6 FAILED: Counter not reset to 0 after transitioning to LOAD_NEW_MSG state" severity error;       
 
+        wait for clk_period/2;
+        
         report "TEST CASE 6 PASSED: FINISHED state behavior and reset verified" severity note;
 
-
+        wait;
     end process;
 
 end rsa_core_fsm_tbBehave;
