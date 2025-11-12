@@ -42,7 +42,7 @@ entity exponentiation_fsm is
         msgin_valid         : in std_logic;
         msgin_last          : in std_logic;
 
-        -- handshaking signals with Mult_with_mod module.
+        -- handshaking signals with mult_with_mod module.
         mult_ready_in        : in std_logic;
         mult_valid_in        : out std_logic;
         mult_ready_out       : out std_logic;

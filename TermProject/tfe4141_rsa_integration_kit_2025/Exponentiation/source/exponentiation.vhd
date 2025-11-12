@@ -170,7 +170,7 @@ begin
 	----------------------------------
 	-- Update mult_R_next and mult_P_next when finished a computation
 	----------------------------------
-	update_Mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data_reg, mult_R_next, mult_P_next)
+	update_mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data_reg, mult_R_next, mult_P_next)
 	begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
@@ -191,9 +191,9 @@ begin
 
 
 	-----------------------------------------------------------------------------
-	-- Mult_with_mod module instantiation
+	-- mult_with_mod module instantiation
 	-----------------------------------------------------------------------------
-	i_Mult_with_Mod : entity work.Mult_with_Mod
+	i_mult_with_mod : entity work.mult_with_mod
 		generic map (
 			C_block_size => C_BLOCK_SIZE
 		)
