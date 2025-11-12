@@ -232,8 +232,8 @@ begin
         report "TEST CASE 2: Load values and start simple RSA operation" severity note;
 
         msgin_data <= x"00000000000000000000000000000000000000000000000000000000000001ff"; -- msgin_data 
-        key_e_d    <= x"0100000000000000000000000000000000000000000000000000000000000101"; -- key_e_d = 3, 256 bit
-        key_n      <= x"0000000000000000000000000000000000000000000000000000000000000100"; -- key_n = 256, 256 bit
+        key_e_d    <= x"0000000000000000000000000000000000000000000000000000000000000101"; -- key_e_d = 3, 256 bit
+        key_n      <= x"0000000000000000000000000000000000000000000000000000000000002101"; -- key_n = 256, 256 bit
 
         msgin_valid <= '1';
         msgin_last  <= '0';
@@ -290,6 +290,31 @@ begin
             expected_mult_ready_out  => '0',
             expected_mult_reset_neg   => '1'
         );
+        report "TEST CASE 4: PASSED" severity note;
+        
+        
+        msgout_ready <= '1';
+        
+        msgin_data <= x"8000000000000000000000000000000000000000000000000000000000000000"; -- msgin_data 
+        key_e_d    <= x"0000000000000000000000000000000000000000000000000000000000000002"; -- key_e_d = 2, 256 bit
+        key_n      <= x"8000000000000000000000000000000000000000000000000000000000000001"; -- key_n = 256, 256 bit
+
+        msgin_valid <= '1';
+        
+        wait for clk_period;
+        
+        check_outputs(
+            expected_state       => LOAD_NEW_MSG,
+            expected_msgin_ready => '1',
+            expected_msgout_valid => '0',
+            expected_mult_valid_in  => '0',
+            expected_mult_ready_out  => '0',
+            expected_mult_reset_neg   => '0'
+        );
+        
+        
+        
+        
 
         wait;
     end process test_process;
