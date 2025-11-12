@@ -79,21 +79,21 @@ entity exponentiation is
 		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 		msgin_data_reg   : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		
-		-- Exponentiation module signals
-		exp_valid_out      : inout std_logic;
-		exp_ready_in       : inout std_logic;
-		exp_valid_in       : inout std_logic;
-		exp_ready_out      : inout std_logic;
-		exp_reset_neg      : inout std_logic;
+		-- Mult_with_mod module signals
+		mult_valid_out      : inout std_logic;
+		mult_ready_in       : inout std_logic;
+		mult_valid_in       : inout std_logic;
+		mult_ready_out      : inout std_logic;
+		mult_reset_neg      : inout std_logic;
 
-		exp_R_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		exp_P_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		exp_e_d            : inout std_logic;				-- exponent bit (LSB first)
+		mult_R_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		mult_P_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		mult_e_d            : inout std_logic;				-- exponent bit (LSB first)
 
 
 		---- can be deleted when testing is done ----
-		exp_counter			: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		exp_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+		mult_counter			: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		mult_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
 		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
@@ -155,11 +155,11 @@ begin
 	------------------------------
 	-- Port data to output when in FINISHED state
 	------------------------------
-	port_data_out : process (current_state, exp_R_next)
+	port_data_out : process (current_state, mult_R_next)
 	begin
 		case current_state is
 			when "11" =>  -- FINISHED
-				msgout_data <= exp_R_next;
+				msgout_data <= mult_R_next;
 			
 			when others =>
 				msgout_data <= (others => '0');
@@ -168,22 +168,22 @@ begin
 
 
 	----------------------------------
-	-- Update exp_R_next and exp_P_next when finished a computation
+	-- Update mult_R_next and mult_P_next when finished a computation
 	----------------------------------
-	update_Mult_inputs : process (current_state, exp_valid_out, result_R, result_P, msgin_data_reg, exp_R_next, exp_P_next)
+	update_Mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data_reg, mult_R_next, mult_P_next)
 	begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
-				exp_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
-				exp_P_next <= msgin_data_reg;				-- Load new message into P
+				mult_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
+				mult_P_next <= msgin_data_reg;				-- Load new message into P
 
 			when "10" =>  -- COUNT_FIN_PARTIAL
-				exp_R_next <= result_R;
-				exp_P_next <= result_P;
+				mult_R_next <= result_R;
+				mult_P_next <= result_P;
 
 			when others => -- COUNT_WAIT, FINISHED
-				exp_R_next <= exp_R_next;
-				exp_P_next <= exp_P_next;
+				mult_R_next <= mult_R_next;
+				mult_P_next <= mult_P_next;
 			
 		end case;
 	end process;
@@ -191,7 +191,7 @@ begin
 
 
 	-----------------------------------------------------------------------------
-	-- Exponentiation module instantiation
+	-- Mult_with_mod module instantiation
 	-----------------------------------------------------------------------------
 	i_Mult_with_Mod : entity work.Mult_with_Mod
 		generic map (
@@ -199,16 +199,16 @@ begin
 		)
 		port map (	
 			-- handshaking signals
-			valid_in       	=> exp_valid_in,
-			ready_out      	=> exp_ready_out,
-			valid_out      	=> exp_valid_out,
-			ready_in       	=> exp_ready_in,
+			valid_in       	=> mult_valid_in,
+			ready_out      	=> mult_ready_out,
+			valid_out      	=> mult_valid_out,
+			ready_in       	=> mult_ready_in,
 
 			-- input data
-			a			  	=> exp_P_next,
-			b 			 	=> exp_R_next,
-			c 			 	=> exp_P_next,
-			e 				=> exp_e_d,
+			a			  	=> mult_P_next,
+			b 			 	=> mult_R_next,
+			c 			 	=> mult_P_next,
+			e 				=> mult_e_d,
 
 			--output data
 			result_R		=> result_R,
@@ -220,7 +220,7 @@ begin
 
 			-- utility
 			clk       		=> clk,
-			reset_neg  		=> exp_reset_neg,
+			reset_neg  		=> mult_reset_neg,
 
 			-- Internal Signals for testing. Remove when done
 			s0          	=> open,
@@ -242,8 +242,8 @@ begin
 			mux_ctrl_P_out 	=> open,
 			mux_ctrl_R_out 	=> open,
 			bit_shifted_a  	=> open,
-			current_state  	=> exp_current_state,
-			counter        	=> exp_counter
+			current_state  	=> mult_current_state,
+			counter        	=> mult_counter
 		);
 
 
@@ -266,12 +266,12 @@ begin
 			msgin_valid         => msgin_valid,
 			msgin_last          => msgin_last_reg,
 
-			-- handshaking signals with exponentiation module.
-			exp_ready_in        => exp_ready_in,
-			exp_valid_in        => exp_valid_in,
-			exp_ready_out       => exp_ready_out,
-			exp_valid_out       => exp_valid_out,
-			exp_reset_neg       => exp_reset_neg,
+			-- handshaking signals with Mult_with_mod module.
+			mult_ready_in        => mult_ready_in,
+			mult_valid_in        => mult_valid_in,
+			mult_ready_out       => mult_ready_out,
+			mult_valid_out       => mult_valid_out,
+			mult_reset_neg       => mult_reset_neg,
 
 			-- RSA status signal
 			rsa_status          => rsa_status,
@@ -281,7 +281,7 @@ begin
 
 			-- exponent bits
 			key_e_d_reg         => key_e_d_reg,
-			key_e_d_LSB         => exp_e_d,     
+			key_e_d_LSB         => mult_e_d,     
 			
 			current_state       => current_state,
 
