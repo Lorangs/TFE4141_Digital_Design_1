@@ -22,14 +22,14 @@ entity Mult_with_Mod_fsm is
 	);
     port ( 
         -- utility
-        reset_neg         : in std_logic;
+        reset_neg       : in std_logic;
         clk             : in std_logic;
 
         -- modulus
-        n               : in std_logic_vector(C_block_size-1 downto 0);
+        n               : in std_logic_vector ( C_block_size-1 downto 0 );
 
         -- input data
-        a               : in std_logic_vector(C_block_size-1 downto 0);
+        a               : in std_logic_vector ( C_block_size-1 downto 0 );
         bit_shifted_a   : out std_logic_vector( C_block_size-1 downto 0 );
 
         -- input control
@@ -41,64 +41,41 @@ entity Mult_with_Mod_fsm is
         valid_out       : out std_logic;
         
         -- mux control signals
-        mux_ctrl_P_in   : in std_logic_vector(3 downto 0);
-        mux_ctrl_R_in   : in std_logic_vector(3 downto 0);
+        mux_ctrl_P_in   : in std_logic_vector ( 3 downto 0 );
+        mux_ctrl_R_in   : in std_logic_vector ( 3 downto 0 );
         
         -- output mux control signals
-        mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
-        mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
+        mux_ctrl_P_out  : out std_logic_vector ( 2 downto 0 );
+        mux_ctrl_R_out  : out std_logic_vector ( 2 downto 0 );
         
         -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state  : inout std_logic_vector(1 downto 0);
-
-        -- counter
-        counter        : out std_logic_vector(C_block_size-1 downto 0)
-    );
+        current_state   : inout std_logic_vector ( 1 downto 0 )
+    ); 
 end Mult_with_Mod_fms;
 
 architecture mult_fms_behave of Mult_with_Mod_fsm is
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-    signal next_state : std_logic_vector(1 downto 0);
+    signal  next_state 
+        : std_logic_vector ( 1 downto 0 );
 
-    -- Add any internal signals here when testing is done
-
+    signal  counter 
+        : std_logic_vector ( C_block_size-1 downto 0 );
 
 begin
-    -----------------------------------------
-    -- Next State Logic. Combinational process to determine next state.
-    -----------------------------------------
-   NextState: process (current_state, counter, ready_out, valid_in, bit_shifted_a(255), mux_ctrl_P_in, mux_ctrl_R_in, n) 
-   begin
-        case current_state is 
 
-            ---------------------
-            -- RESET State
-            ---------------------
+    ------------------------------------------
+    -- Set outputs based on current state
+    ------------------------------------------
+    SetOutputs: process (current_state, mux_ctrl_R_in, mux_ctrl_P_in, bit_shifted_a(255))
+    begin
+        case current_state is
             when "00" =>    -- RESET
-                -- Set outputs
                 ready_in    <= '1';
                 valid_out   <= '0';
-
-                -- Mux control P & R set to "111" to indicate uninitialized state
-                mux_ctrl_P_out <= "111"; 
+                mux_ctrl_P_out <= "111";
                 mux_ctrl_R_out <= "111";
-                    
 
-                --------------------------------
-                -- Next State Transition Check
-                --------------------------------
-                if (valid_in = '1') then 
-                    next_state  <= "01"; -- COUNTING state
-                else
-                    next_state  <= "00"; -- RESET state
-                end if;
-                
-
-            ---------------------
-            -- COUNTING State
-            ---------------------
             when "01" =>  -- COUNTING
-                -- Set outputs
                 ready_in    <= '0';
                 valid_out   <= '0';
 
@@ -132,7 +109,6 @@ begin
 
                     end if;
 
-
                 ----------------------------------------------------------------------------------
                 -- Else             --> possible outputs: S0, S2, S4 for R and S6, S8, S10 for P
                 ----------------------------------------------------------------------------------
@@ -164,43 +140,53 @@ begin
                     end if;
                 end if;
                         
+            when "10" =>  -- FINISHED
+                ready_in    <= '0';
+                valid_out   <= '1';
+                mux_ctrl_P_out <= "000"; 
+                mux_ctrl_R_out <= "000"; 
 
-                ----------------------------------------------
-                -- Next State Transition Check           
-                ----------------------------------------------       
+                
+            -- Set equal to RESET state outputs
+            when others =>      
+                ready_in    <= '1';
+                valid_out   <= '0';
+                mux_ctrl_P_out <= "111";
+                mux_ctrl_R_out <= "111";
+        end case;
+
+    -----------------------------------------
+    -- Next State Logic.
+    -----------------------------------------
+   NextState: process (current_state, counter, ready_out, valid_in, n) 
+   begin
+        case current_state is 
+            when "00" =>    -- RESET
+                if (valid_in = '1') then 
+                    next_state  <= "01"; -- COUNTING state
+                else
+                    next_state  <= "00"; -- RESET state
+                end if;
+
+            when "01" =>  -- COUNTING
+   
                 if (counter = n ) then
                     next_state  <= "10";  -- FINISHED state
                 else
                     next_state <= "01";  -- COUNTING state
                 end if;
                 
-
-            ---------------------
-            -- FINISHED State
-            ---------------------
             when "10" =>  -- FINISHED
-                -- Set outputs
-                ready_in    <= '0';
-                valid_out   <= '1';
-               
-                -- Hold result values
-                mux_ctrl_P_out <= "000"; 
-                mux_ctrl_R_out <= "000"; 
-
-                -- Check for transition
                 if( ready_out = '1' ) then
                     next_state  <= "00";  -- RESET state
                 else 
                     next_state  <= "10";  -- FINISHED state
                 end if;
                 
-            ------------------
-            -- Default case
-            ------------------
-            when others =>
-                next_state <= "00"; -- RESET state 
-                ready_in   <= '1';
-                valid_out  <= '0';
+    
+            when others => -- UNUSED
+                next_state <= "00"; -- RESET state
+
         end case;
     end process NextState;
    
@@ -260,5 +246,4 @@ begin
             end case;
         end if;
     end process;
-
 end mult_fsm_behave;

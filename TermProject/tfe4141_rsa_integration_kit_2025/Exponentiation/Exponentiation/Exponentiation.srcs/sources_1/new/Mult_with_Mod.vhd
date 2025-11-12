@@ -51,36 +51,7 @@ entity Mult_with_Mod is
          
 		--utility
 		clk 		: in STD_LOGIC;
-		reset_neg 	: in STD_LOGIC;
-		
-		--internal signals available for testing
-		s0          : inout std_logic_vector( C_block_size downto 0 );
-        s1          : inout std_logic_vector( C_block_size downto 0 );
-        s2          : inout std_logic_vector( C_block_size downto 0 );
-        s3          : inout std_logic_vector( C_block_size downto 0 );
-        s4          : inout std_logic_vector( C_block_size downto 0 );
-        s5          : inout std_logic_vector( C_block_size downto 0 );
-        s6          : inout std_logic_vector( C_block_size downto 0 );
-        s7          : inout std_logic_vector( C_block_size downto 0 );
-        s8          : inout std_logic_vector( C_block_size downto 0 );
-        s9          : inout std_logic_vector( C_block_size downto 0 );
-        s10         : inout std_logic_vector( C_block_size downto 0 );
-        s11         : inout std_logic_vector( C_block_size downto 0 );
-
-		mux_ctrl_P_out : inout std_logic_vector(2 downto 0);
-		mux_ctrl_R_out : inout std_logic_vector(2 downto 0);
-
-		bit_shifted_a : inout std_logic_vector( C_block_size-1 downto 0 );
-
-		current_state : inout std_logic_vector(1 downto 0);
-
-		counter : inout std_logic_vector(C_block_size-1 downto 0);
-
-		b_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		b_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		c_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		c_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 )
-
+		reset_neg 	: in STD_LOGIC
 	);
 end Mult_with_Mod;
 
@@ -88,13 +59,38 @@ end Mult_with_Mod;
 architecture mult_behave of Mult_with_Mod is
 	-------------------------------------------
 	-- Signal Declarations
-	-- 
-	-- Add any internal signals here when testing is done
 	-------------------------------------------
+	
+	signal 	s0,
+			s1,
+			s2,
+			s3,
+			s4,
+			s5,
+			s6,
+			s7,
+			s8,
+			s9,
+			s10,
+			s11,
+			b_minus_n,
+			b_minus_2n,
+			c_minus_n,
+			c_minus_2n,
+			n_2_neg				-- negativ of 2*n
+		: std_logic_vector ( C_block_size downto 0 );
 
-	signal bit_shifted_R 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal bit_shifted_P 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal n_2_neg			: STD_LOGIC_VECTOR ( C_block_size downto 0 );
+	signal  mux_ctrl_P_out,
+			mux_ctrl_R_out
+		: std_logic_vector ( 2 downto 0 );
+
+	signal  bit_shifted_a,
+			bit_shifted_R,
+			bit_shifted_P
+	 	: std_logic_vector ( C_block_size-1 downto 0 );
+
+    signal current_state 	
+		: std_logic_vector ( 1 downto 0 );
 begin
 
 	-------------------------------------------
@@ -167,7 +163,6 @@ begin
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
 			current_state 			=> current_state,
-			counter        			=> counter
 		);
 	
 
