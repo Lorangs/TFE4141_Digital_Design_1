@@ -1,236 +1,291 @@
----------------------------------------------
--- Entity Declaration
+--------------------------------------------------------------------------------
+-- Author       : Oystein Gjermundnes
+-- Organization : Norwegian University of Science and Technology (NTNU)
+--                Department of Electronic Systems
+--                https://www.ntnu.edu/ies
+-- Course       : TFE4141 Design of digital systems 1 (DDS1)
+-- Year         : 2018-2019
+-- Project      : RSA accelerator
+-- License      : This is free and unencumbered software released into the
+--                public domain (UNLICENSE)
+--------------------------------------------------------------------------------
+-- Purpose:
+--   RSA encryption core template. This core currently computes
+--   C = M xor key_n
+--
+--   Replace/change this module so that it implements the function
+--   C = M**key_e mod key_n.
+--------------------------------------------------------------------------------
 
--- This module performs modular exponentiation using
--- the blakley method. It computes both R and P values
--- simultaneously to optimize performance.
 
--- Computes:
--- R = (a * b) mod n, if e == 1, else R = b
--- P = (a * c) mod n
-
--- The module assumes constant inputs during operation.
--- Do not change inputs until valid_out is high.
-
-
----------------------------------------------
-
-
-library IEEE;
+library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 
-
 entity exponentiation is
 	generic (
-		C_block_size : integer := 256
+		-- Users to add parameters here
+		C_block_size          : integer := 256
 	);
 	port (
-		--input controll
-		valid_in	: in STD_LOGIC;
-		ready_in	: out STD_LOGIC;
+		-----------------------------------------------------------------------------
+		-- Clocks and reset
+		-----------------------------------------------------------------------------
+		clk                    :  in std_logic;
+		reset_neg              :  in std_logic;
 
-		--ouput controll
-		ready_out	: in STD_LOGIC;
-		valid_out	: out STD_LOGIC;
+		-----------------------------------------------------------------------------
+		-- Slave msgin interface
+		-----------------------------------------------------------------------------
+		-- Message that will be sent out is valid
+		msgin_valid             : in std_logic;
+		-- Slave ready to accept a new message
+		msgin_ready             : out std_logic;
+		-- Message that will be sent out of the rsa_msgin module
+		msgin_data              :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		-- Indicates boundary of last packet
+		msgin_last              :  in std_logic;
 
-		--input data
-		a           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	    b           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-        c           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-		e 			: in std_logic;
+		-----------------------------------------------------------------------------
+		-- Master msgout interface
+		-----------------------------------------------------------------------------
+		-- Message that will be sent out is valid
+		msgout_valid            : out std_logic;
+		-- Slave ready to accept a new message
+		msgout_ready            :  in std_logic;
+		-- Message that will be sent out of the rsa_msgin module
+		msgout_data             : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		-- Indicates boundary of last packet
+		msgout_last             : out std_logic;
+
+		-----------------------------------------------------------------------------
+		-- Interface to the register block
+		-----------------------------------------------------------------------------
+		key_e_d                 :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		key_n                   :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		rsa_status              :  out std_logic_vector(31 downto 0);
+
+
+		-----------------------------------------------------------------------------
+		-- Internal signals for testing. Can be moved to signal interface when testing is done.
+		-----------------------------------------------------------------------------
+		counter				  : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		
-		--output data
-		result_R 	: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-		result_P 	: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-
-		--modulus
-		n           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
-         
-		--utility
-		clk 		: in STD_LOGIC;
-		reset_neg 	: in STD_LOGIC;
 		
-		--internal signals available for testing
-		s0          : inout std_logic_vector( C_block_size downto 0 );
-        s1          : inout std_logic_vector( C_block_size downto 0 );
-        s2          : inout std_logic_vector( C_block_size downto 0 );
-        s3          : inout std_logic_vector( C_block_size downto 0 );
-        s4          : inout std_logic_vector( C_block_size downto 0 );
-        s5          : inout std_logic_vector( C_block_size downto 0 );
-        s6          : inout std_logic_vector( C_block_size downto 0 );
-        s7          : inout std_logic_vector( C_block_size downto 0 );
-        s8          : inout std_logic_vector( C_block_size downto 0 );
-        s9          : inout std_logic_vector( C_block_size downto 0 );
-        s10         : inout std_logic_vector( C_block_size downto 0 );
-        s11         : inout std_logic_vector( C_block_size downto 0 );
+		-- Control signals from FSM
+		current_state			: inout std_logic_vector(1 downto 0);
+		
+		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
+		msgin_data_reg   : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		
+		-- Exponentiation module signals
+		exp_valid_out      : inout std_logic;
+		exp_ready_in       : inout std_logic;
+		exp_valid_in       : inout std_logic;
+		exp_ready_out      : inout std_logic;
+		exp_reset_neg      : inout std_logic;
 
-		mux_ctrl_P_out : inout std_logic_vector(2 downto 0);
-		mux_ctrl_R_out : inout std_logic_vector(2 downto 0);
+		exp_R_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_P_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_e_d            : inout std_logic;				-- exponent bit (LSB first)
 
-		bit_shifted_a : inout std_logic_vector( C_block_size-1 downto 0 );
 
-		current_state : inout std_logic_vector(1 downto 0);
+		---- can be deleted when testing is done ----
+		exp_counter			: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		exp_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
-		counter : inout std_logic_vector(C_block_size-1 downto 0);
+		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
+		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
 
-		b_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		b_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		c_minus_n   : inout STD_LOGIC_VECTOR ( C_block_size downto 0 );
-		c_minus_2n  : inout STD_LOGIC_VECTOR ( C_block_size downto 0 )
+		-- Registers for storing input signals
+		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		n_neg_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);
+		msgin_last_reg   : inout std_logic := '0'
 
 	);
 end exponentiation;
 
+architecture exponentiation_behave of exponentiation is
+	-----------------------------------------
+	-- R and P signals are defined as per the RSA algorithm in high-level description.
+	-- R is the result accumulator, P is the base being exponentiated.
+	-- See the datasheet for documentation. 
+	----------------------------------------
 
-architecture expBehave of exponentiation is
-	-------------------------------------------
-	-- Signal Declarations
-	-- 
-	-- Add any internal signals here when testing is done
-	-------------------------------------------
 
-	signal bit_shifted_R 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal bit_shifted_P 	: STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-	signal n_2_neg			: STD_LOGIC_VECTOR ( C_block_size downto 0 );
+
+	
+
 begin
-
-	-------------------------------------------
-	-- Shifted versions of R, P, and n_neg
-	-------------------------------------------
-	bit_shifted_R 	<= std_logic_vector( shift_left( unsigned( result_R ), 1) );
-	bit_shifted_P 	<= std_logic_vector( shift_left( unsigned( result_P ), 1) );
-	n_2_neg 		<= std_logic_vector( shift_left( signed( n_neg ), 1) );
-
-    -------------------------------------------
-    -- Calculate summations for R
-    -------------------------------------------
-    s0  <= std_logic_vector( 		 '0' & bit_shifted_R );
-    s1  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) );
-    s2  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_neg ) );
-    s3  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_n ) ); 
-    s4  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_2_neg ) );
-    s5  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_2n ) );
-
-    -------------------------------------------
-    -- Calculate summations for P
-    -------------------------------------------
-    s6  <= std_logic_vector( 		 '0' & bit_shifted_P );
-    s7  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) );
-    s8  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_neg ) );
-    s9  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_n ) );
-    s10 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_2_neg ) );
-    s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_2n ) );
-
-
-
-	-----------------------------------------
-	-- Calculate b minus n and b minus 2n, c minus n and c minus 2n
-	-- When in RESET state
-	-----------------------------------------
-	PreCalculations: process(current_state, b, c, n_2_neg, n_neg)
+	----------------------------
+	-- Register input signals. Can be opted out if register block is static.
+	----------------------------
+	Input_Reg : process (current_state, key_e_d, key_n, msgin_data, msgin_last, key_e_d_reg, key_n_reg, msgin_data_reg, msgin_last_reg)
 	begin
-		if current_state = "00" then  -- RESET state
-			b_minus_n   <= std_logic_vector( signed( '0' & b ) + signed( n_neg ) );
-			b_minus_2n  <= std_logic_vector( signed( '0' & b ) + signed( n_2_neg ) );
-			c_minus_n   <= std_logic_vector( signed( '0' & c ) + signed( n_neg ) );
-			c_minus_2n  <= std_logic_vector( signed( '0' & c ) + signed( n_2_neg ) );
-		else
-			b_minus_n   <= b_minus_n;
-			b_minus_2n  <= b_minus_2n;
-			c_minus_n   <= c_minus_n;
-			c_minus_2n  <= c_minus_2n;
-		end if;
+		case current_state is
+			when "00" =>  -- LOAD_NEW_MSG
+				key_e_d_reg    <=  key_e_d;
+				key_n_reg      <=  key_n;
+				msgin_data_reg <=  msgin_data;
+				msgin_last_reg <=  msgin_last;
+
+			when others =>
+				key_e_d_reg    <=  key_e_d_reg;
+				key_n_reg      <=  key_n_reg;
+				msgin_data_reg <=  msgin_data_reg;
+				msgin_last_reg <=  msgin_last_reg;	
+		end case;
 	end process;
 
-	------------------------------------------
-	-- FSM module instantiation
-	------------------------------------------
-	exp_fsm: entity work.exponentiation_fsm
+
+	------------------------------
+	-- Propagate msgin_last value to msgout_last
+	------------------------------
+	msgout_last <= msgin_last_reg;
+
+	----------------------------
+	-- Negate N. not a register, but relies on key_n_reg, which is a stored value.
+	----------------------------
+	n_neg_reg <= std_logic_vector( not unsigned( '0' & key_n_reg ) + 1 );
+
+
+	------------------------------
+	-- Port data to output when in FINISHED state
+	------------------------------
+	port_data_out : process (current_state, exp_R_next)
+	begin
+		case current_state is
+			when "11" =>  -- FINISHED
+				msgout_data <= exp_R_next;
+			
+			when others =>
+				msgout_data <= (others => '0');
+		end case;
+	end process;
+
+
+	----------------------------------
+	-- Update exp_R_next and exp_P_next when finished a computation
+	----------------------------------
+	update_Mult_inputs : process (current_state, exp_valid_out, result_R, result_P, msgin_data_reg, exp_R_next, exp_P_next)
+	begin
+		case current_state is
+			when "00" =>  -- LOAD_NEW_MSG
+				exp_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
+				exp_P_next <= msgin_data_reg;				-- Load new message into P
+
+			when "10" =>  -- COUNT_FIN_PARTIAL
+				exp_R_next <= result_R;
+				exp_P_next <= result_P;
+
+			when others => -- COUNT_WAIT, FINISHED
+				exp_R_next <= exp_R_next;
+				exp_P_next <= exp_P_next;
+			
+		end case;
+	end process;
+
+
+
+	-----------------------------------------------------------------------------
+	-- Exponentiation module instantiation
+	-----------------------------------------------------------------------------
+	i_Mult_with_Mod : entity work.Mult_with_Mod
 		generic map (
-			C_block_size => C_block_size
+			C_block_size => C_BLOCK_SIZE
+		)
+		port map (	
+			-- handshaking signals
+			valid_in       	=> exp_valid_in,
+			ready_out      	=> exp_ready_out,
+			valid_out      	=> exp_valid_out,
+			ready_in       	=> exp_ready_in,
+
+			-- input data
+			a			  	=> exp_P_next,
+			b 			 	=> exp_R_next,
+			c 			 	=> exp_P_next,
+			e 				=> exp_e_d,
+
+			--output data
+			result_R		=> result_R,
+			result_P		=> result_P,
+
+			-- modulus
+			n			  	=> key_n_reg,
+			n_neg		  	=> n_neg_reg,	
+
+			-- utility
+			clk       		=> clk,
+			reset_neg  		=> exp_reset_neg,
+
+			-- Internal Signals for testing. Remove when done
+			s0          	=> open,
+			s1          	=> open,
+			s2          	=> open,
+			s3          	=> open,
+			s4          	=> open,
+			s5          	=> open,
+			s6          	=> open,
+			s7          	=> open,
+			s8          	=> open,
+			s9          	=> open,
+			s10         	=> open,
+			s11         	=> open,
+			b_minus_n   	=> open,
+			b_minus_2n  	=> open,
+			c_minus_n   	=> open,
+			c_minus_2n  	=> open,
+			mux_ctrl_P_out 	=> open,
+			mux_ctrl_R_out 	=> open,
+			bit_shifted_a  	=> open,
+			current_state  	=> exp_current_state,
+			counter        	=> exp_counter
+		);
+
+
+	-----------------------------------------------------------------------------
+	-- FSM module instantiation
+	-----------------------------------------------------------------------------
+	rsa_core_fsm: entity work.eponentiation_fsm
+		generic map (
+			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
 		port map (
-			reset_neg        			=> reset_neg,
-			clk            			=> clk,
-			n		      			=> n,
-			a              			=> a,
-			bit_shifted_a  			=> bit_shifted_a,
-			ready_out      			=> ready_out,
-			valid_in       			=> valid_in,
-			ready_in       			=> ready_in,
-			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
-			mux_ctrl_R_out 			=> mux_ctrl_R_out,
-			mux_ctrl_P_out 			=> mux_ctrl_P_out,
-			current_state 			=> current_state,
-			counter        			=> counter
+			-- External Interface Signals
+			clk                 => clk,
+			reset_neg           => reset_neg,
+
+			-- handshaking signals with external module.
+			msgout_ready        => msgout_ready,
+			msgout_valid        => msgout_valid,
+			msgin_ready         => msgin_ready,
+			msgin_valid         => msgin_valid,
+			msgin_last          => msgin_last_reg,
+
+			-- handshaking signals with exponentiation module.
+			exp_ready_in        => exp_ready_in,
+			exp_valid_in        => exp_valid_in,
+			exp_ready_out       => exp_ready_out,
+			exp_valid_out       => exp_valid_out,
+			exp_reset_neg       => exp_reset_neg,
+
+			-- RSA status signal
+			rsa_status          => rsa_status,
+
+			-- modulus 
+			n                   => key_n_reg,  
+
+			-- exponent bits
+			key_e_d_reg         => key_e_d_reg,
+			key_e_d_LSB         => exp_e_d,     
+			
+			current_state       => current_state,
+
+			-- internal signals for testing
+			counter             => counter
 		);
-	
-
-	------------------------------------------
-	-- Output result selection process
-	------------------------------------------
-	exp_result: process(clk, e, mux_ctrl_P_out, mux_ctrl_R_out, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, current_state)
-	begin
-		if rising_edge(clk) then
-			case current_state is 
-				when "00" =>  -- RESET
-					result_R <= (others => '0');
-					result_P <= (others => '0');
-
-				when "01" =>  -- COUNTING
-					if e = '0' then
-						result_R <= b;
-					
-					else
-						case mux_ctrl_R_out is
-							when "000" =>
-								result_R <= s0(C_block_size-1 downto 0);
-							when "001" => 	
-								result_R <= s1(C_block_size-1 downto 0);
-							when "010" =>	
-								result_R <= s2(C_block_size-1 downto 0);
-							when "011" =>	
-								result_R <= s3(C_block_size-1 downto 0);
-							when "100" =>	
-								result_R <= s4(C_block_size-1 downto 0);
-							when "101" =>
-								result_R <= s5(C_block_size-1 downto 0);
-							when others =>	-- should not occur
-								result_R <= (others => '0');
-						end case;
-					end if;
-
-					case mux_ctrl_P_out is
-						when "000" =>
-							result_P <= s6(C_block_size-1 downto 0);
-						when "001" =>	
-							result_P <= s7(C_block_size-1 downto 0);
-						when "010" =>	
-							result_P <= s8(C_block_size-1 downto 0);
-						when "011" =>	
-							result_P <= s9(C_block_size-1 downto 0);
-						when "100" =>	
-							result_P <= s10(C_block_size-1 downto 0);
-						when "101" =>	
-							result_P <= s11(C_block_size-1 downto 0);
-						when others =>	-- should not occur
-							result_P <= (others => '0');
-					end case;
-	
-				when "10" =>  -- FINISHED, hold values 
-					result_R <= result_R;
-					result_P <= result_P;
-				
-				when others => -- UNUSED
-					result_R <= (others => '0');
-					result_P <= (others => '0');
-
-			end case;
-		end if;
-	end process;	
-end expBehave;
+end exponentiation_behave;

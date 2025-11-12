@@ -1,262 +1,253 @@
-------------------------------------------
--- Exponentiation FSM VHDL Module
-
--- This module implements the finite state machine (FSM) for controlling the
--- modular exponentiation process. It manages the states of the operation,
--- including resetting, counting through the bits of the exponent, and
--- signaling when the computation is finished.
-
--- assumes constant inputs during operation.
--- Do not change inputs until valid_out is high.
-------------------------------------------
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date: 10/22/2025 06:00:20 PM
+-- Design Name: 
+-- Module Name: rsa_core_fsm - rsa_core_fsm_behave
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments:
+-- 
+----------------------------------------------------------------------------------
 
 
 library IEEE;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.Numeric_STD.all;
 
 entity exponentiation_fsm is
     generic (
-		C_block_size    : integer := 256
-	);
-    port ( 
-        -- utility
-        reset_neg         : in std_logic;
-        clk             : in std_logic;
+        C_block_size : integer := 256
+    );
 
-        -- modulus
-        n               : in std_logic_vector(C_block_size-1 downto 0);
+    Port ( 
+        ------------------------------------
+        -- External Interface Signals
+        ------------------------------------
+        clk                 : in std_logic;
+        reset_neg             : in std_logic;
 
-        -- input data
-        a               : in std_logic_vector(C_block_size-1 downto 0);
-        bit_shifted_a   : out std_logic_vector( C_block_size-1 downto 0 );
+        -- handshaking signals with external module.
+        msgout_ready        : in std_logic;
+        msgout_valid        : out std_logic;
+        msgin_ready         : out std_logic;
+        msgin_valid         : in std_logic;
+        msgin_last          : in std_logic;
 
-        -- input control
-        ready_out       : in std_logic;
-        valid_in        : in std_logic;
-        
-        -- output control
-        ready_in        : out std_logic;
-        valid_out       : out std_logic;
-        
-        -- mux control signals
-        mux_ctrl_P_in   : in std_logic_vector(3 downto 0);
-        mux_ctrl_R_in   : in std_logic_vector(3 downto 0);
-        
-        -- output mux control signals
-        mux_ctrl_P_out  : out std_logic_vector(2 downto 0);
-        mux_ctrl_R_out  : out std_logic_vector(2 downto 0);
-        
-        -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state  : inout std_logic_vector(1 downto 0);
+        -- handshaking signals with exponentiation module.
+        exp_ready_in        : in std_logic;
+        exp_valid_in        : out std_logic;
+        exp_ready_out       : out std_logic;
+        exp_valid_out       : in std_logic;
+        exp_reset_neg       : out std_logic;
 
-        -- counter
-        counter        : out std_logic_vector(C_block_size-1 downto 0)
+        -- RSA status signal
+        rsa_status          : out std_logic_vector(31 downto 0);
+
+        -- modulus 
+        n                   : in std_logic_vector(C_block_size-1 downto 0);  
+
+        -- exponent bits
+        key_e_d_reg         : in std_logic_vector(C_block_size-1 downto 0);
+        key_e_d_LSB         : out std_logic;     
+        
+        current_state       : inout std_logic_vector(1 downto 0);
+
+        -- internal signals for testing
+        counter             : inout std_logic_vector(C_block_size-1 downto 0 )
     );
 end exponentiation_fsm;
 
-architecture expFsmBehave of exponentiation_fsm is
-    -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-    signal next_state : std_logic_vector(1 downto 0);
+architecture exponentiation_fsm_behave of exponentiation_fsm is
+    ------------------------------------------------------------------------
+    -- RESET = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
+    -------------------------------------------------------------------------
+    signal next_state                   : std_logic_vector(1 downto 0);
 
-    -- Add any internal signals here when testing is done
-
+    signal bit_shifted_key_e_d          : std_logic_vector(C_block_size-1 downto 0);
 
 begin
-    -----------------------------------------
-    -- Next State Logic. Combinational process to determine next state.
-    -----------------------------------------
-   NextState: process (current_state, counter, ready_out, valid_in, bit_shifted_a(255), mux_ctrl_P_in, mux_ctrl_R_in) 
-   begin
-        case current_state is 
 
-            ---------------------
-            -- RESET State
-            ---------------------
-            when "00" =>    -- RESET
-                -- Set outputs
-                ready_in    <= '1';
-                valid_out   <= '0';
+    --------------------------------------
+    -- RSA Status Signal.
+    --------------------------------------
+    rsa_status <= (others => '0');
 
-                -- Mux control P & R set to "111" to indicate uninitialized state
-                mux_ctrl_P_out <= "111"; 
-                mux_ctrl_R_out <= "111";
-                    
+    ---------------------------------------
+    -- Bit shift key_e_d to get LSB
+    ---------------------------------------
+    key_e_d_LSB <= bit_shifted_key_e_d(0);
 
-                --------------------------------
-                -- Next State Transition Check
-                --------------------------------
-                if (valid_in = '1') then 
-                    next_state  <= "01"; -- COUNTING state
-                else
-                    next_state  <= "00"; -- RESET state
-                end if;
-                
-
-            ---------------------
-            -- COUNTING State
-            ---------------------
-            when "01" =>  -- COUNTING
-                -- Set outputs
-                ready_in    <= '0';
-                valid_out   <= '0';
-
-                ----------------------------------------------------------------------------------
-                -- Determine Mux Control Outputs
-
-                -- If a(255) = '1'  --> possible outputs: S1, S3, S5 for R and S7, S9, S11 for P
-                ----------------------------------------------------------------------------------
-                if (bit_shifted_a(255) = '1') then
-                    -- Mux control R
-                    if ( mux_ctrl_R_in(3) = '0') then       -- If R + b - 2*n >= 0
-                        mux_ctrl_R_out <= "101";            -- Select S5: R = R + b - 2*n
-
-                    elsif ( mux_ctrl_R_in(1) = '0') then    -- If R + b - n >= 0
-                        mux_ctrl_R_out <= "011";            -- Select S3: R = R + b - n
-
-                    else                                    -- R >= 0                   
-                        mux_ctrl_R_out <= "001";            -- Select S1: R = R + b
-
-                    end if;
-
-                    -- Mux control P
-                    if ( mux_ctrl_P_in(3) = '0') then       -- If P + b - 2*n >= 0
-                        mux_ctrl_P_out <= "101";            -- Select S11: P = P + b - 2*n
-                    
-                    elsif ( mux_ctrl_P_in(1) = '0') then    -- If P + b - n >= 0
-                        mux_ctrl_P_out <= "011";            -- Select S9: P = P + b - n
-
-                    else                                    -- P >= 0
-                        mux_ctrl_P_out <= "001";            -- Select S7: P = P + b
-
-                    end if;
-
-
-                ----------------------------------------------------------------------------------
-                -- Else             --> possible outputs: S0, S2, S4 for R and S6, S8, S10 for P
-                ----------------------------------------------------------------------------------
-                else
-
-                    -- Mux control R
-                    if ( mux_ctrl_R_in(2) = '0') then       -- If R - 2*n >= 0
-                        mux_ctrl_R_out <= "100";            -- Select S4: R = R - 2*n
-                    
-                    elsif ( mux_ctrl_R_in(0) = '0') then    -- If R - n >= 0
-                        mux_ctrl_R_out <= "010";            -- Select S2: R = R - n
-
-                    else                                    -- R >= 0
-                        mux_ctrl_R_out <= "000";            -- Select S0: R = R
-
-                    end if;
-
-
-                    -- Mux control P
-                    if ( mux_ctrl_P_in(2) = '0') then       -- If P - 2*n >= 0
-                        mux_ctrl_P_out <= "100";            -- Select S10: P = P - 2*n
-                    
-                    elsif ( mux_ctrl_P_in(0) = '0') then    -- If P - n >= 0
-                        mux_ctrl_P_out <= "010";            -- Select S8: P = P - n
-
-                    else                                    -- P >= 0
-                        mux_ctrl_P_out <= "000";            -- Select S6: P = P
-
-                    end if;
-                end if;
-                        
-
-                ----------------------------------------------
-                -- Next State Transition Check           
-                ----------------------------------------------       
-                if (counter = n ) then
-                    next_state  <= "10";  -- FINISHED state
-                else
-                    next_state <= "01";  -- COUNTING state
-                end if;
-                
-
-            ---------------------
-            -- FINISHED State
-            ---------------------
-            when "10" =>  -- FINISHED
-                -- Set outputs
-                ready_in    <= '0';
-                valid_out   <= '1';
-               
-                -- Hold result values
-                mux_ctrl_P_out <= "000"; 
-                mux_ctrl_R_out <= "000"; 
-
-                -- Check for transition
-                if( ready_out = '1' ) then
-                    next_state  <= "00";  -- RESET state
-                else 
-                    next_state  <= "10";  -- FINISHED state
-                end if;
-                
-            ------------------
-            -- Default case
-            ------------------
-            when others =>
-                next_state <= "00"; -- RESET state 
-        end case;
-    end process NextState;
-   
-
-    -----------------------------------------
-    -- State Register. Updates current state on clock edge.
-    -----------------------------------------
-    SyncState: process (clk, reset_neg, current_state, next_state) 
+    bit_shift_e_d_Process: process (clk, current_state, key_e_d_reg, bit_shifted_key_e_d)
     begin
         if rising_edge(clk) then
-            if( reset_neg = '0' ) then
-                current_state <= "00";  -- RESET state
-            else
-                current_state <= next_state;
-            end if;
+            case current_state is 
+                when "00" =>-- LOAD_NEW_MSG
+                    bit_shifted_key_e_d <= key_e_d_reg;
 
-        end if;
-    end process SyncState;
-  
+                when "10" =>  -- COUNT_FIN_PARTIAL
+                    bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
 
-    -----------------------------------------
-    -- Counter Control. Increments during COUNTING state.
-    -- In other states, resets to zero.
-    -- Uses next_state signal from Next State Logic.
-    -----------------------------------------
-    SyncCounter: process (clk, reset_neg, next_state) 
-    begin
-        if rising_edge(clk) then
-            case next_state is
-                when "01" =>    -- COUNTING
-                    counter <= std_logic_vector( unsigned( counter ) + 1 );
-    
-                when others =>
-                    counter <= ( others => '0' );
-            end case ;
-        end if;
-    end process SyncCounter;  
-  
-
-    -----------------------------------------
-    -- Shift A register. Shifts left during COUNTING state.
-    -- In other states, loads input a.
-    -----------------------------------------
-   ShiftA: process (clk, current_state)
-    begin
-        if rising_edge(clk) then
-            case current_state is
-                when "00" =>   -- RESET
-                    bit_shifted_a <= a;
-
-                when "01" =>   -- COUNTING
-                    bit_shifted_a <= STD_LOGIC_VECTOR( shift_left( unsigned( bit_shifted_a ), 1 ) );  -- Shift left by 1 bit 
-    
-                when others => -- FINISHED and UNUSED
-                    bit_shifted_a <= bit_shifted_a;
-
+                when others => -- COUNT_WAIT, FINISHED
+                    bit_shifted_key_e_d <= bit_shifted_key_e_d;
             end case;
         end if;
-    end process;
+    end process bit_shift_e_d_Process;
 
-end expFsmBehave;
+
+
+    ------------------------------------
+    -- Set Outputs based on current state
+    ------------------------------------
+    OutputLogic: process (current_state)
+    begin
+        case current_state is  
+        
+            when "00" =>  -- LOAD_NEW_MSG
+                msgin_ready    <= '1';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '0';
+
+            when "01" =>  -- COUNT_WAIT
+                msgin_ready    <= '0';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '1';
+                exp_ready_out  <= '1';
+                exp_reset_neg  <= '1';
+
+            when "10" =>  -- COUNT_FIN_PARTIAL
+                msgin_ready    <= '0';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '1';
+                exp_reset_neg  <= '1';
+
+            when "11" =>  -- FINISHED
+                msgin_ready    <= '0';
+                msgout_valid   <= '1';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '1';
+
+            when others =>  -- default case
+                msgin_ready    <= '1';
+                msgout_valid   <= '0';
+                exp_valid_in   <= '0';
+                exp_ready_out  <= '0';
+                exp_reset_neg  <= '0';
+
+        end case;
+    end process OutputLogic;
+
+
+    -----------------------------------
+    -- Current and Next State Syncronization
+    -----------------------------------
+    CurrentState: process (clk, reset_neg, next_state)
+    begin
+        if rising_edge(clk) then
+            if (reset_neg = '0') then
+                current_state <= "00"; -- LOAD_NEW_MSG state
+
+            else
+                current_state <= next_state;
+
+            end if;
+        end if;
+    end process CurrentState;
+
+
+    -----------------------------------
+    -- Next State Logic
+    -----------------------------------
+    NextState: process (current_state, msgin_valid, exp_ready_in, exp_valid_out, msgout_ready, counter, n)
+    begin
+        case current_state is 
+
+            when "00" =>   -- LOAD_NEW_MSG
+
+                if (msgin_valid = '1' and exp_ready_in = '1') then
+                    next_state  <= "01";  -- COUNT_WAIT state
+                else
+                    next_state <= "00";   -- remain in LOAD_NEW_MSG state
+                end if;
+
+
+            when "01" =>  -- COUNT_WAIT
+
+                if ( exp_valid_out = '0' ) then
+                    next_state  <= "01";  -- COUNT_WAIT state
+                else
+                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
+                end if;
+
+
+            when "10" =>  -- COUNT_FIN_PARTIAL
+
+                if (exp_ready_in = '0') then -- Should never happen. The counter will be out of sync.
+                    next_state  <= "10";  -- COUNT_FIN_PARTIAL state
+
+                elsif ( counter < n ) then
+                    next_state <= "01";  -- COUNT_WAIT state
+
+                else 
+                    next_state  <= "11";  -- FINISHED state
+
+                end if;
+
+
+            when "11" =>  -- FINISHED
+
+                if( msgout_ready = '1' ) then
+                    next_state  <= "00";  -- LOAD_NEW_MSG state
+
+                else
+                    next_state  <= "11";  -- FINISHED state
+
+                end if;
+            
+
+            when others =>  -- default case
+                next_state <= "00"; -- LOAD_NEW_MSG state
+
+        end case;
+    end process NextState;
+
+    
+    -----------------------------------
+    -- Sync counter
+    -----------------------------------
+    SyncCounter: process (current_state, next_state, counter) 
+    begin
+        case current_state is
+            when "00" => -- LOAD_NEW_MSG
+                counter <= (others => '0');
+
+            when "10" => -- COUNT_FIN_PARTIAL
+
+                if next_state = "01" then   -- transition to COUNT_WAIT
+                    counter <= std_logic_vector( unsigned( counter ) + 1);
+
+                else
+                    counter <= counter;
+                
+                end if;
+
+            when others => -- COUNT_WAIT, FINISHED
+                counter <= counter;
+        end case;
+    end process SyncCounter;
+
+
+
+end exponentiation_fsm_behave;

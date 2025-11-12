@@ -121,7 +121,7 @@ begin
 	----------------------------
 	-- Register input signals. Can be opted out if register block is static.
 	----------------------------
-	Input_Reg : process (current_state, key_e_d, key_n, msgin_data, msgin_last)
+	Input_Reg : process (current_state, key_e_d, key_n, msgin_data, msgin_last, key_e_d_reg, key_n_reg, msgin_data_reg, msgin_last_reg)
 	begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
@@ -153,7 +153,7 @@ begin
 	------------------------------
 	-- Port data to output when in FINISHED state
 	------------------------------
-	port_data_out : process (current_state, result_R)
+	port_data_out : process (current_state, exp_R_next)
 	begin
 		case current_state is
 			when "11" =>  -- FINISHED
@@ -168,7 +168,7 @@ begin
 	----------------------------------
 	-- Update exp_R_next and exp_P_next when finished a computation
 	----------------------------------
-	update_exp_inputs : process (current_state, exp_valid_out, result_R, result_P, msgin_data_reg)
+	update_exp_inputs : process (current_state, exp_valid_out, result_R, result_P, msgin_data_reg, exp_R_next, exp_P_next)
 	begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
