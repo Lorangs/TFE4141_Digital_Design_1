@@ -201,9 +201,6 @@ begin
 	assert to_integer(unsigned(result_P)) = 24 report "result_P not correct - a * c mod n = 24" severity error;	
 
 
-
-
-
     report "------ TEST COMPLETED -------" severity note;
     wait; 
 end process test_process;

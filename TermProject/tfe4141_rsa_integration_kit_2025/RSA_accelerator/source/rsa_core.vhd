@@ -62,8 +62,7 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		key_e_d                 :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		key_n                   :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		rsa_status              :  out std_logic_vector(31 downto 0);
-
+		rsa_status              :  out std_logic_vector(31 downto 0)
 	);
 end rsa_core;
 
@@ -76,23 +75,41 @@ begin
 			C_block_size => C_block_size
 		)
 		port map (
-			clk			=> clk,
-			reset_neg 	=> reset_neg,
+			clk				=> clk,
+			reset_neg 		=> reset_neg,
+			msgin_valid 	=> msgin_valid,
+			msgin_ready 	=> msgin_ready,
+			msgin_data		=> msgin_data,
+			msgin_last		=> msgin_last,
+			msgout_valid	=> msgout_valid,
+			msgout_ready	=> msgout_ready,
+			msgout_data		=> msgout_data,
+			msgout_last		=> msgout_last,
+			key_e_d			=> key_e_d,
+			key_n			=> key_n,
+			rsa_status		=> rsa_status,
 
-			msgin_valid => msgin_valid,
-			msgin_ready => msgin_ready,
-			msgin_data	=> msgin_data,
-			msgin_last	=> msgin_last,
-
-			msgout_valid => msgout_valid,
-			msgout_ready => msgout_ready,
-			msgout_data => msgout_data,
-			msgout_last => msgout_last,
-
-			key_e_d		=> key_e_d,
-			key_n		=> key_n,
-			rsa_status	=> rsa_status
+			-----------------------------------------------------------------------------
+			-- Internal signals for testing. Can be moved to signal interface when testing is done.
+			-----------------------------------------------------------------------------
+			counter				=> open,
+			current_state		=> open,
+			msgin_data_reg		=> open,
+			mult_valid_out		=> open,
+			mult_ready_in		=> open,
+			mult_valid_in		=> open,
+			mult_ready_out		=> open,
+			mult_reset_neg		=> open,
+			mult_R_next			=> open,
+			mult_P_next			=> open,
+			mult_e_d			=> open,
+			mult_counter		=> open,
+			mult_current_state	=> open,
+			result_R			=> open,
+			result_P			=> open,
+			key_e_d_reg			=> open,
+			key_n_reg			=> open,
+			n_neg_reg			=> open,
+			msgin_last_reg		=> open
 		);
-
-	
 end rtl;
