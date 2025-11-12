@@ -22,7 +22,7 @@ entity exponentiation_fsm is
 	);
     port ( 
         -- utility
-        reset_n         : in std_logic;
+        reset_neg         : in std_logic;
         clk             : in std_logic;
 
         -- modulus
@@ -206,10 +206,10 @@ begin
     -----------------------------------------
     -- State Register. Updates current state on clock edge.
     -----------------------------------------
-    SyncState: process (clk, reset_n, current_state, next_state) 
+    SyncState: process (clk, reset_neg, current_state, next_state) 
     begin
         if rising_edge(clk) then
-            if( reset_n = '0' ) then
+            if( reset_neg = '0' ) then
                 current_state <= "00";  -- RESET state
             else
                 current_state <= next_state;
@@ -224,7 +224,7 @@ begin
     -- In other states, resets to zero.
     -- Uses next_state signal from Next State Logic.
     -----------------------------------------
-    SyncCounter: process (clk, reset_n, next_state) 
+    SyncCounter: process (clk, reset_neg, next_state) 
     begin
         if rising_edge(clk) then
             case next_state is

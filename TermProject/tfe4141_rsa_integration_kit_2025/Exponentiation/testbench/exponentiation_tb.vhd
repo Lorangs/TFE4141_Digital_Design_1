@@ -33,10 +33,16 @@ architecture expBehave of exponentiation_tb is
 		--modulus
 		signal n              :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0);
 		signal n_neg          :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+
+		-- Precalculated values 
+		signal b_minus_n      :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		signal b_minus_2n     :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		signal c_minus_n      :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		signal c_minus_2n     :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
          
 		--utility
 		signal clk 		      :  STD_LOGIC;
-		signal reset_n 	      :  STD_LOGIC;
+		signal reset_neg 	      :  STD_LOGIC;
 
 		-- Internal Signal
 		signal s0, s1 ,s2 ,s3 ,s4, s5, s6, s7, s8, s9, s10, s11 : std_logic_vector(C_block_size downto 0);
@@ -84,9 +90,15 @@ DUT : entity work.exponentiation
 		n          =>   n,
 		n_neg      =>   n_neg,
 
+	-- Precalculated values
+		b_minus_n   =>   b_minus_n,
+		b_minus_2n  =>   b_minus_2n,
+		c_minus_n   =>   c_minus_n,
+		c_minus_2n  =>   c_minus_2n,
+
 	--utility
 		clk        =>   clk,
-		reset_n    =>   reset_n,
+		reset_neg    =>   reset_neg,
 
 	-- Internal Signal
 		s0         =>   s0,
@@ -121,7 +133,7 @@ end process clk_process;
 test_process: process
 begin
 
-	-- Start test with setting input values and resetting the module (reset_n = 0)
+	-- Start test with setting input values and resetting the module (reset_neg = 0)
 
 	a 			<= std_logic_vector(to_unsigned(100, a'length)); -- a = 100 (1100100)
 	b 			<= std_logic_vector(to_unsigned(15, b'length)); -- b = 15
@@ -130,12 +142,11 @@ begin
 	
 	n			<= std_logic_vector(to_unsigned(256, n'length)); -- n = 256
 	n_neg 		<= std_logic_vector(to_signed(-256, n_neg'length)); -- n_neg = 256
-	n_minus_1  <= std_logic_vector(to_unsigned(255, n_minus_1'length)); -- n_minus_1 = 255
 
 	valid_in 	<= '0';
 	ready_out	<= '0';
 
-	reset_n 	<= '0'; 
+	reset_neg 	<= '0'; 
 
 	wait for clk_period*2;
 
@@ -150,8 +161,8 @@ begin
 	assert s8 = std_logic_vector(signed('0' & c) + signed(n_neg)) report "s8 is not c-n when resetting" severity error;
 	assert s10 = std_logic_vector(signed('0' & c) + signed(shift_left(signed(n_neg), 1))) report "s10 is not c-2n when resetting" severity error;
 
-	-- test if the signals stay the same when reset_n = 0, but valid_in is still 0 
-	reset_n		<= '1'; 
+	-- test if the signals stay the same when reset_neg = 0, but valid_in is still 0 
+	reset_neg		<= '1'; 
 	wait for clk_period*2;
 	valid_in	<= '1';
 	wait for clk_period*2;
@@ -188,7 +199,7 @@ begin
 	-- Check new values after reset
 	wait for clk_period*2;
 	ready_out	<= '0';
-	reset_n 	<= '0';
+	reset_neg 	<= '0';
 
 	-----------------------------------------
 	-- New input values after reset
@@ -201,7 +212,7 @@ begin
 	valid_in 	<= '1';
 
 	wait for clk_period;
-	reset_n		<= '1';
+	reset_neg		<= '1';
 
 	wait for clk_period;
 	valid_in	<= '0';
