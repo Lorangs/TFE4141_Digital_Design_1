@@ -1,0 +1,94 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.math_real.ALL;
+
+
+entity rsa_core_tb is
+    generic (
+        C_block_size : integer := 256
+    );
+end rsa_core_tb;
+
+architecture Behavioral of rsa_core_tb is
+
+    -- Clock and reset
+    signal clk                 : std_logic := '0';
+    signal reset_neg             : std_logic := '0';
+
+    -- Slave msgin interface
+    signal msgin_valid         : std_logic := '0';
+    signal msgin_ready         : std_logic;
+    signal msgin_data          : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal msgin_data_reg      : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal result_R         : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal msgin_last          : std_logic := '0';
+
+    -- Master msgout interface
+    signal msgout_valid        : std_logic;
+    signal msgout_ready        : std_logic := '0';
+    signal msgout_data         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+    signal msgout_last         : std_logic;
+
+    -- Interface to register block
+    signal key_e_d             : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal key_n               : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal rsa_status          : std_logic_vector(31 downto 0);
+
+    -- Internal signals for testing
+    signal counter             : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+    signal current_state       : std_logic_vector(1 downto 0);
+
+    -- Constants
+    constant clk_period        : time := 5 ns;
+    signal test_running        : boolean := true;
+    signal test_case_num       : integer := 0;
+
+begin
+    ---------------------------
+    -- Clock generation
+    ---------------------------
+    clk_process : process
+    begin
+        while test_running loop
+            clk <= '0';
+            wait for clk_period/2;
+            clk <= '1';
+            wait for clk_period/2;
+        end loop;
+        wait;
+    end process clk_process;
+
+
+    ------------------------------
+    -- DUT instantiation
+    ------------------------------
+    DUT: entity work.rsa_core
+        generic map (
+            C_BLOCK_SIZE => C_BLOCK_SIZE
+        )
+        port map (
+            -- Clock and reset
+            clk             => clk,
+            reset_neg         => reset_neg,
+
+            -- Slave msgin interface
+            msgin_valid     => msgin_valid,
+            msgin_ready     => msgin_ready,
+            msgin_data      => msgin_data,
+            msgin_last      => msgin_last,
+
+            -- Master msgout interface
+            msgout_valid    => msgout_valid,
+            msgout_ready    => msgout_ready,
+            msgout_data     => msgout_data,
+            msgout_last     => msgout_last,
+
+            -- Register interface
+            key_e_d         => key_e_d,
+            key_n           => key_n,
+            rsa_status      => rsa_status
+        );
+
+    
+end Behavioral;
