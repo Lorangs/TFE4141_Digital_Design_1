@@ -52,7 +52,7 @@ entity mult_with_mod is
 		reset_neg 	: in STD_LOGIC;
 
 		-- internal signals for testing
-		current_state : inout std_logic_vector(1 downto 0)
+		current_state : inout std_logic_vector(1 downto 0); 
 		counter       : inout std_logic_vector(C_block_size-1 downto 0 )
 	);
 end mult_with_mod;

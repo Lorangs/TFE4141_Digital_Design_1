@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------  -------
 -- Author       : Oystein Gjermundnes
 -- Organization : Norwegian University of Science and Technology (NTNU)
 --                Department of Electronic Systems
@@ -58,7 +58,7 @@ entity exponentiation is
 		msgout_data             : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		-- Indicates boundary of last packet
 		msgout_last             : out std_logic;
-
+ 
 		-----------------------------------------------------------------------------
 		-- Interface to the register block
 		-----------------------------------------------------------------------------
