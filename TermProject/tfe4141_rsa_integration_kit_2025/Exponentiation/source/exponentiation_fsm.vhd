@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 10/22/2025 06:00:20 PM
 -- Design Name: 
--- Module Name: rsa_core_fsm - rsa_core_fsm_behave
+-- Module Name: exponentiation_fsm - exponentiation_fsm_behave
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -42,12 +42,12 @@ entity exponentiation_fsm is
         msgin_valid         : in std_logic;
         msgin_last          : in std_logic;
 
-        -- handshaking signals with exponentiation module.
-        exp_ready_in        : in std_logic;
-        exp_valid_in        : out std_logic;
-        exp_ready_out       : out std_logic;
-        exp_valid_out       : in std_logic;
-        exp_reset_neg       : out std_logic;
+        -- handshaking signals with Mult_with_mod module.
+        mult_ready_in        : in std_logic;
+        mult_valid_in        : out std_logic;
+        mult_ready_out       : out std_logic;
+        mult_valid_out       : in std_logic;
+        mult_reset_neg       : out std_logic;
 
         -- RSA status signal
         rsa_status          : out std_logic_vector(31 downto 0);
@@ -114,37 +114,37 @@ begin
             when "00" =>  -- LOAD_NEW_MSG
                 msgin_ready    <= '1';
                 msgout_valid   <= '0';
-                exp_valid_in   <= '0';
-                exp_ready_out  <= '0';
-                exp_reset_neg  <= '0';
+                mult_valid_in   <= '0';
+                mult_ready_out  <= '0';
+                mult_reset_neg  <= '0';
 
             when "01" =>  -- COUNT_WAIT
                 msgin_ready    <= '0';
                 msgout_valid   <= '0';
-                exp_valid_in   <= '1';
-                exp_ready_out  <= '1';
-                exp_reset_neg  <= '1';
+                mult_valid_in   <= '1';
+                mult_ready_out  <= '1';
+                mult_reset_neg  <= '1';
 
             when "10" =>  -- COUNT_FIN_PARTIAL
                 msgin_ready    <= '0';
                 msgout_valid   <= '0';
-                exp_valid_in   <= '0';
-                exp_ready_out  <= '1';
-                exp_reset_neg  <= '1';
+                mult_valid_in   <= '0';
+                mult_ready_out  <= '1';
+                mult_reset_neg  <= '1';
 
             when "11" =>  -- FINISHED
                 msgin_ready    <= '0';
                 msgout_valid   <= '1';
-                exp_valid_in   <= '0';
-                exp_ready_out  <= '0';
-                exp_reset_neg  <= '1';
+                mult_valid_in   <= '0';
+                mult_ready_out  <= '0';
+                mult_reset_neg  <= '1';
 
             when others =>  -- default case
                 msgin_ready    <= '1';
                 msgout_valid   <= '0';
-                exp_valid_in   <= '0';
-                exp_ready_out  <= '0';
-                exp_reset_neg  <= '0';
+                mult_valid_in   <= '0';
+                mult_ready_out  <= '0';
+                mult_reset_neg  <= '0';
 
         end case;
     end process OutputLogic;
@@ -170,13 +170,13 @@ begin
     -----------------------------------
     -- Next State Logic
     -----------------------------------
-    NextState: process (current_state, msgin_valid, exp_ready_in, exp_valid_out, msgout_ready, counter, n)
+    NextState: process (current_state, msgin_valid, mult_ready_in, mult_valid_out, msgout_ready, counter, n)
     begin
         case current_state is 
 
             when "00" =>   -- LOAD_NEW_MSG
 
-                if (msgin_valid = '1' and exp_ready_in = '1') then
+                if (msgin_valid = '1' and mult_ready_in = '1') then
                     next_state  <= "01";  -- COUNT_WAIT state
                 else
                     next_state <= "00";   -- remain in LOAD_NEW_MSG state
@@ -185,7 +185,7 @@ begin
 
             when "01" =>  -- COUNT_WAIT
 
-                if ( exp_valid_out = '0' ) then
+                if ( mult_valid_out = '0' ) then
                     next_state  <= "01";  -- COUNT_WAIT state
                 else
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
@@ -194,7 +194,7 @@ begin
 
             when "10" =>  -- COUNT_FIN_PARTIAL
 
-                if (exp_ready_in = '0') then -- Should never happen. The counter will be out of sync.
+                if (mult_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
                 elsif ( counter < n ) then
