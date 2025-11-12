@@ -16,7 +16,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 
-entity Mult_with_Mod_fsm is
+entity mult_with_mod_fsm is
     generic (
 		C_block_size    : integer := 256
 	);
@@ -25,12 +25,11 @@ entity Mult_with_Mod_fsm is
         reset_neg       : in std_logic;
         clk             : in std_logic;
 
-        -- modulus
+        -- modulus 
         n               : in std_logic_vector ( C_block_size-1 downto 0 );
 
         -- input data
         a               : in std_logic_vector ( C_block_size-1 downto 0 );
-        bit_shifted_a   : out std_logic_vector( C_block_size-1 downto 0 );
 
         -- input control
         ready_out       : in std_logic;
@@ -51,14 +50,15 @@ entity Mult_with_Mod_fsm is
         -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
         current_state   : inout std_logic_vector ( 1 downto 0 )
     ); 
-end Mult_with_Mod_fms;
+end mult_with_mod_fsm;
 
-architecture mult_fms_behave of Mult_with_Mod_fsm is
+architecture mult_fsm_behave of mult_with_mod_fsm is
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
     signal  next_state 
         : std_logic_vector ( 1 downto 0 );
 
-    signal  counter 
+    signal  counter,
+            bit_shifted_a 
         : std_logic_vector ( C_block_size-1 downto 0 );
 
 begin
@@ -66,7 +66,7 @@ begin
     ------------------------------------------
     -- Set outputs based on current state
     ------------------------------------------
-    SetOutputs: process (current_state, mux_ctrl_R_in, mux_ctrl_P_in, bit_shifted_a(255))
+    setOutputs: process (current_state, mux_ctrl_R_in, mux_ctrl_P_in, bit_shifted_a(255))
     begin
         case current_state is
             when "00" =>    -- RESET
@@ -146,7 +146,7 @@ begin
                 mux_ctrl_P_out <= "000"; 
                 mux_ctrl_R_out <= "000"; 
 
-                
+
             -- Set equal to RESET state outputs
             when others =>      
                 ready_in    <= '1';
@@ -154,7 +154,7 @@ begin
                 mux_ctrl_P_out <= "111";
                 mux_ctrl_R_out <= "111";
         end case;
-
+    end process setOutputs;
     -----------------------------------------
     -- Next State Logic.
     -----------------------------------------

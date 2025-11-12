@@ -12,7 +12,6 @@
 -- The module assumes constant inputs during operation.
 -- Do not change inputs until valid_out is high.
 
-
 ---------------------------------------------
 
 
@@ -21,8 +20,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 
-
-entity Mult_with_Mod is
+entity mult_with_mod is
 	generic (
 		C_block_size : integer := 256
 	);
@@ -53,10 +51,10 @@ entity Mult_with_Mod is
 		clk 		: in STD_LOGIC;
 		reset_neg 	: in STD_LOGIC
 	);
-end Mult_with_Mod;
+end mult_with_mod;
 
 
-architecture mult_behave of Mult_with_Mod is
+architecture mult_behave of mult_with_mod is
 	-------------------------------------------
 	-- Signal Declarations
 	-------------------------------------------
@@ -84,8 +82,7 @@ architecture mult_behave of Mult_with_Mod is
 			mux_ctrl_R_out
 		: std_logic_vector ( 2 downto 0 );
 
-	signal  bit_shifted_a,
-			bit_shifted_R,
+	signal  bit_shifted_R,
 			bit_shifted_P
 	 	: std_logic_vector ( C_block_size-1 downto 0 );
 
@@ -144,7 +141,7 @@ begin
 	------------------------------------------
 	-- FSM module instantiation
 	------------------------------------------
-	mult_fsm: entity work.Mult_with_Mod_fsm
+	mult_fsm: entity work.mult_with_mod_fsm
 		generic map (
 			C_block_size => C_block_size
 		)
@@ -152,8 +149,7 @@ begin
 			reset_neg        			=> reset_neg,
 			clk            			=> clk,
 			n		      			=> n,
-			a              			=> a,
-			bit_shifted_a  			=> bit_shifted_a,
+			a              			=> a, 
 			ready_out      			=> ready_out,
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
@@ -162,7 +158,7 @@ begin
 			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
-			current_state 			=> current_state,
+			current_state 			=> current_state
 		);
 	
 
