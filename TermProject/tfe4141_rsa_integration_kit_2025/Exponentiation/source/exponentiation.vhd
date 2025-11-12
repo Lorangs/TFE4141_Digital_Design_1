@@ -92,7 +92,7 @@ entity exponentiation is
 
 
 		---- can be deleted when testing is done ----
-		mult_counter			: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		mult_counter		: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		mult_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
@@ -116,8 +116,6 @@ architecture exponentiation_behave of exponentiation is
 	----------------------------------------
 
 
-
-	
 
 begin
 	----------------------------
@@ -189,7 +187,6 @@ begin
 	end process;
 
 
-
 	-----------------------------------------------------------------------------
 	-- mult_with_mod module instantiation
 	-----------------------------------------------------------------------------
@@ -222,28 +219,9 @@ begin
 			clk       		=> clk,
 			reset_neg  		=> mult_reset_neg,
 
-			-- Internal Signals for testing. Remove when done
-			s0          	=> open,
-			s1          	=> open,
-			s2          	=> open,
-			s3          	=> open,
-			s4          	=> open,
-			s5          	=> open,
-			s6          	=> open,
-			s7          	=> open,
-			s8          	=> open,
-			s9          	=> open,
-			s10         	=> open,
-			s11         	=> open,
-			b_minus_n   	=> open,
-			b_minus_2n  	=> open,
-			c_minus_n   	=> open,
-			c_minus_2n  	=> open,
-			mux_ctrl_P_out 	=> open,
-			mux_ctrl_R_out 	=> open,
-			bit_shifted_a  	=> open,
-			current_state  	=> mult_current_state,
-			counter        	=> mult_counter
+			-- internal signals for testing
+			counter			=> mult_counter,
+			current_state	=> mult_current_state
 		);
 
 

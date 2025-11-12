@@ -49,7 +49,11 @@ entity mult_with_mod is
          
 		--utility
 		clk 		: in STD_LOGIC;
-		reset_neg 	: in STD_LOGIC
+		reset_neg 	: in STD_LOGIC;
+
+		-- internal signals for testing
+		current_state : inout std_logic_vector(1 downto 0)
+		counter       : inout std_logic_vector(C_block_size-1 downto 0 )
 	);
 end mult_with_mod;
 
@@ -86,9 +90,33 @@ architecture mult_behave of mult_with_mod is
 			bit_shifted_P
 	 	: std_logic_vector ( C_block_size-1 downto 0 );
 
-    signal current_state 	
-		: std_logic_vector ( 1 downto 0 );
+    --signal current_state 	
+	--	: std_logic_vector ( 1 downto 0 );
 begin
+	------------------------------------------
+	-- FSM module instantiation
+	------------------------------------------
+	mult_fsm: entity work.mult_with_mod_fsm
+		generic map (
+			C_block_size => C_block_size
+		)
+		port map (
+			reset_neg        			=> reset_neg,
+			clk            			=> clk,
+			n		      			=> n,
+			a              			=> a, 
+			ready_out      			=> ready_out,
+			valid_in       			=> valid_in,
+			ready_in       			=> ready_in,
+			valid_out      			=> valid_out,
+			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
+			mux_ctrl_R_out 			=> mux_ctrl_R_out,
+			mux_ctrl_P_out 			=> mux_ctrl_P_out,
+			current_state 			=> current_state,
+			counter 				=> counter
+		);
+
 
 	-------------------------------------------
 	-- Shifted versions of R, P, and n_neg
@@ -118,7 +146,6 @@ begin
     s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_2n ) );
 
 
-
 	-----------------------------------------
 	-- Calculate b minus n and b minus 2n, c minus n and c minus 2n
 	-- When in RESET state
@@ -137,29 +164,6 @@ begin
 			c_minus_2n  <= c_minus_2n;
 		end if;
 	end process;
-
-	------------------------------------------
-	-- FSM module instantiation
-	------------------------------------------
-	mult_fsm: entity work.mult_with_mod_fsm
-		generic map (
-			C_block_size => C_block_size
-		)
-		port map (
-			reset_neg        			=> reset_neg,
-			clk            			=> clk,
-			n		      			=> n,
-			a              			=> a, 
-			ready_out      			=> ready_out,
-			valid_in       			=> valid_in,
-			ready_in       			=> ready_in,
-			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
-			mux_ctrl_R_out 			=> mux_ctrl_R_out,
-			mux_ctrl_P_out 			=> mux_ctrl_P_out,
-			current_state 			=> current_state
-		);
 	
 
 	------------------------------------------

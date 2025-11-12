@@ -48,7 +48,10 @@ entity mult_with_mod_fsm is
         mux_ctrl_R_out  : out std_logic_vector ( 2 downto 0 );
         
         -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state   : inout std_logic_vector ( 1 downto 0 )
+        current_state   : inout std_logic_vector ( 1 downto 0 );
+
+        -- internal signals for testing
+        counter         : inout std_logic_vector(C_block_size-1 downto 0 )
     ); 
 end mult_with_mod_fsm;
 
@@ -57,7 +60,7 @@ architecture mult_fsm_behave of mult_with_mod_fsm is
     signal  next_state 
         : std_logic_vector ( 1 downto 0 );
 
-    signal  counter,
+    signal  --counter,
             bit_shifted_a 
         : std_logic_vector ( C_block_size-1 downto 0 );
 
