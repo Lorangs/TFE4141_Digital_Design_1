@@ -107,183 +107,31 @@ entity rsa_core is
 end rsa_core;
 
 architecture rtl of rsa_core is
-	-----------------------------------------
-	-- R and P signals are defined as per the RSA algorithm in high-level description.
-	-- R is the result accumulator, P is the base being exponentiated.
-	-- See the datasheet for documentation. 
-	----------------------------------------
-
-
-
 	
-
 begin
-	----------------------------
-	-- Register input signals. Can be opted out if register block is static.
-	----------------------------
-	Input_Reg : process (current_state, key_e_d, key_n, msgin_data, msgin_last, key_e_d_reg, key_n_reg, msgin_data_reg, msgin_last_reg)
-	begin
-		case current_state is
-			when "00" =>  -- LOAD_NEW_MSG
-				key_e_d_reg    <=  key_e_d;
-				key_n_reg      <=  key_n;
-				msgin_data_reg <=  msgin_data;
-				msgin_last_reg <=  msgin_last;
 
-			when others =>
-				key_e_d_reg    <=  key_e_d_reg;
-				key_n_reg      <=  key_n_reg;
-				msgin_data_reg <=  msgin_data_reg;
-				msgin_last_reg <=  msgin_last_reg;	
-		end case;
-	end process;
-
-
-	------------------------------
-	-- Propagate msgin_last value to msgout_last
-	------------------------------
-	msgout_last <= msgin_last_reg;
-
-	----------------------------
-	-- Negate N. not a register, but relies on key_n_reg, which is a stored value.
-	----------------------------
-	n_neg_reg <= std_logic_vector( not unsigned( '0' & key_n_reg ) + 1 );
-
-
-	------------------------------
-	-- Port data to output when in FINISHED state
-	------------------------------
-	port_data_out : process (current_state, exp_R_next)
-	begin
-		case current_state is
-			when "11" =>  -- FINISHED
-				msgout_data <= exp_R_next;
-			
-			when others =>
-				msgout_data <= (others => '0');
-		end case;
-	end process;
-
-
-	----------------------------------
-	-- Update exp_R_next and exp_P_next when finished a computation
-	----------------------------------
-	update_exp_inputs : process (current_state, exp_valid_out, result_R, result_P, msgin_data_reg, exp_R_next, exp_P_next)
-	begin
-		case current_state is
-			when "00" =>  -- LOAD_NEW_MSG
-				exp_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
-				exp_P_next <= msgin_data_reg;				-- Load new message into P
-
-			when "10" =>  -- COUNT_FIN_PARTIAL
-				exp_R_next <= result_R;
-				exp_P_next <= result_P;
-
-			when others => -- COUNT_WAIT, FINISHED
-				exp_R_next <= exp_R_next;
-				exp_P_next <= exp_P_next;
-			
-		end case;
-	end process;
-
-
-
-	-----------------------------------------------------------------------------
-	-- Exponentiation module instantiation
-	-----------------------------------------------------------------------------
-	i_exponentiation : entity work.exponentiation
+	i_exponentiation: entity work.exponentiation
 		generic map (
-			C_block_size => C_BLOCK_SIZE
-		)
-		port map (	
-			-- handshaking signals
-			valid_in       	=> exp_valid_in,
-			ready_out      	=> exp_ready_out,
-			valid_out      	=> exp_valid_out,
-			ready_in       	=> exp_ready_in,
-
-			-- input data
-			a			  	=> exp_P_next,
-			b 			 	=> exp_R_next,
-			c 			 	=> exp_P_next,
-			e 				=> exp_e_d,
-
-			--output data
-			result_R		=> result_R,
-			result_P		=> result_P,
-
-			-- modulus
-			n			  	=> key_n_reg,
-			n_neg		  	=> n_neg_reg,	
-
-			-- utility
-			clk       		=> clk,
-			reset_neg  		=> exp_reset_neg,
-
-			-- Internal Signals for testing. Remove when done
-			s0          	=> open,
-			s1          	=> open,
-			s2          	=> open,
-			s3          	=> open,
-			s4          	=> open,
-			s5          	=> open,
-			s6          	=> open,
-			s7          	=> open,
-			s8          	=> open,
-			s9          	=> open,
-			s10         	=> open,
-			s11         	=> open,
-			b_minus_n   	=> open,
-			b_minus_2n  	=> open,
-			c_minus_n   	=> open,
-			c_minus_2n  	=> open,
-			mux_ctrl_P_out 	=> open,
-			mux_ctrl_R_out 	=> open,
-			bit_shifted_a  	=> open,
-			current_state  	=> exp_current_state,
-			counter        	=> exp_counter
-		);
-
-
-	-----------------------------------------------------------------------------
-	-- FSM module instantiation
-	-----------------------------------------------------------------------------
-	rsa_core_fsm: entity work.rsa_core_fsm
-		generic map (
-			C_BLOCK_SIZE => C_BLOCK_SIZE
+			C_block_size => C_block_size
 		)
 		port map (
-			-- External Interface Signals
-			clk                 => clk,
-			reset_neg           => reset_neg,
+			clk			=> clk,
+			reset_neg 	=> reset_neg,
 
-			-- handshaking signals with external module.
-			msgout_ready        => msgout_ready,
-			msgout_valid        => msgout_valid,
-			msgin_ready         => msgin_ready,
-			msgin_valid         => msgin_valid,
-			msgin_last          => msgin_last_reg,
+			msgin_valid => msgin_valid,
+			msgin_ready => msgin_ready,
+			msgin_data	=> msgin_data,
+			msgin_last	=> msgin_last,
 
-			-- handshaking signals with exponentiation module.
-			exp_ready_in        => exp_ready_in,
-			exp_valid_in        => exp_valid_in,
-			exp_ready_out       => exp_ready_out,
-			exp_valid_out       => exp_valid_out,
-			exp_reset_neg       => exp_reset_neg,
+			msgout_valid => msgout_valid,
+			msgout_ready => msgout_ready,
+			msgout_data => msgout_data,
+			msgout_last => msgout_last,
 
-			-- RSA status signal
-			rsa_status          => rsa_status,
-
-			-- modulus 
-			n                   => key_n_reg,  
-
-			-- exponent bits
-			key_e_d_reg         => key_e_d_reg,
-			key_e_d_LSB         => exp_e_d,     
-			
-			current_state       => current_state,
-
-			-- internal signals for testing
-			counter             => counter
+			key_e_d		=> key_e_d,
+			key_n		=> key_n,
+			rsa_status	=> rsa_status
 		);
+
+	
 end rtl;
