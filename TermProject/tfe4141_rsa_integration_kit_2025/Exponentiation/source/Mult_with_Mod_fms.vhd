@@ -25,9 +25,6 @@ entity mult_with_mod_fsm is
         reset_neg       : in std_logic;
         clk             : in std_logic;
 
-        -- modulus 
-        n               : in std_logic_vector ( C_block_size-1 downto 0 );
-
         -- input data
         a               : in std_logic_vector ( C_block_size-1 downto 0 );
 
@@ -51,7 +48,7 @@ entity mult_with_mod_fsm is
         current_state   : inout std_logic_vector ( 1 downto 0 );
 
         -- internal signals for testing
-        counter         : inout std_logic_vector(C_block_size-1 downto 0 )
+        counter         : inout integer
     ); 
 end mult_with_mod_fsm;
 
@@ -161,7 +158,7 @@ begin
     -----------------------------------------
     -- Next State Logic.
     -----------------------------------------
-   NextState: process (current_state, counter, ready_out, valid_in, n) 
+   NextState: process (current_state, counter, ready_out, valid_in) 
    begin
         case current_state is 
             when "00" =>    -- RESET
@@ -173,7 +170,7 @@ begin
 
             when "01" =>  -- COUNTING
    
-                if (counter = n ) then
+                if ( counter = C_block_size ) then
                     next_state  <= "10";  -- FINISHED state
                 else
                     next_state <= "01";  -- COUNTING state
@@ -215,15 +212,15 @@ begin
     -- In other states, resets to zero.
     -- Uses next_state signal from Next State Logic.
     -----------------------------------------
-    SyncCounter: process (clk, reset_neg, next_state) 
+    SyncCounter: process (clk, next_state) 
     begin
         if rising_edge(clk) then
             case next_state is
                 when "01" =>    -- COUNTING
-                    counter <= std_logic_vector( unsigned( counter ) + 1 );
+                    counter <= counter + 1;
     
                 when others =>
-                    counter <= ( others => '0' );
+                    counter <= 0;
             end case ;
         end if;
     end process SyncCounter;  
@@ -233,7 +230,7 @@ begin
     -- Shift A register. Shifts left during COUNTING state.
     -- In other states, loads input a.
     -----------------------------------------
-   ShiftA: process (clk, current_state)
+   ShiftA: process (clk, current_state, a, bit_shifted_a)
     begin
         if rising_edge(clk) then
             case current_state is

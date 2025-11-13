@@ -37,7 +37,7 @@ architecture Behavioral of exponentiation_tb is
     signal rsa_status          	: std_logic_vector(31 downto 0);
 
     -- Internal signals for testing
-    signal counter             	: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+    signal counter             	: integer;
     signal current_state       	: std_logic_vector(1 downto 0);
 
     -- Constants
@@ -48,7 +48,7 @@ architecture Behavioral of exponentiation_tb is
     -- FSM States
     constant LOAD_NEW_MSG    	: std_logic_vector(1 downto 0)     := "00";
     constant COUNT_WAIT      	: std_logic_vector(1 downto 0)     := "01";
-    constant COUNT_FIN_PARTIAL 	: std_logic_vector(1 downto 0)   := "10";
+    constant COUNT_FIN_PARTIAL 	: std_logic_vector(1 downto 0)     := "10";
     constant FINISHED        	: std_logic_vector(1 downto 0)     := "11";
 
 	signal mult_valid_out      	: std_logic;
@@ -62,7 +62,7 @@ architecture Behavioral of exponentiation_tb is
 	signal mult_e_d            	: std_logic;				-- exponent bit (LSB first)
 
 	---- can be deleted when testing is done ----
-	signal mult_counter			: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal mult_counter			: integer;
 	signal mult_current_state	: std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
@@ -70,8 +70,7 @@ architecture Behavioral of exponentiation_tb is
 
 	-- Registers for storing input signals
 	signal key_e_d_reg      	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-	signal key_n_reg        	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-	signal n_neg_reg        	: std_logic_vector(C_BLOCK_SIZE downto 0);
+	signal key_n_reg        	: std_logic_vector(C_BLOCK_SIZE downto 0) := (others => '0');
 	signal msgin_last_reg   	: std_logic := '0';
 
 begin
@@ -129,7 +128,6 @@ begin
 
             key_e_d_reg     	=> key_e_d_reg,
             key_n_reg       	=> key_n_reg,
-            n_neg_reg       	=> n_neg_reg,
             msgin_last_reg  	=> msgin_last_reg,
             mult_valid_out      => mult_valid_out,
             mult_ready_in       => mult_ready_in,
@@ -231,9 +229,9 @@ begin
         test_case_num <= 2;
         report "TEST CASE 2: Load values and start simple RSA operation" severity note;
 
-        msgin_data <= x"00000000000000000000000000000000000000000000000000000000000001ff"; -- msgin_data 
-        key_e_d    <= x"0100000000000000000000000000000000000000000000000000000000000101"; -- key_e_d = 3, 256 bit
-        key_n      <= x"0000000000000000000000000000000000000000000000000000000000000100"; -- key_n = 256, 256 bit
+        key_n <= x"99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d"; -- msgin_data 
+        key_e_d    <= x"0000000000000000000000000000000000000000000000000000000000010001"; -- key_e_d = 3, 256 bit
+        msgin_data      <= x"0a23232323232323232323232323232323232323232323232323232323232323"; -- key_n = 256, 256 bit
 
         msgin_valid <= '1';
         msgin_last  <= '1';

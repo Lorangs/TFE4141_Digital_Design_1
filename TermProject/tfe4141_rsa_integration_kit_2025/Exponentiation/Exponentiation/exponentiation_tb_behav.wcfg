@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="exponentiation_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="exponentiation_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="6.484 ns"></ZoomStartTime>
+      <ZoomEndTime time="78.735 ns"></ZoomEndTime>
+      <Cursor1Time time="30.084 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="182"></NameColumnWidth>
+      <ValueColumnWidth column_width="60"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="31" />
+   <wvobject type="logic" fp_name="/exponentiation_tb/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/reset_neg">
+      <obj_property name="ElementShortName">reset_neg</obj_property>
+      <obj_property name="ObjectShortName">reset_neg</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/key_n">
+      <obj_property name="ElementShortName">key_n[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_n[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/key_e_d">
+      <obj_property name="ElementShortName">key_e_d[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_e_d[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/msgin_data">
+      <obj_property name="ElementShortName">msgin_data[255:0]</obj_property>
+      <obj_property name="ObjectShortName">msgin_data[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgout_last">
+      <obj_property name="ElementShortName">msgout_last</obj_property>
+      <obj_property name="ObjectShortName">msgout_last</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgin_last">
+      <obj_property name="ElementShortName">msgin_last</obj_property>
+      <obj_property name="ObjectShortName">msgin_last</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgin_valid">
+      <obj_property name="ElementShortName">msgin_valid</obj_property>
+      <obj_property name="ObjectShortName">msgin_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgin_ready">
+      <obj_property name="ElementShortName">msgin_ready</obj_property>
+      <obj_property name="ObjectShortName">msgin_ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgout_valid">
+      <obj_property name="ElementShortName">msgout_valid</obj_property>
+      <obj_property name="ObjectShortName">msgout_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgout_ready">
+      <obj_property name="ElementShortName">msgout_ready</obj_property>
+      <obj_property name="ObjectShortName">msgout_ready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/msgout_data">
+      <obj_property name="ElementShortName">msgout_data[255:0]</obj_property>
+      <obj_property name="ObjectShortName">msgout_data[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/counter">
+      <obj_property name="ElementShortName">counter[255:0]</obj_property>
+      <obj_property name="ObjectShortName">counter[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/current_state">
+      <obj_property name="ElementShortName">current_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">current_state[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_valid_out">
+      <obj_property name="ElementShortName">mult_valid_out</obj_property>
+      <obj_property name="ObjectShortName">mult_valid_out</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_ready_in">
+      <obj_property name="ElementShortName">mult_ready_in</obj_property>
+      <obj_property name="ObjectShortName">mult_ready_in</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_valid_in">
+      <obj_property name="ElementShortName">mult_valid_in</obj_property>
+      <obj_property name="ObjectShortName">mult_valid_in</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_ready_out">
+      <obj_property name="ElementShortName">mult_ready_out</obj_property>
+      <obj_property name="ObjectShortName">mult_ready_out</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_reset_neg">
+      <obj_property name="ElementShortName">mult_reset_neg</obj_property>
+      <obj_property name="ObjectShortName">mult_reset_neg</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/mult_R_next">
+      <obj_property name="ElementShortName">mult_R_next[255:0]</obj_property>
+      <obj_property name="ObjectShortName">mult_R_next[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/mult_P_next">
+      <obj_property name="ElementShortName">mult_P_next[255:0]</obj_property>
+      <obj_property name="ObjectShortName">mult_P_next[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/mult_e_d">
+      <obj_property name="ElementShortName">mult_e_d</obj_property>
+      <obj_property name="ObjectShortName">mult_e_d</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/mult_counter">
+      <obj_property name="ElementShortName">mult_counter[255:0]</obj_property>
+      <obj_property name="ObjectShortName">mult_counter[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/mult_current_state">
+      <obj_property name="ElementShortName">mult_current_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">mult_current_state[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/result_R">
+      <obj_property name="ElementShortName">result_R[255:0]</obj_property>
+      <obj_property name="ObjectShortName">result_R[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/result_P">
+      <obj_property name="ElementShortName">result_P[255:0]</obj_property>
+      <obj_property name="ObjectShortName">result_P[255:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/key_e_d_reg">
+      <obj_property name="ElementShortName">key_e_d_reg[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_e_d_reg[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/key_n_reg">
+      <obj_property name="ElementShortName">key_n_reg[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key_n_reg[255:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/exponentiation_tb/n_neg_reg">
+      <obj_property name="ElementShortName">n_neg_reg[256:0]</obj_property>
+      <obj_property name="ObjectShortName">n_neg_reg[256:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/exponentiation_tb/msgin_last_reg">
+      <obj_property name="ElementShortName">msgin_last_reg</obj_property>
+      <obj_property name="ObjectShortName">msgin_last_reg</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/exponentiation_tb/test_case_num">
+      <obj_property name="ElementShortName">test_case_num</obj_property>
+      <obj_property name="ObjectShortName">test_case_num</obj_property>
+   </wvobject>
+</wave_config>

@@ -70,7 +70,7 @@ entity exponentiation is
 		-----------------------------------------------------------------------------
 		-- Internal signals for testing. Can be moved to signal interface when testing is done.
 		-----------------------------------------------------------------------------
-		counter				  : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		counter				  : inout integer;
 		
 		
 		-- Control signals from FSM
@@ -92,17 +92,16 @@ entity exponentiation is
 
 
 		---- can be deleted when testing is done ----
-		mult_counter		: inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		mult_counter		: inout integer;
 		mult_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
-		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 
 		-- Registers for storing input signals
-		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-		n_neg_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);
+		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);
 		msgin_last_reg   : inout std_logic := '0'
 
 	);
@@ -126,7 +125,7 @@ begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
 				key_e_d_reg    <=  key_e_d;
-				key_n_reg      <=  key_n;
+				key_n_reg      <=  '0' & key_n;
 				msgin_data_reg <=  msgin_data;
 				msgin_last_reg <=  msgin_last;
 
@@ -140,17 +139,6 @@ begin
 
 
 	------------------------------
-	-- Propagate msgin_last value to msgout_last
-	------------------------------
-	msgout_last <= msgin_last_reg;
-
-	----------------------------
-	-- Negate N. not a register, but relies on key_n_reg, which is a stored value.
-	----------------------------
-	n_neg_reg <= std_logic_vector( not unsigned( '0' & key_n_reg ) + 1 );
-
-
-	------------------------------
 	-- Port data to output when in FINISHED state
 	------------------------------
 	port_data_out : process (current_state, mult_R_next)
@@ -158,9 +146,11 @@ begin
 		case current_state is
 			when "11" =>  -- FINISHED
 				msgout_data <= mult_R_next;
+				msgout_last <= msgin_last_reg;
 			
 			when others =>
 				msgout_data <= (others => '0');
+				msgout_last <= '0';
 		end case;
 	end process;
 
@@ -213,22 +203,33 @@ begin
 
 			-- modulus
 			n			  	=> key_n_reg,
-			n_neg		  	=> n_neg_reg,	
-
 			-- utility
 			clk       		=> clk,
 			reset_neg  		=> mult_reset_neg,
 
 			-- internal signals for testing
 			counter			=> mult_counter,
-			current_state	=> mult_current_state
+			current_state	=> mult_current_state,
+
+			s0				=> open,
+			s1				=> open,
+			s2				=> open,
+			s3				=> open,
+			s4				=> open,
+			s5				=> open,
+			s6				=> open,
+			s7				=> open,
+			s8				=> open,
+			s9				=> open,
+			s10				=> open,
+			s11				=> open	
 		);
 
 
 	-----------------------------------------------------------------------------
 	-- FSM module instantiation
 	-----------------------------------------------------------------------------
-	rsa_core_fsm: entity work.eponentiation_fsm
+	rsa_core_fsm: entity work.exponentiation_fsm
 		generic map (
 			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
@@ -253,9 +254,6 @@ begin
 
 			-- RSA status signal
 			rsa_status          => rsa_status,
-
-			-- modulus 
-			n                   => key_n_reg,  
 
 			-- exponent bits
 			key_e_d_reg         => key_e_d_reg,

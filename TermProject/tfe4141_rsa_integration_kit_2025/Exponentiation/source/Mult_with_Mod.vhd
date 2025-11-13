@@ -44,16 +44,28 @@ entity mult_with_mod is
 		result_P 	: inout STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		n           : in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-		n_neg       : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
-         
+		n		    : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+
 		--utility
 		clk 		: in STD_LOGIC;
 		reset_neg 	: in STD_LOGIC;
 
 		-- internal signals for testing
 		current_state : inout std_logic_vector(1 downto 0); 
-		counter       : inout std_logic_vector(C_block_size-1 downto 0 )
+		counter       : inout integer;
+
+		s0		: inout std_logic_vector( C_block_size downto 0 );
+		s1		: inout std_logic_vector( C_block_size downto 0 );
+		s2		: inout std_logic_vector( C_block_size downto 0 );
+		s3		: inout std_logic_vector( C_block_size downto 0 );
+		s4		: inout std_logic_vector( C_block_size+1 downto 0 );
+		s5		: inout std_logic_vector( C_block_size+1 downto 0 );
+		s6		: inout std_logic_vector( C_block_size downto 0 );
+		s7		: inout std_logic_vector( C_block_size downto 0 );
+		s8		: inout std_logic_vector( C_block_size downto 0 );
+		s9		: inout std_logic_vector( C_block_size downto 0 );
+		s10		: inout std_logic_vector( C_block_size+1 downto 0 );
+		s11		: inout std_logic_vector( C_block_size+1 downto 0 )
 	);
 end mult_with_mod;
 
@@ -63,32 +75,14 @@ architecture mult_behave of mult_with_mod is
 	-- Signal Declarations
 	-------------------------------------------
 	
-	signal 	s0,
-			s1,
-			s2,
-			s3,
-			s4,
-			s5,
-			s6,
-			s7,
-			s8,
-			s9,
-			s10,
-			s11,
-			b_minus_n,
-			b_minus_2n,
-			c_minus_n,
-			c_minus_2n,
-			n_2_neg				-- negativ of 2*n
+	signal  bit_shifted_R,
+			bit_shifted_P
 		: std_logic_vector ( C_block_size downto 0 );
 
 	signal  mux_ctrl_P_out,
 			mux_ctrl_R_out
 		: std_logic_vector ( 2 downto 0 );
 
-	signal  bit_shifted_R,
-			bit_shifted_P
-	 	: std_logic_vector ( C_block_size-1 downto 0 );
 
     --signal current_state 	
 	--	: std_logic_vector ( 1 downto 0 );
@@ -101,70 +95,47 @@ begin
 			C_block_size => C_block_size
 		)
 		port map (
-			reset_neg        			=> reset_neg,
+			reset_neg        		=> reset_neg,
 			clk            			=> clk,
-			n		      			=> n,
 			a              			=> a, 
 			ready_out      			=> ready_out,
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
 			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
+			mux_ctrl_R_in  			=> s5(C_block_size+1)  & s4(C_block_size+1)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(C_block_size+1) & s10(C_block_size+1) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
 			current_state 			=> current_state,
 			counter 				=> counter
 		);
-
+ 
 
 	-------------------------------------------
-	-- Shifted versions of R, P, and n_neg
+	-- Prepare shifted values for R and P calculations
 	-------------------------------------------
-	bit_shifted_R 	<= std_logic_vector( shift_left( unsigned( result_R ), 1) );
-	bit_shifted_P 	<= std_logic_vector( shift_left( unsigned( result_P ), 1) );
-	n_2_neg 		<= std_logic_vector( shift_left( signed( n_neg ), 1) );
+	bit_shifted_R <= result_R & '0';
+	bit_shifted_P <= result_P & '0';
 
-    -------------------------------------------
-    -- Calculate summations for R
-    -------------------------------------------
-    s0  <= std_logic_vector( 		 '0' & bit_shifted_R );
-    s1  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( '0' & b ) );
-    s2  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_neg ) );
-    s3  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_n ) ); 
-    s4  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( n_2_neg ) );
-    s5  <= std_logic_vector( signed( '0' & bit_shifted_R ) + signed( b_minus_2n ) );
+	-------------------------------------------
+	-- Calculate summations for R
+	-------------------------------------------
+	s0  <= bit_shifted_R;
+	s1  <= std_logic_vector( unsigned( bit_shifted_R ) + unsigned( '0' & b ) );
+	s2  <= std_logic_vector( unsigned( bit_shifted_R ) - unsigned( n ) );  
+	s3  <= std_logic_vector( unsigned( bit_shifted_R ) + unsigned( '0' & b ) - unsigned( n ) ); 
+	s4  <= std_logic_vector( unsigned( "0" & bit_shifted_R ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
+	s5  <= std_logic_vector( unsigned( "0" & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
+	-------------------------------------------
+	-- Calculate summations for P
+	-------------------------------------------
+	s6  <= bit_shifted_P;
+	s7  <= std_logic_vector( unsigned( bit_shifted_P ) + unsigned( '0' & c ) );
+	s8  <= std_logic_vector( unsigned( bit_shifted_P ) - unsigned( n ) );
+	s9  <= std_logic_vector( unsigned( bit_shifted_P ) + unsigned( '0' & c ) - unsigned( n ) );
+	s10 <= std_logic_vector( unsigned( "0" & bit_shifted_P ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
+	s11 <= std_logic_vector( unsigned( "0" & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
 
-    -------------------------------------------
-    -- Calculate summations for P
-    -------------------------------------------
-    s6  <= std_logic_vector( 		 '0' & bit_shifted_P );
-    s7  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( '0' & c ) );
-    s8  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_neg ) );
-    s9  <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_n ) );
-    s10 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( n_2_neg ) );
-    s11 <= std_logic_vector( signed( '0' & bit_shifted_P ) + signed( c_minus_2n ) );
-
-
-	-----------------------------------------
-	-- Calculate b minus n and b minus 2n, c minus n and c minus 2n
-	-- When in RESET state
-	-----------------------------------------
-	PreCalculations: process(current_state, b, c, n_2_neg, n_neg, b_minus_n, b_minus_2n, c_minus_n, c_minus_2n)
-	begin
-		if current_state = "00" then  -- RESET state
-			b_minus_n   <= std_logic_vector( signed( '0' & b ) + signed( n_neg ) );
-			b_minus_2n  <= std_logic_vector( signed( '0' & b ) + signed( n_2_neg ) );
-			c_minus_n   <= std_logic_vector( signed( '0' & c ) + signed( n_neg ) );
-			c_minus_2n  <= std_logic_vector( signed( '0' & c ) + signed( n_2_neg ) );
-		else
-			b_minus_n   <= b_minus_n;
-			b_minus_2n  <= b_minus_2n;
-			c_minus_n   <= c_minus_n;
-			c_minus_2n  <= c_minus_2n;
-		end if;
-	end process;
-	
 
 	------------------------------------------
 	-- Output result selection process

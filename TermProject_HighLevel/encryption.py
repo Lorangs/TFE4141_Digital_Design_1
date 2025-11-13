@@ -1,14 +1,4 @@
-M = 0b1110  # 14 message to be encrypted
-
-p = 11
-q = 17
-n = p*q
-
-# public key
-e = 7
-
-# private key
-d = 23
+import csv
 
 def mult_with_mod(a, b, n):
     R = 0
@@ -40,13 +30,13 @@ def mult_with_mod_v2(a, b, c, e, n):
     R = 0
     P = 0
 
-    for i in range(n):                              
+    for i in range(256):                              
         R = R << 1
         P = P << 1
 
-        if (a >> (n-1-i) & 1):
+        if (a >> (256-1-i) & 1):
             R += b
-            Q += c
+            P += c
 
         if R >= 2*n:
             R -= 2*n
@@ -64,21 +54,177 @@ def mult_with_mod_v2(a, b, c, e, n):
 def encrypt_v2(M, e, n):
     R = 1
     P = M
-    for i in range(n):
+    for i in range(256):
         x = (e >> i) & 1
         R, P = mult_with_mod_v2(P, R, P, x, n)
     return R
 
 
-# Calculate expected cipher and decrypted message
-c = M**e % n
-message = c**d % n
-print(f"cipher = {c}")
-print(f"decrypt= {message}")
+key_N = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
+e     = 0x0000000000000000000000000000000000000000000000000000000000010001
+d     = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
+msg   = 0x0a23232323232323232323232323232323232323232323232323232323232323
 
-# R = 100 * 15 mod 256 = 220
-# P = 100 * 11 mod 256 = 76
-print("Using mult_with_mod:")
-result_r = mult_with_mod_v2(100, 15, 11, 1, 256)
-print(f"result R = {result_r}")
+def mult_with_mod_print_steps(a, b, c, e, n, filename="mult_with_mod_test_01.csv"):
+    steps = []
+    
+    R = 0
+    P = 0
+
+    s0 = 0
+    s1 = 0
+    s2 = 0
+    s3 = 0
+    s4 = 0
+    s5 = 0
+    s6 = 0
+    s7 = 0
+    s8 = 0
+    s9 = 0
+    s10 = 0
+    s11 = 0
+
+    steps.append({
+        "step": -1,
+        "e_bit": f"\t\t-1",
+        "a_bit": f"\t\t-1",
+        "R_hex": f"\t0x{R:0{64}x}",
+        "P_hex": f"\t0x{P:0{64}x}",
+        "s0": f"\t0x{s0:0{64}x}",
+        "s1": f"\t0x{s1:0{64}x}",
+        "s2": f"\t0x{s2:0{64}x}",
+        "s3": f"\t0x{s3:0{64}x}",
+        "s4": f"\t0x{s4:0{64}x}",
+        "s5": f"\t0x{s5:0{64}x}",
+    })
+
+    for i in range(256):
+        R = R << 1
+        P = P << 1
+
+        s0 = R
+        s1 = R + b
+        s2 = R - n
+        s3 = R + b - n
+        s4 = R - 2*n
+        s5 = R + b - 2*n
+        s6 = P
+        s7 = P + c
+        s8 = P - n
+        s9 = P + c - n
+        s10 = P - 2*n
+        s11 = P + c - 2*n
+
+        if (a >> (256-1-i) & 1):
+            if (s5 >= 0):
+                R = s5
+            elif (s3 >= 0):
+                R = s3
+            else:
+                R = s1
+
+            if (s11 >= 0):
+                P = s11
+            elif (s9 >= 0):
+                P = s9
+            else:
+                P = s7
+        else:
+            if (s4 >= 0):
+                R = s4
+            elif (s2 >= 0):
+                R = s2
+            else:
+                R = s0
+            
+            if (s10 >= 0):
+                P = s10
+            elif (s8 >= 0):
+                P = s8
+            else:
+                P = s6
+
+        steps.append({
+            "step": i,
+            "e_bit": f"\t\t{e}",
+            "a_bit": f"\t\t{(a >> (256-1-i)) & 1}",
+            "R_hex": f"\t0x{R:0{64}x}",
+            "P_hex": f"\t0x{P:0{64}x}",
+            "s0": f"\t0x{s0:0{64}x}",
+            "s1": f"\t0x{s1:0{64}x}",
+            "s2": f"\t0x{s2:0{64}x}",
+            "s3": f"\t0x{s3:0{64}x}",
+            "s4": f"\t0x{s4:0{64}x}",
+            "s5": f"\t0x{s5:0{64}x}",
+        })
+
+    if e == 0:
+        R = b
+
+
+    try:
+        with open(filename, mode="w", newline='\n', encoding='utf-8') as csvfile:
+            fieldnames =    [
+                "step",
+                "e_bit",
+                "a_bit",
+                "R_hex",
+                "P_hex",
+                "s0",
+                "s1",
+                "s2",
+                "s3",
+                "s4",
+                "s5"
+            ]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(steps)
+
+    except Exception as ex:
+        print(f"Error opening file {filename}: {ex}")
+    return R, P
+
+def encrypt_print_steps(M, e, n, filename="encrypt_test_01.csv"):
+    steps = []
+
+    R = 1
+    P = M
+    steps.append({
+        "iteration": -1,
+        "e_bit": f"\t\t-1",
+        "R_hex": f"\t0x{R:0{64}x}",
+        "P_hex": f"\t0x{P:0{64}x}"
+    })
+
+    for i in range(256):
+        x = (e >> i) & 1
+        R, P = mult_with_mod_print_steps(P, R, P, x, n, f"test_data_2/multiplication_steps_{i:02}.csv")
+
+        steps.append({
+            "iteration": i,
+            "e_bit": f"\t\t{x}",
+            "R_hex": f"\t0x{R:0{64}x}",
+            "P_hex": f"\t0x{P:0{64}x}"
+        })
+
+
+    try:
+        with open(filename, mode="w", newline='\n', encoding='utf-8') as csvfile:
+            fieldnames =    [
+                "iteration",
+                "e_bit",
+                "R_hex",    
+                "P_hex"
+            ]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(steps)
+
+    except Exception as ex:
+        print(f"Error opening file {filename}: {ex}")
+    return
+
+
+encrypt_print_steps(msg, e, key_N, filename="test_data_2/encryption_steps_01.csv")
 

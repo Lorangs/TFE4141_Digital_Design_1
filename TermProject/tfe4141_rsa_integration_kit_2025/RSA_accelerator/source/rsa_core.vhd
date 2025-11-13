@@ -109,7 +109,6 @@ begin
 			result_P			=> open,
 			key_e_d_reg			=> open,
 			key_n_reg			=> open,
-			n_neg_reg			=> open,
 			msgin_last_reg		=> open
 		);
 end rtl;

@@ -52,9 +52,6 @@ entity exponentiation_fsm is
         -- RSA status signal
         rsa_status          : out std_logic_vector(31 downto 0);
 
-        -- modulus 
-        n                   : in std_logic_vector(C_block_size-1 downto 0);  
-
         -- exponent bits
         key_e_d_reg         : in std_logic_vector(C_block_size-1 downto 0);
         key_e_d_LSB         : out std_logic;     
@@ -62,7 +59,7 @@ entity exponentiation_fsm is
         current_state       : inout std_logic_vector(1 downto 0);
 
         -- internal signals for testing
-        counter             : inout std_logic_vector(C_block_size-1 downto 0 )
+        counter             : inout integer
     );
 end exponentiation_fsm;
 
@@ -170,7 +167,7 @@ begin
     -----------------------------------
     -- Next State Logic
     -----------------------------------
-    NextState: process (current_state, msgin_valid, mult_ready_in, mult_valid_out, msgout_ready, counter, n)
+    NextState: process (current_state, msgin_valid, mult_ready_in, mult_valid_out, msgout_ready, counter)
     begin
         case current_state is 
 
@@ -197,7 +194,7 @@ begin
                 if (mult_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
-                elsif ( counter < n ) then
+                elsif ( counter < C_block_size ) then
                     next_state <= "01";  -- COUNT_WAIT state
 
                 else 
@@ -227,25 +224,27 @@ begin
     -----------------------------------
     -- Sync counter
     -----------------------------------
-    SyncCounter: process (current_state, next_state, counter) 
+    SyncCounter: process (clk, current_state, next_state, counter) 
     begin
-        case current_state is
-            when "00" => -- LOAD_NEW_MSG
-                counter <= (others => '0');
+        if rising_edge(clk) then
+            case current_state is
+                when "00" => -- LOAD_NEW_MSG
+                    counter <= 0;
 
-            when "10" => -- COUNT_FIN_PARTIAL
+                when "10" => -- COUNT_FIN_PARTIAL
 
-                if next_state = "01" then   -- transition to COUNT_WAIT
-                    counter <= std_logic_vector( unsigned( counter ) + 1);
+                    if next_state = "01" then   -- transition to COUNT_WAIT
+                        counter <= counter + 1;
 
-                else
+                    else
+                        counter <= counter;
+                    
+                    end if;
+
+                when others => -- COUNT_WAIT, FINISHED
                     counter <= counter;
-                
-                end if;
-
-            when others => -- COUNT_WAIT, FINISHED
-                counter <= counter;
-        end case;
+            end case;
+        end if;
     end process SyncCounter;
 
 
