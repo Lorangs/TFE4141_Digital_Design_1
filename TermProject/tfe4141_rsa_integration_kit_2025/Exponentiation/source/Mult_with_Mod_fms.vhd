@@ -72,8 +72,8 @@ begin
             when "00" =>    -- RESET
                 ready_in    <= '1';
                 valid_out   <= '0';
-                mux_ctrl_P_out <= "111";
-                mux_ctrl_R_out <= "111";
+                mux_ctrl_P_out <= "111";    -- Indicate invalid mux selection
+                mux_ctrl_R_out <= "111";    -- Indicate invalid mux selection
 
             when "01" =>  -- COUNTING
                 ready_in    <= '0';
@@ -151,10 +151,12 @@ begin
             when others =>      
                 ready_in    <= '1';
                 valid_out   <= '0';
-                mux_ctrl_P_out <= "111";
-                mux_ctrl_R_out <= "111";
+                mux_ctrl_P_out <= "111";    -- Indicate invalid mux selection
+                mux_ctrl_R_out <= "111";    -- Indicate invalid mux selection
         end case;
     end process setOutputs;
+
+    
     -----------------------------------------
     -- Next State Logic.
     -----------------------------------------

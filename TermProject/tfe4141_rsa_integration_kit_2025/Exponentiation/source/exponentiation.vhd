@@ -93,15 +93,15 @@ entity exponentiation is
 
 		---- can be deleted when testing is done ----
 		mult_counter		: inout integer;
-		mult_current_state	: inout std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+		mult_current_state	: inout std_logic_vector(1 downto 0);		-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
 		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 
 		-- Registers for storing input signals
-		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);
+		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);	
+		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);	-- 1 sign bit + C_block_size bits
 		msgin_last_reg   : inout std_logic := '0'
 
 	);
@@ -207,10 +207,9 @@ begin
 			clk       		=> clk,
 			reset_neg  		=> mult_reset_neg,
 
-			-- internal signals for testing
+			-- internal signals for testing. Can be moved to signal interface when testing is done.
 			counter			=> mult_counter,
 			current_state	=> mult_current_state,
-
 			s0				=> open,
 			s1				=> open,
 			s2				=> open,

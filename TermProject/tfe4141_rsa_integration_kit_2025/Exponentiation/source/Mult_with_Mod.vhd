@@ -44,28 +44,27 @@ entity mult_with_mod is
 		result_P 	: inout STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--modulus
-		n		    : in STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		n		    : in STD_LOGIC_VECTOR ( C_block_size downto 0 );	-- 1 sign bit + C_block_size bits
 
 		--utility
 		clk 		: in STD_LOGIC;
 		reset_neg 	: in STD_LOGIC;
 
-		-- internal signals for testing
-		current_state : inout std_logic_vector(1 downto 0); 
-		counter       : inout integer;
-
-		s0		: inout std_logic_vector( C_block_size downto 0 );
-		s1		: inout std_logic_vector( C_block_size downto 0 );
-		s2		: inout std_logic_vector( C_block_size downto 0 );
-		s3		: inout std_logic_vector( C_block_size downto 0 );
-		s4		: inout std_logic_vector( C_block_size+1 downto 0 );
-		s5		: inout std_logic_vector( C_block_size+1 downto 0 );
-		s6		: inout std_logic_vector( C_block_size downto 0 );
-		s7		: inout std_logic_vector( C_block_size downto 0 );
-		s8		: inout std_logic_vector( C_block_size downto 0 );
-		s9		: inout std_logic_vector( C_block_size downto 0 );
-		s10		: inout std_logic_vector( C_block_size+1 downto 0 );
-		s11		: inout std_logic_vector( C_block_size+1 downto 0 )
+		-- internal signals for testing. Should be moved to signal interface when testing is done.
+		current_state 	: inout std_logic_vector(1 downto 0); 
+		counter       	: inout integer;
+		s0				: inout std_logic_vector( C_block_size downto 0 );		
+		s1				: inout std_logic_vector( C_block_size downto 0 );
+		s2				: inout std_logic_vector( C_block_size downto 0 );
+		s3				: inout std_logic_vector( C_block_size downto 0 );
+		s4				: inout std_logic_vector( C_block_size+1 downto 0 );	-- extra bit for overflow
+		s5				: inout std_logic_vector( C_block_size+1 downto 0 );	-- extra bit for overflow 
+		s6				: inout std_logic_vector( C_block_size downto 0 );
+		s7				: inout std_logic_vector( C_block_size downto 0 );
+		s8				: inout std_logic_vector( C_block_size downto 0 );
+		s9				: inout std_logic_vector( C_block_size downto 0 );
+		s10				: inout std_logic_vector( C_block_size+1 downto 0 );	-- extra bit for overflow
+		s11				: inout std_logic_vector( C_block_size+1 downto 0 )		-- extra bit for overflow
 	);
 end mult_with_mod;
 
@@ -83,9 +82,6 @@ architecture mult_behave of mult_with_mod is
 			mux_ctrl_R_out
 		: std_logic_vector ( 2 downto 0 );
 
-
-    --signal current_state 	
-	--	: std_logic_vector ( 1 downto 0 );
 begin
 	------------------------------------------
 	-- FSM module instantiation
@@ -126,6 +122,7 @@ begin
 	s3  <= std_logic_vector( unsigned( bit_shifted_R ) + unsigned( '0' & b ) - unsigned( n ) ); 
 	s4  <= std_logic_vector( unsigned( "0" & bit_shifted_R ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
 	s5  <= std_logic_vector( unsigned( "0" & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( '0' & shift_left( unsigned( n ), 1) ) );
+
 	-------------------------------------------
 	-- Calculate summations for P
 	-------------------------------------------

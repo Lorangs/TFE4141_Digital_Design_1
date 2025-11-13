@@ -70,11 +70,10 @@ architecture exponentiation_fsm_behave of exponentiation_fsm is
     signal next_state                   : std_logic_vector(1 downto 0);
 
     signal bit_shifted_key_e_d          : std_logic_vector(C_block_size-1 downto 0);
-
 begin
 
     --------------------------------------
-    -- RSA Status Signal.
+    -- RSA Status Signal. Not used.
     --------------------------------------
     rsa_status <= (others => '0');
 
@@ -83,6 +82,10 @@ begin
     ---------------------------------------
     key_e_d_LSB <= bit_shifted_key_e_d(0);
 
+
+    ---------------------------------------
+    -- Bit shift process for key_e_d
+    ---------------------------------------
     bit_shift_e_d_Process: process (clk, current_state, key_e_d_reg, bit_shifted_key_e_d)
     begin
         if rising_edge(clk) then
@@ -243,10 +246,8 @@ begin
 
                 when others => -- COUNT_WAIT, FINISHED
                     counter <= counter;
+                    
             end case;
         end if;
     end process SyncCounter;
-
-
-
 end exponentiation_fsm_behave;

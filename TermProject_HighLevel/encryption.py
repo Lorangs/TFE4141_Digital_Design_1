@@ -1,4 +1,5 @@
 import csv
+import os
 
 def mult_with_mod(a, b, n):
     R = 0
@@ -65,7 +66,7 @@ e     = 0x0000000000000000000000000000000000000000000000000000000000010001
 d     = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
 msg   = 0x0a23232323232323232323232323232323232323232323232323232323232323
 
-def mult_with_mod_print_steps(a, b, c, e, n, filename="mult_with_mod_test_01.csv"):
+def mult_with_mod_print_steps(a, b, c, e, n, path="test_data", filename="multiplication_steps.csv"):
     steps = []
     
     R = 0
@@ -161,9 +162,10 @@ def mult_with_mod_print_steps(a, b, c, e, n, filename="mult_with_mod_test_01.csv
     if e == 0:
         R = b
 
-
+    if not os.path.exists(path):
+        os.makedirs(path)
     try:
-        with open(filename, mode="w", newline='\n', encoding='utf-8') as csvfile:
+        with open(f"{path}/{filename}", mode="w", newline='\n', encoding='utf-8') as csvfile:
             fieldnames =    [
                 "step",
                 "e_bit",
@@ -185,7 +187,7 @@ def mult_with_mod_print_steps(a, b, c, e, n, filename="mult_with_mod_test_01.csv
         print(f"Error opening file {filename}: {ex}")
     return R, P
 
-def encrypt_print_steps(M, e, n, filename="encrypt_test_01.csv"):
+def encrypt_print_steps(M, e, n, path="test_data", filename="encrypt_test_01.csv"):
     steps = []
 
     R = 1
@@ -199,7 +201,7 @@ def encrypt_print_steps(M, e, n, filename="encrypt_test_01.csv"):
 
     for i in range(256):
         x = (e >> i) & 1
-        R, P = mult_with_mod_print_steps(P, R, P, x, n, f"test_data_2/multiplication_steps_{i:02}.csv")
+        R, P = mult_with_mod_print_steps(P, R, P, x, n, path=path, filename=f"multiplication_steps_enc_iter_{i:03}.csv")
 
         steps.append({
             "iteration": i,
@@ -208,9 +210,11 @@ def encrypt_print_steps(M, e, n, filename="encrypt_test_01.csv"):
             "P_hex": f"\t0x{P:0{64}x}"
         })
 
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     try:
-        with open(filename, mode="w", newline='\n', encoding='utf-8') as csvfile:
+        with open(f"{path}/{filename}", mode="w", newline='\n', encoding='utf-8') as csvfile:
             fieldnames =    [
                 "iteration",
                 "e_bit",
@@ -226,5 +230,5 @@ def encrypt_print_steps(M, e, n, filename="encrypt_test_01.csv"):
     return
 
 
-encrypt_print_steps(msg, e, key_N, filename="test_data_2/encryption_steps_01.csv")
+encrypt_print_steps(msg, e, key_N, path="test_data", filename="encryption_steps_01.csv")
 
