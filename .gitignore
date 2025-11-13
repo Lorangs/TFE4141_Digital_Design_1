@@ -56,3 +56,6 @@ TermProject/tfe4141_rsa_integration_kit_2025/RSA_soc/
 
 # ignore all .txt files in TermProject/ (anywhere in TermProject/)
 TermProject/**/*.txt
+
+# ignore test files
+test_data/
