@@ -2,7 +2,7 @@
 *.jou
 *.log
 *.str
-*.xpr.backup
+#*.xpr.backup
 *.cache/
 *.hw/
 *.ip_user_files/
