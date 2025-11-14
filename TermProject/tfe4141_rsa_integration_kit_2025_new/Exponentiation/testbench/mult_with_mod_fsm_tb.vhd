@@ -51,7 +51,7 @@ architecture mult_fsm_tb_behave of mult_with_mod_fsm_tb is
 
     signal  
             clk, 
-            reset_neg, 
+            reset_n, 
             valid_out, 
             valid_in, 
             ready_out, 
@@ -79,10 +79,11 @@ DUT: entity work.mult_with_mod_fsm
             C_block_size => C_block_size
         )
     port map (
-        reset_neg         => reset_neg,
+        reset_n         => reset_n,
         clk             => clk,
         n               => n,
         a               => a,
+        bit_shifted_a     => bit_shifted_a,
 
         ready_out       => ready_out,
         valid_in        => valid_in,
@@ -94,9 +95,7 @@ DUT: entity work.mult_with_mod_fsm
         mux_ctrl_R_in   => mux_ctrl_R_in,
         mux_ctrl_P_out  => mux_ctrl_P_out,
         mux_ctrl_R_out  => mux_ctrl_R_out,
-        current_state   => current_state,
-        
-        counter         => counter
+        current_state   => current_state
         
     );
     
@@ -110,12 +109,13 @@ end process;
 
 test_process : process 
     begin
-        reset_neg     <= '0';
+        reset_n     <= '0';
         ready_out   <= '0';
         valid_in    <= '0';
         
-        -- setting n = 256
-        n       <= (8 => '1', others => '0');
+        -- setting n = 8
+        n       <= (others => '0'); 
+        n(3)    <= '1'; 
         
         -- setting a = 10001001 = 17
         a       <= (others => '0');
@@ -129,17 +129,17 @@ test_process : process
         assert valid_out = '0' report "valid_out is not reset when in reset state" severity error;
         assert ready_in = '1' report "ready_in is not 1 when in reset state" severity error;
         
-        reset_neg     <= '1';
+        reset_n     <= '1';
         valid_in    <= '1';
         ready_out   <= '1';
         
         mux_ctrl_P_in <= "1010";
         mux_ctrl_R_in <= "1010";
         
-        wait for clk_period*(C_block_size+1);
+        wait for clk_period*10;
         
         assert ready_in = '0' report "ready_in was not 0 when in counting state" severity error;
-        assert to_integer(unsigned(counter)) = C_block_size report "counter is not C_block_size after C_block_size+1 cycles" severity error;
+        assert counter = n report "counter is not n after n+1 cycles" severity error;
     
         wait for clk_period;
     

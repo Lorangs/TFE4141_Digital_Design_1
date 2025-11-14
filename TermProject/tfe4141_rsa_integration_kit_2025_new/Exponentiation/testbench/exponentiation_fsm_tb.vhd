@@ -23,7 +23,7 @@ architecture exponentiation_fsm_tbBehave of exponentiation_fsm_tb is
 
     -- External Interface Signals
     signal clk                 : std_logic  := '0';
-    signal reset_neg           : std_logic  := '0';
+    signal reset_n             : std_logic  := '0';
 
     -- handshaking signals with external module.
     signal msgout_ready        : std_logic  := '0';
@@ -86,7 +86,7 @@ begin
         port map (
             -- External Interface Signals
             clk                 => clk,
-            reset_neg           => reset_neg,
+            reset_n             => reset_n,
 
             -- handshaking signals with external module.
             msgout_ready        => msgout_ready,
@@ -162,7 +162,7 @@ begin
         report "Starting RSA Core FSM Testbench" severity note;
 
         -- initialize inputs
-        reset_neg        <= '0';
+        reset_n         <= '0';
         msgout_ready    <= '0';
         msgin_valid     <= '0';
         msgin_last      <= '0';
@@ -183,7 +183,7 @@ begin
         assert unsigned(counter) = 0
             report "Counter not reset to 0 after reset" severity error;
 
-        reset_neg <= '1';
+        reset_n <= '1';
         wait for clk_period;
 
         report "TEST CASE 1 PASSED: Reset functionality verified" severity note;
