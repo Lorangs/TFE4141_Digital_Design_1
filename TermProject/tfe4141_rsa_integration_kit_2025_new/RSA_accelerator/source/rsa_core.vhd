@@ -218,12 +218,9 @@ begin
 						-- check if outside is ready to accept the message, then dequeue
 						if msgout_ready = '1' then
 							queue_head <= (queue_head + 1) mod NUM_CORES;
+							msgout_valid <= '0';
 						end if;
-					else 
-						msgout_valid <= '0';
 					end if;	
-				else
-					msgout_valid <= '0';
 				end if;			
 			end if;
 		end if;
