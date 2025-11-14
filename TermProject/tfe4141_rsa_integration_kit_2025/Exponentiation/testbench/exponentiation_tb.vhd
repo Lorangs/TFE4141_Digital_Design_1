@@ -7,71 +7,71 @@ use IEEE.math_real.ALL;
 
 entity exponentiation_tb is
     generic (
-        C_block_size : integer := 256
+        C_BLOCK_SIZE : INTEGER := 256
     );
 end exponentiation_tb;
 
 architecture Behavioral of exponentiation_tb is
 
     -- Clock and reset
-    signal clk                 	: std_logic := '0';
-    signal reset_neg            : std_logic := '0';
+    signal clk                 	: STD_LOGIC := '0';
+    signal reset_neg            : STD_LOGIC := '0';
 
     -- Slave msgin interface
-    signal msgin_valid         	: std_logic := '0';
-    signal msgin_ready         	: std_logic;
-    signal msgin_data          	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-    signal msgin_data_reg      	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-    signal result_R        		: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-    signal msgin_last          	: std_logic := '0';
+    signal msgin_valid         	: STD_LOGIC := '0';
+    signal msgin_ready         	: STD_LOGIC;
+    signal msgin_data          	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal msgin_data_reg      	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal result_R        		: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal msgin_last          	: STD_LOGIC := '0';
 
     -- Master msgout interface
-    signal msgout_valid        	: std_logic;
-    signal msgout_ready        	: std_logic := '0';
-    signal msgout_data         	: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-    signal msgout_last         	: std_logic;
+    signal msgout_valid        	: STD_LOGIC;
+    signal msgout_ready        	: STD_LOGIC := '0';
+    signal msgout_data         	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+    signal msgout_last         	: STD_LOGIC;
 
     -- Interface to register block
-    signal key_e_d             	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-    signal key_n               	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-    signal rsa_status          	: std_logic_vector(31 downto 0);
+    signal key_e_d             	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal key_n               	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+    signal rsa_status          	: STD_LOGIC_VECTOR(31 downto 0);
 
     -- Internal signals for testing
-    signal counter             	: integer;
-    signal current_state       	: std_logic_vector(1 downto 0);
+    signal counter             	: INTEGER in range 0 to C_BLOCK_SIZE;
+    signal current_state       	: STD_LOGIC_VECTOR(1 downto 0);
 
     -- Constants
-    constant clk_period        	: time := 5 ns;
+    constant clk_period        	: TIME := 5 ns;
     signal test_running        	: boolean := true;
-    signal test_case_num       	: integer := 0;
+    signal test_case_num       	: INTEGER := 0;
 
     -- FSM States
-    constant LOAD_NEW_MSG    	: std_logic_vector(1 downto 0)     := "00";
-    constant COUNT_WAIT      	: std_logic_vector(1 downto 0)     := "01";
-    constant COUNT_FIN_PARTIAL 	: std_logic_vector(1 downto 0)     := "10";
-    constant FINISHED        	: std_logic_vector(1 downto 0)     := "11";
+    constant LOAD_NEW_MSG    	: STD_LOGIC_VECTOR(1 downto 0)     := "00";
+    constant COUNT_WAIT      	: STD_LOGIC_VECTOR(1 downto 0)     := "01";
+    constant COUNT_FIN_PARTIAL 	: STD_LOGIC_VECTOR(1 downto 0)     := "10";
+    constant FINISHED        	: STD_LOGIC_VECTOR(1 downto 0)     := "11";
 
-	signal mult_valid_out      	: std_logic;
-	signal mult_ready_in       	: std_logic;
-	signal mult_valid_in       	: std_logic;
-	signal mult_ready_out      	: std_logic;
-	signal mult_reset_neg      	: std_logic;
+	signal mult_valid_out      	: STD_LOGIC;
+	signal mult_ready_in       	: STD_LOGIC;
+	signal mult_valid_in       	: STD_LOGIC;
+	signal mult_ready_out      	: STD_LOGIC;
+	signal mult_reset_neg      	: STD_LOGIC;
 
-	signal mult_R_next         	: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal mult_P_next         	: std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal mult_e_d            	: std_logic;				-- exponent bit (LSB first)
+	signal mult_R_next         	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+	signal mult_P_next         	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+	signal mult_e_d            	: STD_LOGIC;				-- exponent bit (LSB first)
 
 	---- can be deleted when testing is done ----
-	signal mult_counter			: integer;
-	signal mult_current_state	: std_logic_vector(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+	signal mult_counter			: INTEGER in range 0 to C_BLOCK_SIZE;
+	signal mult_current_state	: STD_LOGIC_VECTOR(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
-	signal result_P          	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+	signal result_P          	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
 
 	-- Registers for storing input signals
-	signal key_e_d_reg      	: std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
-	signal key_n_reg        	: std_logic_vector(C_BLOCK_SIZE downto 0) := (others => '0');
-	signal msgin_last_reg   	: std_logic := '0';
+	signal key_e_d_reg      	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+	signal key_n_reg        	: STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0) := (others => '0');
+	signal msgin_last_reg   	: STD_LOGIC := '0';
 
 begin
     ---------------------------
@@ -94,11 +94,11 @@ begin
     ------------------------------
     DUT: entity work.exponentiation
         generic map (
-            C_block_size => C_block_size
+            C_BLOCK_SIZE => C_BLOCK_SIZE
         )
         port map (
             -- Clock and reset
-            clk             => clk,
+            clk               => clk,
             reset_neg         => reset_neg,
 
             -- Slave msgin interface
@@ -150,36 +150,36 @@ begin
 
             -- helper function to test outputs correctness
         procedure check_outputs(
-            expected_state  : std_logic_vector(1 downto 0);
-            expected_msgin_ready : std_logic;
-            expected_msgout_valid : std_logic;
-            expected_mult_valid_in  : std_logic;
-            expected_mult_ready_out  : std_logic;
-            expected_mult_reset_neg   : std_logic
+            expected_state  : STD_LOGIC_VECTOR(1 downto 0);
+            expected_msgin_ready : STD_LOGIC;
+            expected_msgout_valid : STD_LOGIC;
+            expected_mult_valid_in  : STD_LOGIC;
+            expected_mult_ready_out  : STD_LOGIC;
+            expected_mult_reset_neg   : STD_LOGIC
         ) is
         begin 
             if current_state /= expected_state then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect current_state" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect current_state" severity error;
             end if;
 
             if msgin_ready /= expected_msgin_ready then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect msgin_ready" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect msgin_ready" severity error;
             end if;
 
             if msgout_valid /= expected_msgout_valid then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect msgout_valid" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect msgout_valid" severity error;
             end if;
 
             if mult_valid_in = expected_mult_valid_in then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect mult_valid_in" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect mult_valid_in" severity error;
             end if;
 
             if mult_ready_out /= expected_mult_ready_out then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect mult_ready_out" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect mult_ready_out" severity error;
             end if;
 
             if mult_reset_neg /= expected_mult_reset_neg then
-                report "TEST " & integer'image(test_case_num) & " FAILED: Incorrect mult_reset_neg" severity error;
+                report "TEST " & INTEGER'image(test_case_num) & " FAILED: Incorrect mult_reset_neg" severity error;
             end if;
 
         end procedure check_outputs;
@@ -257,7 +257,7 @@ begin
 
         report "TEST CASE 3: Wait for operation to complete and check outputs" severity note;
 
-        wait for clk_period * 256;  -- wait enough time for operation to complete
+        wait for clk_period * 256;  -- wait enough TIME for operation to complete
 
         check_outputs(
             expected_state       => COUNT_FIN_PARTIAL,

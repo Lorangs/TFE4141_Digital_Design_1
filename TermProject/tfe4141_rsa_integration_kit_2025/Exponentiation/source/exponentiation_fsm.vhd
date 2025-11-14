@@ -25,41 +25,41 @@ use IEEE.Numeric_STD.all;
 
 entity exponentiation_fsm is
     generic (
-        C_block_size : integer := 256
+        C_BLOCK_SIZE : INTEGER := 256
     );
 
     Port ( 
         ------------------------------------
         -- External Interface Signals
         ------------------------------------
-        clk                 : in std_logic;
-        reset_neg             : in std_logic;
+        clk                 : in STD_LOGIC;
+        reset_neg           : in STD_LOGIC;
 
         -- handshaking signals with external module.
-        msgout_ready        : in std_logic;
-        msgout_valid        : out std_logic;
-        msgin_ready         : out std_logic;
-        msgin_valid         : in std_logic;
-        msgin_last          : in std_logic;
+        msgout_ready        : in STD_LOGIC;
+        msgout_valid        : out STD_LOGIC;
+        msgin_ready         : out STD_LOGIC;
+        msgin_valid         : in STD_LOGIC;
+        msgin_last          : in STD_LOGIC;
 
         -- handshaking signals with mult_with_mod module.
-        mult_ready_in        : in std_logic;
-        mult_valid_in        : out std_logic;
-        mult_ready_out       : out std_logic;
-        mult_valid_out       : in std_logic;
-        mult_reset_neg       : out std_logic;
+        mult_ready_in       : in STD_LOGIC;
+        mult_valid_in       : out STD_LOGIC;
+        mult_ready_out      : out STD_LOGIC;
+        mult_valid_out      : in STD_LOGIC;
+        mult_reset_neg      : out STD_LOGIC;
 
         -- RSA status signal
-        rsa_status          : out std_logic_vector(31 downto 0);
+        rsa_status          : out STD_LOGIC_VECTOR( 31 downto 0 );
 
         -- exponent bits
-        key_e_d_reg         : in std_logic_vector(C_block_size-1 downto 0);
-        key_e_d_LSB         : out std_logic;     
+        key_e_d_reg         : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+        key_e_d_LSB         : out STD_LOGIC;     
         
-        current_state       : inout std_logic_vector(1 downto 0);
+        current_state       : inout STD_LOGIC_VECTOR( 1 downto 0 ); -- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 
         -- internal signals for testing
-        counter             : inout integer
+        counter             : inout INTEGER in range 0 to C_BLOCK_SIZE
     );
 end exponentiation_fsm;
 
@@ -67,9 +67,9 @@ architecture exponentiation_fsm_behave of exponentiation_fsm is
     ------------------------------------------------------------------------
     -- RESET = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
     -------------------------------------------------------------------------
-    signal next_state                   : std_logic_vector(1 downto 0);
+    signal next_state                   : STD_LOGIC_VECTOR(1 downto 0);
 
-    signal bit_shifted_key_e_d          : std_logic_vector(C_block_size-1 downto 0);
+    signal bit_shifted_key_e_d          : STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
 begin
 
     --------------------------------------
@@ -94,7 +94,7 @@ begin
                     bit_shifted_key_e_d <= key_e_d_reg;
 
                 when "10" =>  -- COUNT_FIN_PARTIAL
-                    bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
+                    bit_shifted_key_e_d <= STD_LOGIC_VECTOR( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
 
                 when others => -- COUNT_WAIT, FINISHED
                     bit_shifted_key_e_d <= bit_shifted_key_e_d;
@@ -197,7 +197,7 @@ begin
                 if (mult_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
-                elsif ( counter < C_block_size ) then
+                elsif ( counter < C_BLOCK_SIZE ) then
                     next_state <= "01";  -- COUNT_WAIT state
 
                 else 

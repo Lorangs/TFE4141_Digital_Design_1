@@ -18,48 +18,48 @@ use ieee.numeric_std.all;
 
 entity mult_with_mod_fsm is
     generic (
-		C_block_size    : integer := 256
+		C_BLOCK_SIZE    : INTEGER := 256
 	);
     port ( 
         -- utility
-        reset_neg       : in std_logic;
-        clk             : in std_logic;
+        reset_neg       : in STD_LOGIC;
+        clk             : in STD_LOGIC;
 
         -- input data
-        a               : in std_logic_vector ( C_block_size-1 downto 0 );
+        a               : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );
 
         -- input control
-        ready_out       : in std_logic;
-        valid_in        : in std_logic;
+        ready_out       : in STD_LOGIC;
+        valid_in        : in STD_LOGIC;
         
         -- output control
-        ready_in        : out std_logic;
-        valid_out       : out std_logic;
+        ready_in        : out STD_LOGIC;
+        valid_out       : out STD_LOGIC;
         
         -- mux control signals
-        mux_ctrl_P_in   : in std_logic_vector ( 3 downto 0 );
-        mux_ctrl_R_in   : in std_logic_vector ( 3 downto 0 );
+        mux_ctrl_P_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
+        mux_ctrl_R_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
         
         -- output mux control signals
-        mux_ctrl_P_out  : out std_logic_vector ( 2 downto 0 );
-        mux_ctrl_R_out  : out std_logic_vector ( 2 downto 0 );
+        mux_ctrl_P_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
+        mux_ctrl_R_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
         
         -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state   : inout std_logic_vector ( 1 downto 0 );
+        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 );
 
         -- internal signals for testing
-        counter         : inout integer
+        counter         : inout INTEGER In range 0 to C_BLOCK_SIZE
     ); 
 end mult_with_mod_fsm;
 
 architecture mult_fsm_behave of mult_with_mod_fsm is
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
     signal  next_state 
-        : std_logic_vector ( 1 downto 0 );
+        : STD_LOGIC_VECTOR ( 1 downto 0 );
 
     signal  --counter,
             bit_shifted_a 
-        : std_logic_vector ( C_block_size-1 downto 0 );
+        : STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
 
 begin
 
@@ -172,7 +172,7 @@ begin
 
             when "01" =>  -- COUNTING
    
-                if ( counter = C_block_size ) then
+                if ( counter = C_BLOCK_SIZE ) then
                     next_state  <= "10";  -- FINISHED state
                 else
                     next_state <= "01";  -- COUNTING state

@@ -26,83 +26,83 @@ use ieee.numeric_std.all;
 entity exponentiation is
 	generic (
 		-- Users to add parameters here
-		C_block_size          : integer := 256
+		C_BLOCK_SIZE          : INTEGER := 256
 	);
 	port (
 		-----------------------------------------------------------------------------
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
-		clk                    :  in std_logic;
-		reset_neg              :  in std_logic;
+		clk                    :  in STD_LOGIC;
+		reset_neg              :  in STD_LOGIC;
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
 		-----------------------------------------------------------------------------
 		-- Message that will be sent out is valid
-		msgin_valid             : in std_logic;
+		msgin_valid             : in STD_LOGIC;
 		-- Slave ready to accept a new message
-		msgin_ready             : out std_logic;
+		msgin_ready             : out STD_LOGIC;
 		-- Message that will be sent out of the rsa_msgin module
-		msgin_data              :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		msgin_data              :  in STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
 		-- Indicates boundary of last packet
-		msgin_last              :  in std_logic;
+		msgin_last              :  in STD_LOGIC;
 
 		-----------------------------------------------------------------------------
 		-- Master msgout interface
 		-----------------------------------------------------------------------------
 		-- Message that will be sent out is valid
-		msgout_valid            : out std_logic;
+		msgout_valid            : out STD_LOGIC;
 		-- Slave ready to accept a new message
-		msgout_ready            :  in std_logic;
+		msgout_ready            :  in STD_LOGIC;
 		-- Message that will be sent out of the rsa_msgin module
-		msgout_data             : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		msgout_data             : out STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		-- Indicates boundary of last packet
-		msgout_last             : out std_logic;
+		msgout_last             : out STD_LOGIC;
  
 		-----------------------------------------------------------------------------
 		-- Interface to the register block
 		-----------------------------------------------------------------------------
-		key_e_d                 :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		key_n                   :  in std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		rsa_status              :  out std_logic_vector(31 downto 0);
+		key_e_d                 :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+		key_n                   :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+		rsa_status              :  out STD_LOGIC_VECTOR( 31 downto 0 );
 
 
 		-----------------------------------------------------------------------------
 		-- Internal signals for testing. Can be moved to signal interface when testing is done.
 		-----------------------------------------------------------------------------
-		counter				  : inout integer;
+		counter				  : inout INTEGER;
 		
 		
 		-- Control signals from FSM
-		current_state			: inout std_logic_vector(1 downto 0);
+		current_state			: inout STD_LOGIC_VECTOR( 1 downto 0 );		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 		
 		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
-		msgin_data_reg   : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		msgin_data_reg   : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		
 		-- Mult_with_mod module signals
-		mult_valid_out      : inout std_logic;
-		mult_ready_in       : inout std_logic;
-		mult_valid_in       : inout std_logic;
-		mult_ready_out      : inout std_logic;
-		mult_reset_neg      : inout std_logic;
+		mult_valid_out      : inout STD_LOGIC;
+		mult_ready_in       : inout STD_LOGIC;
+		mult_valid_in       : inout STD_LOGIC;
+		mult_ready_out      : inout STD_LOGIC;
+		mult_reset_neg      : inout STD_LOGIC;
 
-		mult_R_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		mult_P_next         : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		mult_e_d            : inout std_logic;				-- exponent bit (LSB first)
+		mult_R_next         : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+		mult_P_next         : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+		mult_e_d            : inout STD_LOGIC;				-- exponent bit (LSB first)
 
 
 		---- can be deleted when testing is done ----
-		mult_counter		: inout integer;
-		mult_current_state	: inout std_logic_vector(1 downto 0);		-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+		mult_counter		: inout INTEGER;
+		mult_current_state	: inout STD_LOGIC_VECTOR( 1 downto 0 );		-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
-		result_R          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-		result_P          : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+		result_R          : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+		result_P          : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 
 		-- Registers for storing input signals
-		key_e_d_reg      : inout std_logic_vector(C_BLOCK_SIZE-1 downto 0);	
-		key_n_reg        : inout std_logic_vector(C_BLOCK_SIZE downto 0);	-- 1 sign bit + C_block_size bits
-		msgin_last_reg   : inout std_logic := '0'
+		key_e_d_reg      : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );	
+		key_n_reg        : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );	
+		msgin_last_reg   : inout STD_LOGIC := '0'
 
 	);
 end exponentiation;
@@ -125,7 +125,7 @@ begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
 				key_e_d_reg    <=  key_e_d;
-				key_n_reg      <=  '0' & key_n;
+				key_n_reg      <=  key_n;
 				msgin_data_reg <=  msgin_data;
 				msgin_last_reg <=  msgin_last;
 
@@ -182,7 +182,7 @@ begin
 	-----------------------------------------------------------------------------
 	i_mult_with_mod : entity work.mult_with_mod
 		generic map (
-			C_block_size => C_BLOCK_SIZE
+			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
 		port map (	
 			-- handshaking signals

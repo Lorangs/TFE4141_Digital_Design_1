@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity mult_with_mod_tb is
 	generic (
-		C_block_size : integer := 256
+		C_BLOCK_SIZE : INTEGER := 256
 	);
 end mult_with_mod_tb;
 
@@ -12,44 +12,42 @@ end mult_with_mod_tb;
 
 architecture mult_behave of mult_with_mod_tb is 
 
-		--constant C_block_size : integer := 256;
-		constant clk_period   : time 	:= 10ns;
+		--constant C_BLOCK_SIZE : INTEGER := 256;
+		constant clk_period   : TIME 	:= 10ns;
 
 		signal valid_in 	  :  STD_LOGIC;
 		signal ready_in  	  :  STD_LOGIC;
 
 		--input data
-		signal a, b, c        :  STD_LOGIC_VECTOR ( C_block_size-1 downto 0);
-		signal e              :  std_logic;
+		signal a, b, c        :  STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0);
+		signal e              :  STD_LOGIC;
 		
 		--ouput controll
 		signal ready_out	  :  STD_LOGIC;
 		signal valid_out	  :  STD_LOGIC;
 
 		--output data
-		signal result_R 	  :  STD_LOGIC_VECTOR( C_block_size-1 downto 0);
-		signal result_P 	  :  STD_LOGIC_VECTOR( C_block_size-1 downto 0);
+		signal result_R 	  :  STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0);
+		signal result_P 	  :  STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0);
 
 		--modulus
-		signal n              :  STD_LOGIC_VECTOR ( C_block_size downto 0 );
+		signal n              :  STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 
          
 		--utility
 		signal clk 		      :  STD_LOGIC;
-		signal reset_neg 	      :  STD_LOGIC;
+		signal reset_neg 	  :  STD_LOGIC;
 
 		-- Internal Signal
-		signal s0, s1 ,s2 ,s3 , s6, s7, s8, s9 : std_logic_vector(C_block_size downto 0);
-		signal s4, s5, s10, s11 : std_logic_vector(C_block_size+1 downto 0);
-
+		signal s0, s1 ,s2 ,s3, s4, s5, s6, s7, s8, s9, s10, s11 : STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 ); -- two extra bits: one for sign, one for possible overflow
 		-- state
-		signal current_state : std_logic_vector(1 downto 0);
+		signal current_state : STD_LOGIC_VECTOR( 1 downto 0 );	-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- counter
-		signal counter       : integer;
+		signal counter       : INTEGER in range 0 to C_BLOCK_SIZE;
 
 		-- Registers for input values
-		signal a_reg, b_reg, c_reg: std_logic_vector(C_block_size-1 downto 0);
+		signal a_reg, b_reg, c_reg: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		signal e_reg : std_logic;
 
 
@@ -59,7 +57,7 @@ begin
 
 DUT : entity work.mult_with_mod
 	generic map(
-		C_block_size => C_block_size
+		C_BLOCK_SIZE => C_BLOCK_SIZE
 	)
 	port map (
 	--input controll
@@ -125,7 +123,7 @@ begin
 	c 			<= x"0a23232323232323232323232323232323232323232323232323232323232323";
 	e 			<= '1'; -- e = 1 (perform multiplication)
 
-	n 			<= '0' & x"99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d";
+	n 			<= x"99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d";
 	
 
 	valid_in 	<= '0';
