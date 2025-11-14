@@ -94,7 +94,7 @@ begin
                     bit_shifted_key_e_d <= key_e_d_reg;
 
                 when "10" =>  -- COUNT_FIN_PARTIAL
-                    bit_shifted_key_e_d <= std_logic_vector( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
+                    bit_shifted_key_e_d <= STD_LOGIC_VECTOR( shift_right( unsigned( bit_shifted_key_e_d ), 1 ) );
 
                 when others => -- COUNT_WAIT, FINISHED
                     bit_shifted_key_e_d <= bit_shifted_key_e_d;
@@ -170,7 +170,7 @@ begin
     -----------------------------------
     -- Next State Logic
     -----------------------------------
-    NextState: process (current_state, msgin_valid, mult_ready_in, mult_valid_out, msgout_ready, counter, n)
+    NextState: process (current_state, msgin_valid, mult_ready_in, mult_valid_out, msgout_ready, counter)
     begin
         case current_state is 
 
@@ -197,7 +197,7 @@ begin
                 if (mult_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
-                elsif ( to_integer(unsigned(counter)) < C_block_size ) then
+                elsif ( counter < C_BLOCK_SIZE ) then
                     next_state <= "01";  -- COUNT_WAIT state
 
                 else 
@@ -232,12 +232,12 @@ begin
         if rising_edge(clk) then
             case current_state is
                 when "00" => -- LOAD_NEW_MSG
-                    counter <= (others => '0');
+                    counter <= 0;
 
                 when "10" => -- COUNT_FIN_PARTIAL
 
                     if next_state = "01" then   -- transition to COUNT_WAIT
-                        counter <= std_logic_vector( unsigned( counter ) + 1);
+                        counter <= counter + 1;
 
                     else
                         counter <= counter;
@@ -246,10 +246,8 @@ begin
 
                 when others => -- COUNT_WAIT, FINISHED
                     counter <= counter;
+                    
             end case;
         end if;
     end process SyncCounter;
-
-
-
 end exponentiation_fsm_behave;

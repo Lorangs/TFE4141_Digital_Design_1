@@ -109,8 +109,8 @@ begin
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
 			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(C_block_size)  & s4(C_block_size)  & s3(C_block_size) & s2(C_block_size),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(C_block_size) & s10(C_block_size) & s9(C_block_size) & s8(C_block_size),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
+			mux_ctrl_R_in  			=> s5(s5'high) &  s4(s4'high) & s3(s3'high) & s2(s2'high),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(s11'high) & s10(s10'high) & s9(s9'high) & s8(s8'high),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
 			current_state 			=> current_state,

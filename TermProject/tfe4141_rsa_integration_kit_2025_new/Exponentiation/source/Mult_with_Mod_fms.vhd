@@ -18,51 +18,48 @@ use ieee.numeric_std.all;
 
 entity mult_with_mod_fsm is
     generic (
-		C_block_size    : integer := 256
+		C_BLOCK_SIZE    : INTEGER := 256
 	);
     port ( 
         -- utility
-        reset_neg       : in std_logic;
-        clk             : in std_logic;
-
-        -- modulus 
-        n               : in std_logic_vector ( C_block_size-1 downto 0 );
+        reset_neg       : in STD_LOGIC;
+        clk             : in STD_LOGIC;
 
         -- input data
-        a               : in std_logic_vector ( C_block_size-1 downto 0 );
+        a               : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );
 
         -- input control
-        ready_out       : in std_logic;
-        valid_in        : in std_logic;
+        ready_out       : in STD_LOGIC;
+        valid_in        : in STD_LOGIC;
         
         -- output control
-        ready_in        : out std_logic;
-        valid_out       : out std_logic;
+        ready_in        : out STD_LOGIC;
+        valid_out       : out STD_LOGIC;
         
         -- mux control signals
-        mux_ctrl_P_in   : in std_logic_vector ( 3 downto 0 );
-        mux_ctrl_R_in   : in std_logic_vector ( 3 downto 0 );
+        mux_ctrl_P_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
+        mux_ctrl_R_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
         
         -- output mux control signals
-        mux_ctrl_P_out  : out std_logic_vector ( 2 downto 0 );
-        mux_ctrl_R_out  : out std_logic_vector ( 2 downto 0 );
+        mux_ctrl_P_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
+        mux_ctrl_R_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
         
         -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state   : inout std_logic_vector ( 1 downto 0 );
+        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 );
 
         -- internal signals for testing
-        counter         : inout std_logic_vector(C_block_size-1 downto 0 )
+        counter         : inout INTEGER
     ); 
 end mult_with_mod_fsm;
 
 architecture mult_fsm_behave of mult_with_mod_fsm is
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
     signal  next_state 
-        : std_logic_vector ( 1 downto 0 );
+        : STD_LOGIC_VECTOR ( 1 downto 0 );
 
     signal  --counter,
             bit_shifted_a 
-        : std_logic_vector ( C_block_size-1 downto 0 );
+        : STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
 
 begin
 
@@ -75,8 +72,8 @@ begin
             when "00" =>    -- RESET
                 ready_in    <= '1';
                 valid_out   <= '0';
-                mux_ctrl_P_out <= "111";
-                mux_ctrl_R_out <= "111";
+                mux_ctrl_P_out <= "111";    -- Indicate invalid mux selection
+                mux_ctrl_R_out <= "111";    -- Indicate invalid mux selection
 
             when "01" =>  -- COUNTING
                 ready_in    <= '0';
@@ -154,14 +151,16 @@ begin
             when others =>      
                 ready_in    <= '1';
                 valid_out   <= '0';
-                mux_ctrl_P_out <= "111";
-                mux_ctrl_R_out <= "111";
+                mux_ctrl_P_out <= "111";    -- Indicate invalid mux selection
+                mux_ctrl_R_out <= "111";    -- Indicate invalid mux selection
         end case;
     end process setOutputs;
+
+    
     -----------------------------------------
     -- Next State Logic.
     -----------------------------------------
-   NextState: process (current_state, counter, ready_out, valid_in, n) 
+   NextState: process (current_state, counter, ready_out, valid_in) 
    begin
         case current_state is 
             when "00" =>    -- RESET
@@ -173,7 +172,7 @@ begin
 
             when "01" =>  -- COUNTING
    
-                if (to_integer(unsigned(counter)) = C_block_size ) then
+                if ( counter = C_BLOCK_SIZE ) then
                     next_state  <= "10";  -- FINISHED state
                 else
                     next_state <= "01";  -- COUNTING state
@@ -215,15 +214,15 @@ begin
     -- In other states, resets to zero.
     -- Uses next_state signal from Next State Logic.
     -----------------------------------------
-    SyncCounter: process (clk, reset_neg, next_state) 
+    SyncCounter: process (clk, next_state) 
     begin
         if rising_edge(clk) then
             case next_state is
                 when "01" =>    -- COUNTING
-                    counter <= std_logic_vector( unsigned( counter ) + 1 );
+                    counter <= counter + 1;
     
                 when others =>
-                    counter <= ( others => '0' );
+                    counter <= 0;
             end case ;
         end if;
     end process SyncCounter;  
@@ -233,7 +232,7 @@ begin
     -- Shift A register. Shifts left during COUNTING state.
     -- In other states, loads input a.
     -----------------------------------------
-   ShiftA: process (clk, current_state)
+   ShiftA: process (clk, current_state, a, bit_shifted_a)
     begin
         if rising_edge(clk) then
             case current_state is
