@@ -27,7 +27,11 @@ entity rsa_core is
 	generic (
 		-- Users to add parameters here
 		C_BLOCK_SIZE          	: INTEGER := 256;
+<<<<<<< HEAD
 		NUM_CORES		   	    : INTEGER := 2
+=======
+		NUM_CORES		   	    : INTEGER := 2;
+>>>>>>> cb98b1c0a25e8962a1d6d4d123042f62adc11420
 	);
 	
 	port (
@@ -66,6 +70,7 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		key_e_d                 : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		key_n                   : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+<<<<<<< HEAD
 		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 );
 
 
@@ -85,12 +90,16 @@ entity rsa_core is
 
 		exp_current_state 	: inout state_array_t(0 to NUM_CORES - 1)
 
+=======
+		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 )
+>>>>>>> cb98b1c0a25e8962a1d6d4d123042f62adc11420
 	);
 end rsa_core;
 
 architecture rtl of rsa_core is
 	
 	-- Array types for connecting multiple cores
+<<<<<<< HEAD
 	type msg_data_array_t		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 	
 	-- Signals for connecting multiple cores
@@ -111,6 +120,24 @@ architecture rtl of rsa_core is
 	-- signal queue_tail		: integer range 0 to NUM_CORES - 1 := 0;
 
 
+=======
+	type msgin_data_array	is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	type control_signal_array	is array (0 to NUM_CORES - 1) of STD_LOGIC;
+	type rsa_status_array		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( 31 downto 0 );
+
+	-- Signals for connecting multiple cores
+	signal msgin_data_array		: msgin_data_array;
+	signal msgout_data_array	: msgin_data_array;
+	signal key_e_d_array		: msgin_data_array;
+	signal key_n_array			: msgin_data_array;
+	signal msgin_valid_array	: control_signal_array;
+	signal msgin_ready_array	: control_signal_array;
+	signal msgin_last_array		: control_signal_array;
+	signal msgout_valid_array	: control_signal_array;
+	signal msgout_ready_array	: control_signal_array;
+	signal msgout_last_array	: control_signal_array;
+	signal rsa_status_array		: rsa_status_array;
+>>>>>>> cb98b1c0a25e8962a1d6d4d123042f62adc11420
 
 begin
 	

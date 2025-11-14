@@ -61,7 +61,11 @@ architecture Behavioral of exponentiation_tb is
 	signal mult_e_d            	: STD_LOGIC;				-- exponent bit (LSB first)
 
 	---- can be deleted when testing is done ----
+<<<<<<< HEAD
 	signal mult_counter			: INTEGER;
+=======
+	signal mult_counter			: INTEGER in range 0 to C_BLOCK_SIZE;
+>>>>>>> cb98b1c0a25e8962a1d6d4d123042f62adc11420
 	signal mult_current_state	: STD_LOGIC_VECTOR(1 downto 0);					-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
 
 		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
