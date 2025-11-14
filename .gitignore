@@ -52,7 +52,7 @@ TermProject/tfe4141_rsa_integration_kit_2025/RSA_accelerator/RSA_accelerator/RSA
 TermProject/tfe4141_rsa_integration_kit_2025/RSA_soc/
 
 # ignore all .tcl files globally (anywhere in the repository)
-*.tcl
+#*.tcl
 
 # ignore all .txt files in TermProject/ (anywhere in TermProject/)
 TermProject/**/*.txt
