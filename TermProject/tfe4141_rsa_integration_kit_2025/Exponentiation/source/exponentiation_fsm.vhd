@@ -59,7 +59,7 @@ entity exponentiation_fsm is
         current_state       : inout STD_LOGIC_VECTOR( 1 downto 0 ); -- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 
         -- internal signals for testing
-        counter             : inout INTEGER in range 0 to C_BLOCK_SIZE
+        counter             : inout INTEGER range 0 to C_BLOCK_SIZE
     );
 end exponentiation_fsm;
 

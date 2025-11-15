@@ -52,7 +52,7 @@ entity mult_with_mod is
 
 		-- internal signals for testing. Should be moved to signal interface when testing is done.
 		current_state 	: inout STD_LOGIC_VECTOR(1 downto 0); 
-		counter       	: inout INTEGER in range 0 to C_BLOCK_SIZE;
+		counter       	: inout INTEGER range 0 to C_BLOCK_SIZE;
 		s0				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );	-- two extra bits: one for sign, one for possible overflow	
 		s1				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
 		s2				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );

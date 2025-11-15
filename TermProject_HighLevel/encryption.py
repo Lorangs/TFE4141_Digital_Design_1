@@ -61,10 +61,10 @@ def encrypt_v2(M, e, n):
     return R
 
 
-key_N = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
+key_N = 0X99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
 e     = 0x0000000000000000000000000000000000000000000000000000000000010001
 d     = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
-msg   = 0x0a23232323232323232323232323232323232323232323232323232323232323
+msg   = 0X0a2320202020202020202020203336203a2020544e554f43204547415353454d
 
 def mult_with_mod_print_steps(a, b, c, e, n, path="test_data", filename="multiplication_steps.csv"):
     steps = []
@@ -227,8 +227,8 @@ def encrypt_print_steps(M, e, n, path="test_data", filename="encrypt_test_01.csv
 
     except Exception as ex:
         print(f"Error opening file {filename}: {ex}")
-    return
+    return R
 
 
-encrypt_print_steps(msg, e, key_N, path="test_data", filename="encryption_steps_01.csv")
+print(encrypt_print_steps(msg, e, key_N, path="test_data", filename="encryption_steps_01.csv"))
 

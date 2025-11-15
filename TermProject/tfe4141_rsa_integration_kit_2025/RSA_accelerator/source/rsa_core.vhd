@@ -17,22 +17,26 @@
 --   C = M**key_e mod key_n.
 --------------------------------------------------------------------------------
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.rsa_types_pkg.all;
+
+
 entity rsa_core is
 	generic (
-		-- Users to add parameters here
+		-- Users to add parameters here 
 		C_BLOCK_SIZE          	: INTEGER := 256;
-		NUM_CORES		   	    : INTEGER := 2;
+		NUM_CORES		   	    : INTEGER := 4
 	);
+
+	
 	port (
 		-----------------------------------------------------------------------------
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
 		clk                    	: in STD_LOGIC;
-		reset_neg              	: in STD_LOGIC;
+		reset_n              	: in STD_LOGIC;
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
@@ -63,31 +67,93 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		key_e_d                 : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		key_n                   : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 )
+		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 );
+
+
+		-----------------------------------------------------------------------------
+		-- Internal signals for testing
+		-----------------------------------------------------------------------------
+		current_state_array   : inout state_array_t;
+		msgin_data_array      : inout data_array_t;
+		msgin_ready_array     : inout logic_array_t;
+		msgout_ready_array    : inout logic_array_t;
+		msgin_valid_array     : inout logic_array_t;
+		msgin_last_array      : inout logic_array_t;
+		msgout_data_array     : inout data_array_t;
+		msgout_valid_array    : inout logic_array_t;
+		msgout_last_array     : inout logic_array_t;
+		rsa_status_array      : inout status_array_t;
+
+		queue_head		  : inout INTEGER range 0 to NUM_CORES-1;
+		queue_tail		  : inout INTEGER range 0 to NUM_CORES-1;
+		queue_count       : inout INTEGER range 0	 to NUM_CORES;
+		queue_empty		  : out STD_LOGIC;
+		queue_full		  : out STD_LOGIC
 	);
 end rsa_core;
 
 architecture rtl of rsa_core is
 	
 	-- Array types for connecting multiple cores
-	type msgin_data_array	is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	type control_signal_array	is array (0 to NUM_CORES - 1) of STD_LOGIC;
-	type rsa_status_array		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( 31 downto 0 );
+	type msg_data_array_t		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	type ctrl_signal_array_t 	is array (0 to NUM_CORES - 1) of STD_LOGIC;
 
 	-- Signals for connecting multiple cores
-	signal msgin_data_array		: msgin_data_array;
-	signal msgout_data_array	: msgin_data_array;
-	signal key_e_d_array		: msgin_data_array;
-	signal key_n_array			: msgin_data_array;
-	signal msgin_valid_array	: control_signal_array;
-	signal msgin_ready_array	: control_signal_array;
-	signal msgin_last_array		: control_signal_array;
-	signal msgout_valid_array	: control_signal_array;
-	signal msgout_ready_array	: control_signal_array;
-	signal msgout_last_array	: control_signal_array;
-	signal rsa_status_array		: rsa_status_array;
+	-- signal msgin_data_array		: msg_data_array_t;
+	-- signal msgout_data_array	: msg_data_array_t;
+	-- signal msgin_valid_array	: ctrl_signal_array_t;
+	-- signal msgin_ready_array	: ctrl_signal_array_t;
+	-- signal msgin_last_array		: ctrl_signal_array_t;
+	-- signal msgout_valid_array	: ctrl_signal_array_t;
+	-- signal msgout_ready_array	: ctrl_signal_array_t;
+	-- signal msgout_last_array	: ctrl_signal_array_t;
+
+
+	-- signal core_order_queue : core_queue_t;
+	-- signal queue_count : INTEGER range 0 to NUM_CORES;
 
 begin
+
+	-----------------------------------------------------------
+	-- Combinational logic for queue status signals
+	-----------------------------------------------------------
+	queue_empty <= '1' when queue_count = 0 else '0';
+	queue_full  <= '1' when queue_count = NUM_CORES else '0';
+
+	----------------------------------------------------------
+	-- Port mapping of top-level signals to core-specific signals
+	----------------------------------------------------------
+	port_mapping: process(all)
+	begin
+		-- Default assignments to avoid latches
+		msgout_ready_array 			<= (others => '0');
+		msgin_valid_array 			<= (others => '0');
+		msgin_data_array 			<= (others => (others => '0'));
+		msgin_last_array 			<= (others => '0');
+		
+		-- Asynchronous reset
+		if reset_n = '0' then
+			msgout_valid 				<= '0';
+			msgout_data 				<= (others => '0');
+			msgin_ready 				<= '0';
+			msgout_last 				<= '0';
+		
+		else
+		    -- Override signals for the core at the head/tail of the queue
+			msgout_ready_array(queue_head) 	<= msgout_ready;
+			msgout_valid 					<= msgout_valid_array(queue_head);
+			msgout_data 					<= msgout_data_array(queue_head);
+			msgout_last 					<= msgout_last_array(queue_head);
+
+			msgin_valid_array(queue_tail) 	<= msgin_valid;
+			msgin_data_array(queue_tail) 	<= msgin_data;
+			msgin_last_array(queue_tail) 	<= msgin_last;
+			msgin_ready 					<= msgin_ready_array(queue_tail);
+		end if;
+	end process port_mapping;
+
+
+	rsa_status <= rsa_status_array(queue_head);  -- TEMPORARY: just output status of core 0
 
 	----------------------------------------------------------
 	-- Generate NUM_CORES instances of exponentiation module
@@ -100,26 +166,68 @@ begin
 			port map (
 				-- Clocks and reset
 				clk                 => clk,
-				reset_neg           => reset_neg,
+				reset_neg           => reset_n,
 
 				-- Slave msgin interface
+				msgin_data          => msgin_data_array(i),
 				msgin_valid         => msgin_valid_array(i),
 				msgin_ready         => msgin_ready_array(i),
-				msgin_data          => msgin_data_array(i),
 				msgin_last          => msgin_last_array(i),
-
+				
 				-- Master msgout interface
+				msgout_data         => msgout_data_array(i),
 				msgout_valid        => msgout_valid_array(i),
 				msgout_ready        => msgout_ready_array(i),
-				msgout_data         => msgout_data_array(i),
 				msgout_last         => msgout_last_array(i),
+				
+				-- Interface to the register block. Key_n and key_e_d are the same for all cores.
+				key_e_d             => key_e_d,
+				key_n               => key_n,
+				rsa_status          => rsa_status_array(i),
 
-				-- Interface to the register block
-				key_e_d             => key_e_d_array(i),
-				key_n               => key_n_array(i),
-				rsa_status          => rsa_status_array(i)
+				current_state    	=> current_state_array(i)
 			);
 	end generate gen_exponentiation_cores;
 
-	
+
+
+	----------------------------------------------------------
+	-- Distribute incoming messages to available cores
+	----------------------------------------------------------
+	message_management: process(clk, reset_n)
+	begin
+
+		-- Asynchronous reset
+		if reset_n = '0' then
+			queue_head 			<= 0;
+			queue_tail 			<= 0;
+			queue_count 		<= 0;
+		
+
+		-- Synchronous operations
+		elsif rising_edge(clk) then
+
+			-- Distribute incoming message to available cores
+			if msgin_ready_array( queue_tail ) = '1' and queue_full = '0'then
+
+				-- enqueue core into queue (FIFO)
+				if msgin_valid = '1' then
+					queue_tail <= ( queue_tail + 1 ) mod NUM_CORES;
+					queue_count <= queue_count + 1;
+
+				end if;
+			end if;	
+				
+			-- Manage outgoing messages from cores in order
+			if msgout_valid_array( queue_head ) = '1' and queue_empty = '0' then			
+
+				-- Dequeue core from queue (FIFO)
+				if msgout_ready = '1' then
+					queue_count <= queue_count - 1;
+					queue_head <= ( queue_head + 1 ) mod NUM_CORES;
+
+				end if;
+			end if;
+		end if;
+	end process message_management;
 end rtl;

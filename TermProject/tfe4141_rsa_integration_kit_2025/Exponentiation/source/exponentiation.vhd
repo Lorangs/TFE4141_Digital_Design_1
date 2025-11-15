@@ -150,7 +150,7 @@ begin
 			
 			when others =>
 				msgout_data <= (others => '0');
-				msgout_last <= '0';
+				msgout_last <= msgin_last_reg;
 		end case;
 	end process;
 

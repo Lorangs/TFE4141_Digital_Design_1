@@ -10,6 +10,8 @@ use ieee.std_logic_1164.all;
 use ieee.math_real.all;
 use ieee.numeric_std.all;
 
+use work.rsa_types_pkg.all;
+
 library std;
 use std.textio.all;
 
@@ -23,6 +25,7 @@ architecture struct of rsa_accelerator_tb is
 	-- Constant declarations
 	-----------------------------------------------------------------------------
 	constant C_BLOCK_SIZE   : integer := 256;
+	constant NUM_CORES      : integer := 4;
 
 	-- RENAME this constant to "long_test" for more comprehensive tests
 	-- "short_test" for shorter tests
@@ -32,7 +35,7 @@ architecture struct of rsa_accelerator_tb is
 	-- Clocks and reset
 	-----------------------------------------------------------------------------
 	signal clk              : std_logic;
-	signal reset_neg          : std_logic;
+	signal reset_n          : std_logic;
 
 	-----------------------------------------------------------------------------
 	-- Slave msgin interface
@@ -64,6 +67,24 @@ architecture struct of rsa_accelerator_tb is
 	signal key_e_d         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	signal key_n           : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	signal rsa_status      : std_logic_vector(31 downto 0);
+
+	-----------------------------------------------------------------------------
+	-- Internal signals for testing
+	-----------------------------------------------------------------------------
+	signal queue_head	  : INTEGER range 0 to NUM_CORES-1;
+	signal queue_tail	  : INTEGER range 0 to NUM_CORES-1;
+	signal queue_count     : INTEGER range 0 to NUM_CORES;
+	signal queue_empty     : std_logic;
+	signal queue_full      : std_logic;
+	signal current_state_array: state_array_t;
+	signal msgin_data_array   : data_array_t;
+	signal msgin_valid_array  : logic_array_t;
+	signal msgin_ready_array  : logic_array_t;
+	signal msgin_last_array   : logic_array_t;
+	signal msgout_data_array  : data_array_t;
+	signal msgout_valid_array : logic_array_t;
+	signal msgout_ready_array : logic_array_t;
+	signal msgout_last_array  : logic_array_t;
 
 	-----------------------------------------------------------------------------
 	-- Testcases
@@ -318,12 +339,12 @@ begin
 		wait for 5 ns;
 	end process;
 
-	-- reset_neg generator
+	-- reset_n generator
 	reset_gen: process is
 	begin
-		reset_neg <= '0';
+		reset_n <= '0';
 		wait for 20 ns;
-		reset_neg <= '1';
+		reset_n <= '1';
 		wait;
 	end process;
 
@@ -331,10 +352,10 @@ begin
 	-- testcase_control
 	-- Process that sets up the correct keys and initializes the testcases.
 	-----------------------------------------------------------------------------
-	testcase_control: process(clk, reset_neg)
+	testcase_control: process(clk, reset_n)
 	begin
 
-		if (reset_neg = '0') then
+		if (reset_n = '0') then
 			tc_ctrl_state          <= e_TC_START_TC;
 			key_n                  <= (others => '0');
 			key_e_d                <= (others => '0');
@@ -401,7 +422,7 @@ begin
 	-- msgin_bfm
 	-- Process that sends messages into the rsa_core
 	-----------------------------------------------------------------------------
-	msgin_bfm: process(clk, reset_neg)
+	msgin_bfm: process(clk, reset_n)
 		variable msgin_valid_ready: std_logic_vector(1 downto 0);
 		variable seed1, seed2     : positive;   -- seed values for random generator
 		variable rand             : real;       -- random real-number value in range 0 to 1.0
@@ -409,7 +430,7 @@ begin
 		variable input_message    : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	begin
 
-		if (reset_neg = '0') then
+		if (reset_n = '0') then
 			-- Drive the inputs of rsa_core to default values
 			msgin_valid   <= '0';
 			msgin_data    <= (others => '0');
@@ -483,7 +504,7 @@ begin
 	-- msgout_bfm
 	-- Process that receives messages from the rsa_core
 	-----------------------------------------------------------------------------
-	msgout_bfm: process(clk, reset_neg)
+	msgout_bfm: process(clk, reset_n)
 		variable msgout_valid_ready    : std_logic_vector(1 downto 0);
 		variable seed1, seed2          : positive;   -- seed values for random generator
 		variable rand                  : real;       -- random real-number value in range 0 to 1.0
@@ -491,7 +512,7 @@ begin
 		variable expected_msgout_data  : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	begin
 
-		if (reset_neg = '0') then
+		if (reset_n = '0') then
 			-- Drive the inputs of rsa_core to default values
 			msgout_ready   <= '0';
 			msgout_counter <= (others => '0');
@@ -578,7 +599,7 @@ u_rsa_core : entity work.rsa_core
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
 		clk                    => clk,
-		reset_neg              => reset_neg,
+		reset_n              => reset_n,
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
@@ -601,7 +622,24 @@ u_rsa_core : entity work.rsa_core
 		-----------------------------------------------------------------------------
 		key_e_d                => key_e_d,
 		key_n                  => key_n,
-		rsa_status             => rsa_status
+		rsa_status             => rsa_status,
+
+
+		-- Internal signals for testing
+		queue_head         => queue_head,
+		queue_tail         => queue_tail,
+		queue_count        => queue_count,
+		queue_empty        => queue_empty,
+		queue_full         => queue_full,
+		current_state_array => current_state_array,
+		msgin_data_array    => msgin_data_array,
+		msgin_valid_array   => msgin_valid_array,
+		msgin_ready_array   => msgin_ready_array,
+		msgin_last_array    => msgin_last_array,
+		msgout_data_array   => msgout_data_array,
+		msgout_valid_array  => msgout_valid_array,
+		msgout_ready_array  => msgout_ready_array,
+		msgout_last_array   => msgout_last_array
 
 	);
 
