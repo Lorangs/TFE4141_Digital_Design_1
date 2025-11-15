@@ -10,7 +10,6 @@ use ieee.std_logic_1164.all;
 use ieee.math_real.all;
 use ieee.numeric_std.all;
 
-use work.rsa_types_pkg.all;
 
 library std;
 use std.textio.all;
@@ -25,7 +24,7 @@ architecture struct of rsa_accelerator_tb is
 	-- Constant declarations
 	-----------------------------------------------------------------------------
 	constant C_BLOCK_SIZE   : integer := 256;
-	constant NUM_CORES      : integer := 4;
+	constant NUM_CORES      : integer := 6;
 
 	-- RENAME this constant to "long_test" for more comprehensive tests
 	-- "short_test" for shorter tests
@@ -68,23 +67,6 @@ architecture struct of rsa_accelerator_tb is
 	signal key_n           : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 	signal rsa_status      : std_logic_vector(31 downto 0);
 
-	-----------------------------------------------------------------------------
-	-- Internal signals for testing
-	-----------------------------------------------------------------------------
-	signal queue_head	  : INTEGER range 0 to NUM_CORES-1;
-	signal queue_tail	  : INTEGER range 0 to NUM_CORES-1;
-	signal queue_count     : INTEGER range 0 to NUM_CORES;
-	signal queue_empty     : std_logic;
-	signal queue_full      : std_logic;
-	signal current_state_array: state_array_t;
-	signal msgin_data_array   : data_array_t;
-	signal msgin_valid_array  : logic_array_t;
-	signal msgin_ready_array  : logic_array_t;
-	signal msgin_last_array   : logic_array_t;
-	signal msgout_data_array  : data_array_t;
-	signal msgout_valid_array : logic_array_t;
-	signal msgout_ready_array : logic_array_t;
-	signal msgout_last_array  : logic_array_t;
 
 	-----------------------------------------------------------------------------
 	-- Testcases
@@ -592,7 +574,8 @@ begin
 ---------------------------------------------------------------------------------
 u_rsa_core : entity work.rsa_core
 	generic map (
-		C_BLOCK_SIZE => C_BLOCK_SIZE
+		C_BLOCK_SIZE => C_BLOCK_SIZE,
+		NUM_CORES    => NUM_CORES
 	)
 	port map (
 		-----------------------------------------------------------------------------
@@ -622,25 +605,7 @@ u_rsa_core : entity work.rsa_core
 		-----------------------------------------------------------------------------
 		key_e_d                => key_e_d,
 		key_n                  => key_n,
-		rsa_status             => rsa_status,
-
-
-		-- Internal signals for testing
-		queue_head         => queue_head,
-		queue_tail         => queue_tail,
-		queue_count        => queue_count,
-		queue_empty        => queue_empty,
-		queue_full         => queue_full,
-		current_state_array => current_state_array,
-		msgin_data_array    => msgin_data_array,
-		msgin_valid_array   => msgin_valid_array,
-		msgin_ready_array   => msgin_ready_array,
-		msgin_last_array    => msgin_last_array,
-		msgout_data_array   => msgout_data_array,
-		msgout_valid_array  => msgout_valid_array,
-		msgout_ready_array  => msgout_ready_array,
-		msgout_last_array   => msgout_last_array
-
+		rsa_status             => rsa_status
 	);
 
 

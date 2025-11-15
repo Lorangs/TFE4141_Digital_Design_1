@@ -17,6 +17,7 @@ entity rsa_accelerator is
 	generic (
 		-- Users to add parameters here
 		C_BLOCK_SIZE : integer := 256;
+		NUM_CORES    : INTEGER := 4;
 
 		-- User parameters ends
 		
@@ -193,7 +194,8 @@ u_rsa_msgout : entity work.rsa_msgout
 
 u_rsa_core : entity work.rsa_core
 	generic map (
-		C_BLOCK_SIZE => C_BLOCK_SIZE
+		C_BLOCK_SIZE => C_BLOCK_SIZE,
+		NUM_CORES    => NUM_CORES
 	)
 	port map (
 		-----------------------------------------------------------------------------

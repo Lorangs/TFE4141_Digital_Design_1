@@ -1,36 +1,12 @@
---------------------------------------------------------------------------------
--- Author       : Oystein Gjermundnes
--- Organization : Norwegian University of Science and Technology (NTNU)
---                Department of Electronic Systems
---                https://www.ntnu.edu/ies
--- Course       : TFE4141 Design of digital systems 1 (DDS1)
--- Year         : 2018-2019
--- Project      : RSA accelerator
--- License      : This is free and unencumbered software released into the
---                public domain (UNLICENSE)
---------------------------------------------------------------------------------
--- Purpose:
---   RSA encryption core template. This core currently computes
---   C = M xor key_n
---
---   Replace/change this module so that it implements the function
---   C = M**key_e mod key_n.
---------------------------------------------------------------------------------
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.rsa_types_pkg.all;
-
 
 entity rsa_core is
 	generic (
-		-- Users to add parameters here 
 		C_BLOCK_SIZE          	: INTEGER := 256;
 		NUM_CORES		   	    : INTEGER := 4
 	);
-
-	
 	port (
 		-----------------------------------------------------------------------------
 		-- Clocks and reset
@@ -67,28 +43,7 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		key_e_d                 : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		key_n                   : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 );
-
-
-		-----------------------------------------------------------------------------
-		-- Internal signals for testing
-		-----------------------------------------------------------------------------
-		current_state_array   : inout state_array_t;
-		msgin_data_array      : inout data_array_t;
-		msgin_ready_array     : inout logic_array_t;
-		msgout_ready_array    : inout logic_array_t;
-		msgin_valid_array     : inout logic_array_t;
-		msgin_last_array      : inout logic_array_t;
-		msgout_data_array     : inout data_array_t;
-		msgout_valid_array    : inout logic_array_t;
-		msgout_last_array     : inout logic_array_t;
-		rsa_status_array      : inout status_array_t;
-
-		queue_head		  : inout INTEGER range 0 to NUM_CORES-1;
-		queue_tail		  : inout INTEGER range 0 to NUM_CORES-1;
-		queue_count       : inout INTEGER range 0	 to NUM_CORES;
-		queue_empty		  : out STD_LOGIC;
-		queue_full		  : out STD_LOGIC
+		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 )
 	);
 end rsa_core;
 
@@ -96,23 +51,33 @@ architecture rtl of rsa_core is
 	
 	-- Array types for connecting multiple cores
 	type msg_data_array_t		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	type ctrl_signal_array_t 	is array (0 to NUM_CORES - 1) of STD_LOGIC;
+	type logic_array_t 			is array (0 to NUM_CORES - 1) of STD_LOGIC;
+    type status_array_t 		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( 31 downto 0 );
 
-	-- Signals for connecting multiple cores
-	-- signal msgin_data_array		: msg_data_array_t;
-	-- signal msgout_data_array	: msg_data_array_t;
-	-- signal msgin_valid_array	: ctrl_signal_array_t;
-	-- signal msgin_ready_array	: ctrl_signal_array_t;
-	-- signal msgin_last_array		: ctrl_signal_array_t;
-	-- signal msgout_valid_array	: ctrl_signal_array_t;
-	-- signal msgout_ready_array	: ctrl_signal_array_t;
-	-- signal msgout_last_array	: ctrl_signal_array_t;
+	-- Internal arrays to connect to multiple cores
+	signal msgin_data_array    : msg_data_array_t;
+	signal msgout_data_array   : msg_data_array_t;
 
+	signal msgin_valid_array   : logic_array_t;
+	signal msgout_valid_array  : logic_array_t;
+	signal msgin_ready_array   : logic_array_t;
+	signal msgout_ready_array  : logic_array_t; 
+	signal msgin_last_array    : logic_array_t;
+	signal msgout_last_array   : logic_array_t;
+	signal rsa_status_array    : status_array_t;
 
-	-- signal core_order_queue : core_queue_t;
-	-- signal queue_count : INTEGER range 0 to NUM_CORES;
+	-- Queue management signals
+	signal queue_head          : INTEGER range 0 to NUM_CORES - 1;
+	signal queue_tail          : INTEGER range 0 to NUM_CORES - 1;
+	signal queue_count         : INTEGER range 0 to NUM_CORES;
+	signal queue_empty         : STD_LOGIC;
+	signal queue_full          : STD_LOGIC;
 
 begin
+    --------------------------------------
+    -- RSA Status Signal. Not used.
+    --------------------------------------
+    rsa_status <= (others => '0');
 
 	-----------------------------------------------------------
 	-- Combinational logic for queue status signals
@@ -153,8 +118,6 @@ begin
 	end process port_mapping;
 
 
-	rsa_status <= rsa_status_array(queue_head);  -- TEMPORARY: just output status of core 0
-
 	----------------------------------------------------------
 	-- Generate NUM_CORES instances of exponentiation module
 	----------------------------------------------------------
@@ -182,13 +145,10 @@ begin
 				
 				-- Interface to the register block. Key_n and key_e_d are the same for all cores.
 				key_e_d             => key_e_d,
-				key_n               => key_n,
-				rsa_status          => rsa_status_array(i),
-
-				current_state    	=> current_state_array(i)
+				key_n               => key_n
 			);
+		
 	end generate gen_exponentiation_cores;
-
 
 
 	----------------------------------------------------------

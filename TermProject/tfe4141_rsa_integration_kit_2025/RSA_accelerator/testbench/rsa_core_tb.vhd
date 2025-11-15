@@ -6,7 +6,7 @@ use work.rsa_types_pkg.all;
 entity rsa_core_tb is
     generic (
         C_BLOCK_SIZE    : integer := 256;
-        NUM_CORES       : integer := 4
+        NUM_CORES       : integer := 6
     );
 end rsa_core_tb;
 
@@ -32,22 +32,6 @@ architecture Behavioral of rsa_core_tb is
     signal key_e_d             : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
     signal key_n               : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := (others => '0');
     signal rsa_status          : std_logic_vector(31 downto 0);
-
-    -- Internal signals for testing
-    signal current_state_array: state_array_t;
-    signal msgin_data_array   : data_array_t;
-    signal msgin_valid_array  : logic_array_t;
-    signal msgin_ready_array  : logic_array_t;
-    signal msgin_last_array   : logic_array_t;
-    signal msgout_data_array  : data_array_t;
-    signal msgout_valid_array : logic_array_t;
-    signal msgout_last_array  : logic_array_t;
-
-    signal queue_head : INTEGER range 0 to NUM_CORES-1;
-    signal queue_tail : INTEGER range 0 to NUM_CORES-1;
-    signal queue_count : INTEGER range 0 to NUM_CORES;
-    signal queue_empty : std_logic;
-    signal queue_full : std_logic;
 
     -- Constants
     constant clk_period        : time := 10 ns;
@@ -93,23 +77,7 @@ begin
             -- Register interface
             key_e_d         => key_e_d,
             key_n           => key_n,
-            rsa_status      => rsa_status,
-
-            -- Internal signals for testing
-            current_state_array => current_state_array,
-            msgin_data_array    => msgin_data_array,
-            msgin_ready_array   => msgin_ready_array,
-            msgin_valid_array   => msgin_valid_array,
-            msgin_last_array    => msgin_last_array,
-            msgout_data_array   => msgout_data_array,
-            msgout_valid_array  => msgout_valid_array,
-            msgout_last_array   => msgout_last_array,
-
-            queue_head         => queue_head,
-            queue_tail         => queue_tail,
-            queue_count        => queue_count,
-            queue_empty        => queue_empty,
-            queue_full         => queue_full
+            rsa_status      => rsa_status
         );
 
 
