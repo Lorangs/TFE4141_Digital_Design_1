@@ -52,7 +52,7 @@ entity mult_with_mod is
 
 		-- internal signals for testing. Should be moved to signal interface when testing is done.
 		current_state 	: inout STD_LOGIC_VECTOR(1 downto 0); 
-		counter       	: inout INTEGER in range 0 to C_BLOCK_SIZE;
+		counter       	: inout INTEGER;
 		s0				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );	-- two extra bits: one for sign, one for possible overflow	
 		s1				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
 		s2				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
@@ -100,8 +100,8 @@ begin
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
 			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=>  s5(C_BLOCK_SIZE+1) &  s4(C_BLOCK_SIZE+1) & s3(C_BLOCK_SIZE+1) & s2(C_BLOCK_SIZE+1),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(C_BLOCK_SIZE+1) & s10(C_BLOCK_SIZE+1) & s9(C_BLOCK_SIZE+1) & s8(C_BLOCK_SIZE+1),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
+			mux_ctrl_R_in  			=> s5(s5'high) &  s4(s4'high) & s3(s3'high) & s2(s2'high),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(s11'high) & s10(s10'high) & s9(s9'high) & s8(s8'high),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
 			current_state 			=> current_state,

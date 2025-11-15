@@ -48,7 +48,7 @@ entity mult_with_mod_fsm is
         current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 );
 
         -- internal signals for testing
-        counter         : inout INTEGER In range 0 to C_BLOCK_SIZE
+        counter         : inout INTEGER
     ); 
 end mult_with_mod_fsm;
 
