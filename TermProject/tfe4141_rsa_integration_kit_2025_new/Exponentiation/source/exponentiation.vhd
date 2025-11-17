@@ -1,20 +1,19 @@
 -------------------------------------------------------------------------  -------
--- Author       : Oystein Gjermundnes
+-- Author       : L. Strand, S. Gripsgård, O.J. Schubert
 -- Organization : Norwegian University of Science and Technology (NTNU)
 --                Department of Electronic Systems
 --                https://www.ntnu.edu/ies
 -- Course       : TFE4141 Design of digital systems 1 (DDS1)
--- Year         : 2018-2019
+-- Year         : Autumn 2025
 -- Project      : RSA accelerator
 -- License      : This is free and unencumbered software released into the
 --                public domain (UNLICENSE)
 --------------------------------------------------------------------------------
 -- Purpose:
---   RSA encryption core template. This core currently computes
---   C = M xor key_n
---
---   Replace/change this module so that it implements the function
---   C = M**key_e mod key_n.
+    --   VHDL implementation of modular exponentiation module for RSA encryption
+	--   and decryption. Computes ciphertext or plaintext according to the RSA formula:
+	--
+	--   msgout_data = msgin_data ** key_e_d mod key_n
 --------------------------------------------------------------------------------
 
 
@@ -25,83 +24,75 @@ use ieee.numeric_std.all;
 
 entity exponentiation is
 	generic (
-		-- Users to add parameters here
-		C_BLOCK_SIZE          : INTEGER := 256
+		C_BLOCK_SIZE          : INTEGER := 256		-- Size of the data blocks in bits
 	);
 	port (
 		-----------------------------------------------------------------------------
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
-		clk                    :  in STD_LOGIC;
-		reset_neg              :  in STD_LOGIC;
+		clk                    :  in  STD_LOGIC;												-- system clock
+		reset_neg              :  in  STD_LOGIC;												-- active low reset
 
 		-----------------------------------------------------------------------------
-		-- Slave msgin interface
+		-- Input message handshaking interface
 		-----------------------------------------------------------------------------
-		-- Message that will be sent out is valid
-		msgin_valid             : in STD_LOGIC;
-		-- Slave ready to accept a new message
-		msgin_ready             : out STD_LOGIC;
-		-- Message that will be sent out of the rsa_msgin module
-		msgin_data              :  in STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
-		-- Indicates boundary of last packet
-		msgin_last              :  in STD_LOGIC;
+		msgin_valid             : in  STD_LOGIC;												-- Signal indicating the input message is valid		
+		msgin_ready             : out STD_LOGIC;												-- Exponentiation module ready to accept a new message
+		msgin_data              : in  STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);				-- Message in to be encrypted / decrypted
+		msgin_last              : in  STD_LOGIC;												-- Indicates boundary of last packet
 
 		-----------------------------------------------------------------------------
-		-- Master msgout interface
+		-- Output message handshaking interface
 		-----------------------------------------------------------------------------
-		-- Message that will be sent out is valid
-		msgout_valid            : out STD_LOGIC;
-		-- Slave ready to accept a new message
-		msgout_ready            :  in STD_LOGIC;
-		-- Message that will be sent out of the rsa_msgin module
-		msgout_data             : out STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		-- Indicates boundary of last packet
-		msgout_last             : out STD_LOGIC;
+		msgout_valid            : out STD_LOGIC;												-- Signal indicating the output message is valid
+		msgout_ready            :  in STD_LOGIC;												-- External module ready to accept outgoing message
+		msgout_data             : out STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );			-- Message out after encryption / decryption
+		msgout_last             : out STD_LOGIC;												-- Indicates boundary of last packet
  
 		-----------------------------------------------------------------------------
 		-- Interface to the register block
 		-----------------------------------------------------------------------------
-		key_e_d                 :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		key_n                   :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 )
+		key_e_d                 :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );			-- Exponent or decryption key (public or private)
+		key_n                   :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 )				-- Modulus key
 	);
 end exponentiation;
 
 architecture exponentiation_behave of exponentiation is
-	-----------------------------------------
+	----------------------------------------------------------------------------------
 	-- R and P signals are defined as per the RSA algorithm in high-level description.
 	-- R is the result accumulator, P is the base being exponentiated.
 	-- See the datasheet for documentation. 
-	----------------------------------------
+	----------------------------------------------------------------------------------
+	signal result_R			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Result accumulator
+	signal result_P			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Base being exponentiated
+
+	signal mult_R_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for R input to mult_with_mod
+	signal mult_P_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for P input to mult_with_mod
+	signal mult_e_d     	: STD_LOGIC;														-- LSB of exponent key for mult_with_mod e input
+	signal mult_valid_in    : STD_LOGIC;														-- Valid signal to mult_with_mod
+	signal mult_ready_out   : STD_LOGIC;														-- Ready signal from mult_with_mod
+	signal mult_valid_out   : STD_LOGIC;														-- Valid signal from mult_with_mod
+	signal mult_ready_in    : STD_LOGIC;														-- Ready signal to mult_with_mod
+	signal mult_reset_neg   : STD_LOGIC;														-- Active low reset to mult_with_mod
+
+	signal key_e_d_reg    	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing exponent key
+	signal key_n_reg      	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing modulus key
+	signal msgin_data_reg 	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing input message data
+	signal msgin_last_reg 	: STD_LOGIC;														-- Register for storing input message last signal
 	
-	signal result_R			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal result_P			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal mult_R_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal mult_P_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal mult_e_d     	: STD_LOGIC;
-	signal mult_valid_in    : STD_LOGIC;
-	signal mult_ready_out   : STD_LOGIC;
-	signal mult_valid_out   : STD_LOGIC;
-	signal mult_ready_in    : STD_LOGIC;
-	signal mult_reset_neg   : STD_LOGIC;
-
-	signal key_e_d_reg    	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal key_n_reg      	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal msgin_data_reg 	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-	signal msgin_last_reg 	: STD_LOGIC;
-
-	signal current_state    : STD_LOGIC_VECTOR( 1 downto 0 );
+	signal current_state    : STD_LOGIC_VECTOR( 1 downto 0 );									-- Current state of the state machine
 
 begin
-	----------------------------
-	-- Register input signals. Can be opted out if register block is static.
-	----------------------------
+	----------------------------------------------------------------------------------
+	-- Register input signals when in LOAD_NEW_MSG state
+	----------------------------------------------------------------------------------
 	Input_Reg : process (clk, reset_neg)
 	begin
 		if reset_neg = '0' then
 			key_e_d_reg    <= (others => '0');
 			key_n_reg      <= (others => '0');
 			msgin_last_reg <= '0';
+
 		elsif rising_edge(clk) then
 			if current_state = "00" then  -- LOAD_NEW_MSG
 				key_e_d_reg    <= key_e_d;
@@ -113,16 +104,18 @@ begin
 	end process;
 
 
-	------------------------------
+	----------------------------------------------------------------------------------
 	-- Port data to output when in FINISHED state
-	------------------------------
-	msgout_data <= mult_R_next when current_state = "11" else (others => '0');
+	----------------------------------------------------------------------------------
+	msgout_data <= mult_R_next    when current_state = "11" else (others => '0');
 	msgout_last <= msgin_last_reg when current_state = "11" else '0';
 
 
-	----------------------------------
-	-- Update mult_R_next and mult_P_next when finished a computation
-	----------------------------------
+	----------------------------------------------------------------------------------
+	-- Update mult_R_next and mult_P_next
+		-- In LOAD_NEW_MSG state, initialize mult_R_next to 1 and mult_P_next to input message
+		-- In COUNT_FIN_PARTIAL state, update mult_R_next and mult_P_next to results from mult_with_mod
+	----------------------------------------------------------------------------------
 	update_mult_inputs : process (clk, reset_neg)
 	begin
 		if reset_neg = '0' then
@@ -151,27 +144,19 @@ begin
 			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
 		port map (	
-			-- handshaking signals
-			valid_in       	=> mult_valid_in,
-			ready_out      	=> mult_ready_out,
-			valid_out      	=> mult_valid_out,
-			ready_in       	=> mult_ready_in,
-
-			-- input data
-			a			  	=> mult_P_next,
-			b 			 	=> mult_R_next,
-			c 			 	=> mult_P_next,
-			e 				=> mult_e_d,
-
-			--output data
-			result_R		=> result_R,
-			result_P		=> result_P,
-
-			-- modulus
-			n			  	=> key_n_reg,
-			-- utility
-			clk       		=> clk,
-			reset_neg  		=> mult_reset_neg
+			clk       			=> clk,
+			reset_neg  			=> mult_reset_neg
+			a			  		=> mult_P_next,
+			b 			 		=> mult_R_next,
+			c 			 		=> mult_P_next,
+			e 					=> mult_e_d,
+			n			  		=> key_n_reg,
+			result_R			=> result_R,
+			result_P			=> result_P,
+			valid_in       		=> mult_valid_in,
+			ready_out      		=> mult_ready_out,
+			valid_out      		=> mult_valid_out,
+			ready_in       		=> mult_ready_in,
 		);
 
 
@@ -183,27 +168,19 @@ begin
 			C_BLOCK_SIZE => C_BLOCK_SIZE
 		)
 		port map (
-			-- External Interface Signals
 			clk                 => clk,
 			reset_neg           => reset_neg,
-
-			-- handshaking signals with external module.
 			msgout_ready        => msgout_ready,
 			msgout_valid        => msgout_valid,
 			msgin_ready         => msgin_ready,
 			msgin_valid         => msgin_valid,
-
-			-- handshaking signals with Mult_with_mod module.
-			mult_ready_in        => mult_ready_in,
-			mult_valid_in        => mult_valid_in,
-			mult_ready_out       => mult_ready_out,
-			mult_valid_out       => mult_valid_out,
-			mult_reset_neg       => mult_reset_neg,
-
-			-- exponent bits
+			mult_ready_in      	=> mult_ready_in,
+			mult_valid_in      	=> mult_valid_in,
+			mult_ready_out     	=> mult_ready_out,
+			mult_valid_out     	=> mult_valid_out,
+			mult_reset_neg     	=> mult_reset_neg,
 			key_e_d_reg         => key_e_d_reg,
 			key_e_d_LSB         => mult_e_d,     
-			
 			current_state       => current_state
 		);
 end exponentiation_behave;

@@ -1,18 +1,21 @@
----------------------------------------------
--- Entity Declaration
-
--- This module performs modular exponentiation using
--- the blakley method. It computes both R and P values
--- simultaneously to optimize performance.
-
--- Computes:
--- R = (a * b) mod n, if e == 1, else R = b
--- P = (a * c) mod n
-
--- The module assumes constant inputs during operation.
--- Do not change inputs until valid_out is high.
-
----------------------------------------------
+-------------------------------------------------------------------------  -------
+-- Author       : L. Strand, S. Gripsgård, O.J. Schubert
+-- Organization : Norwegian University of Science and Technology (NTNU)
+--                Department of Electronic Systems
+--                https://www.ntnu.edu/ies
+-- Course       : TFE4141 Design of digital systems 1 (DDS1)
+-- Year         : Autumn 2025
+-- Project      : RSA accelerator
+-- License      : This is free and unencumbered software released into the
+--                public domain (UNLICENSE)
+--------------------------------------------------------------------------------
+-- Purpose:
+    --  VHDL implementation of modular multiplication with reduction module for RSA encryption
+	--   and decryption. Computes (a * b) mod n according to the RSA formula
+	--
+	--   result_R = if (e = '1') then { (a * b) mod n }, else { b }
+	--   result_P = (a * c) mod n
+--------------------------------------------------------------------------------
 
 
 library IEEE;
@@ -22,72 +25,82 @@ use ieee.numeric_std.all;
 
 entity mult_with_mod is
 	generic (
-		C_BLOCK_SIZE : INTEGER := 256
+		C_BLOCK_SIZE : INTEGER := 256		-- Size of the data blocks in bits
 	);
 	port (
-		--input controll
-		valid_in	: in STD_LOGIC;
-		ready_in	: out STD_LOGIC;
+		-----------------------------------------------------------------------------
+		-- Clock and Reset
+		-----------------------------------------------------------------------------
+		clk 		: in STD_LOGIC;												-- system clock
+		reset_neg 	: in STD_LOGIC;												-- active low reset			
 
-		--ouput controll
-		ready_out	: in STD_LOGIC;
-		valid_out	: out STD_LOGIC;
 
+		-----------------------------------------------------------------------------
+		-- Handshaking signals
+		-----------------------------------------------------------------------------
+		valid_in	: in STD_LOGIC;												-- Input data is valid from exponentiation module
+		ready_in	: out STD_LOGIC;											-- Mult_with_mod module ready to accept input data	
+		ready_out	: in STD_LOGIC;												-- Exponentiation module ready to accept output data
+		valid_out	: out STD_LOGIC;											-- Output data is valid to exponentiation module
+
+		-----------------------------------------------------------------------------
 		--input data
-		a           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
-	    b           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
-        c           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
-		e 			: in STD_LOGIC;
+		-----------------------------------------------------------------------------
+		a           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );			-- multiplicand for both R and P calculations
+	    b           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 ); 			-- multiplicands for R calculation
+        c           : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );			-- multiplicands for P calculation
+		e 			: in STD_LOGIC;												-- exponent bit		
+		n		    : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );		-- modulus
 		
+		-----------------------------------------------------------------------------
 		--output data
-		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+		-----------------------------------------------------------------------------
+		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);		
 		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
-		
-		--modulus
-		n		    : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );	
 
-		--utility
-		clk 		: in STD_LOGIC;
-		reset_neg 	: in STD_LOGIC;
 
-		current_state : inout STD_LOGIC_VECTOR ( 1 downto 0 )
+		-----------------------------------------------------------------------------
+		-- State interface to and from Exponentiation_FSM module
+			-- 00 = RESET, 01 = COUNTING, 10 = FINISHED, 11 = UNUSED
+		-----------------------------------------------------------------------------
+		current_state : inout STD_LOGIC_VECTOR ( 1 downto 0 )	
 	);
 end mult_with_mod;
 
 
 architecture mult_behave of mult_with_mod is
-	-------------------------------------------
-	-- Signal Declarations
-	-------------------------------------------
-	
-	signal  s0,
-			s1,
-			s2,
-			s3,
-			s4,
-			s5,
-			s6,
-			s7,
-			s8,
-			s9,
-			s10,
-			s11
+	---------------------------------------------------------------------------------
+	-- Signal Declarations. 
+		-- s0 .. s11 are intermediate summation results for R and P calculations.
+	---------------------------------------------------------------------------------
+	signal  s0,																	-- s0 = R shifted left by 1 bit
+			s1,																	-- s1 = R shifted left + b						
+			s2,																	-- s2 = R shifted left - n
+			s3,																	-- s3 = R shifted left + b - n
+			s4,																	-- s4 = R shifted left - n shifted left
+			s5,																	-- s5 = R shifted left + b - n shifted left
+			s6,																	-- s6 = P shifted left by 1 bit
+			s7,																	-- s7 = P shifted left + c
+			s8,																	-- s8 = P shifted left - n
+			s9,																	-- s9 = P shifted left + c - n
+			s10,																-- s10 = P shifted left - n shifted left
+			s11																	-- s11 = P shifted left + c - n shifted left
 		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
 
-	signal  bit_shifted_R,
-			bit_shifted_P
+	signal  bit_shifted_R,														-- R shifted left by 1 bit
+			bit_shifted_P														-- P shifted left by 1 bit
 		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );
 
-	signal  mux_ctrl_P_out,
-			mux_ctrl_R_out
+	signal  mux_ctrl_P_out,														-- Choose output: [ 000 = s6, 001 = s7, 010 = s8, 011 = s9, 100 = s10, 101 = s11 ]
+			mux_ctrl_R_out														-- Choose output: [ 000 = s0, 001 = s1, 010 = s2, 011 = s3, 100 =  s4, 101 = s5  ]	
 		: STD_LOGIC_VECTOR ( 2 downto 0 );
 
-	signal	bit_shifted_n	: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );	-- modulus shifted left by 1 bit
+	signal	bit_shifted_n	: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );		-- modulus shifted left by 1 bit
 
 begin
-	------------------------------------------
+	--------------------------------------------------------------------------
 	-- FSM module instantiation
-	------------------------------------------
+	--------------------------------------------------------------------------
 	mult_fsm: entity work.mult_with_mod_fsm
 		generic map (
 			C_BLOCK_SIZE => C_BLOCK_SIZE
@@ -108,16 +121,16 @@ begin
 		);
  
 
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	-- Prepare shifted values for R and P calculations
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	bit_shifted_R <= result_R & '0';
 	bit_shifted_P <= result_P & '0';
 	bit_shifted_n <= n & '0';
 
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	-- Calculate summations for R
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	s0  <= '0' & bit_shifted_R;
 	s1  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) + unsigned( "00" & b ) );
 	s2  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) - unsigned( "00" & n ) );  
@@ -125,9 +138,9 @@ begin
 	s4  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) - unsigned( '0' & bit_shifted_n ) );
 	s5  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( '0' & bit_shifted_n ) );
 
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	-- Calculate summations for P
-	-------------------------------------------
+	--------------------------------------------------------------------------
 	s6  <= '0' & bit_shifted_P;
 	s7  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) );
 	s8  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) - unsigned( "00" & n ) );
@@ -136,9 +149,9 @@ begin
 	s11 <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( '0' & bit_shifted_n ) );
 
 
-	------------------------------------------
+	--------------------------------------------------------------------------
 	-- Output result selection process
-	------------------------------------------
+	--------------------------------------------------------------------------
 	mult_result: process(clk)
 	begin
 		if rising_edge(clk) then
