@@ -59,3 +59,8 @@ TermProject/**/*.txt
 
 # ignore test files
 test_data/
+
+# ignore all files in boards folder
+TermProject/tfe4141_rsa_integration_kit_2025_new/RSA_soc/boards/
+
+TermProject/tfe4141_rsa_integration_kit_2025_new/NA/
