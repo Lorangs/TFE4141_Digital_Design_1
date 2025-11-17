@@ -150,7 +150,7 @@ begin
 			
 			when others =>
 				msgout_data <= (others => '0');
-				msgout_last <= '0';
+				msgout_last <= msgin_last_reg;
 		end case;
 	end process;
 
@@ -158,12 +158,12 @@ begin
 	----------------------------------
 	-- Update mult_R_next and mult_P_next when finished a computation
 	----------------------------------
-	update_mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data_reg, mult_R_next, mult_P_next)
+	update_mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data, mult_R_next, mult_P_next)
 	begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
 				mult_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
-				mult_P_next <= msgin_data_reg;				-- Load new message into P
+				mult_P_next <= msgin_data;				-- Load new message into P
 
 			when "10" =>  -- COUNT_FIN_PARTIAL
 				mult_R_next <= result_R;

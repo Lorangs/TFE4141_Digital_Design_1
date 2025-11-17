@@ -200,7 +200,7 @@ u_rsa_core : entity work.rsa_core
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
 		clk                    => clk,
-		reset_neg              => reset_neg,
+		reset_n                => reset_neg,
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
