@@ -43,22 +43,23 @@ entity mult_with_mod_fsm is
         -- output mux control signals
         mux_ctrl_P_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
         mux_ctrl_R_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
-        
-        -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 );
 
-        -- internal signals for testing
-        counter         : inout INTEGER
+        -- internal state signal
+        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 )
     ); 
 end mult_with_mod_fsm;
 
 architecture mult_fsm_behave of mult_with_mod_fsm is
+    --------------------------------------------------------------------
     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+    --------------------------------------------------------------------
     signal  next_state 
         : STD_LOGIC_VECTOR ( 1 downto 0 );
 
-    signal  --counter,
-            bit_shifted_a 
+    signal counter 
+        : INTEGER range 0 to C_BLOCK_SIZE;
+
+    signal  bit_shifted_a 
         : STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
 
 begin

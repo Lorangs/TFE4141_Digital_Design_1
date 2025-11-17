@@ -63,47 +63,7 @@ entity exponentiation is
 		-- Interface to the register block
 		-----------------------------------------------------------------------------
 		key_e_d                 :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		key_n                   :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		rsa_status              :  out STD_LOGIC_VECTOR( 31 downto 0 );
-
-
-		-----------------------------------------------------------------------------
-		-- Internal signals for testing. Can be moved to signal interface when testing is done.
-		-----------------------------------------------------------------------------
-		counter				  : inout INTEGER;
-		
-		
-		-- Control signals from FSM
-		current_state			: inout STD_LOGIC_VECTOR( 1 downto 0 );		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
-		
-		-- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
-		msgin_data_reg   : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		
-		-- Mult_with_mod module signals
-		mult_valid_out      : inout STD_LOGIC;
-		mult_ready_in       : inout STD_LOGIC;
-		mult_valid_in       : inout STD_LOGIC;
-		mult_ready_out      : inout STD_LOGIC;
-		mult_reset_neg      : inout STD_LOGIC;
-
-		mult_R_next         : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		mult_P_next         : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		mult_e_d            : inout STD_LOGIC;				-- exponent bit (LSB first)
-
-
-		---- can be deleted when testing is done ----
-		mult_counter		: inout INTEGER;
-		mult_current_state	: inout STD_LOGIC_VECTOR( 1 downto 0 );		-- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-
-		-- Intermediate and result of R and P. R is to be treated as the resulting ciphertext.
-		result_R          : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		result_P          : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-
-		-- Registers for storing input signals
-		key_e_d_reg      : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );	
-		key_n_reg        : inout STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );	
-		msgin_last_reg   : inout STD_LOGIC := '0'
-
+		key_n                   :  in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 )
 	);
 end exponentiation;
 
@@ -113,8 +73,24 @@ architecture exponentiation_behave of exponentiation is
 	-- R is the result accumulator, P is the base being exponentiated.
 	-- See the datasheet for documentation. 
 	----------------------------------------
+	
+	signal result_R			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal result_P			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal mult_R_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal mult_P_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal mult_e_d     	: STD_LOGIC;
+	signal mult_valid_in    : STD_LOGIC;
+	signal mult_ready_out   : STD_LOGIC;
+	signal mult_valid_out   : STD_LOGIC;
+	signal mult_ready_in    : STD_LOGIC;
+	signal mult_reset_neg   : STD_LOGIC;
 
+	signal key_e_d_reg    	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal key_n_reg      	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal msgin_data_reg 	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
+	signal msgin_last_reg 	: STD_LOGIC;
 
+	signal current_state    : STD_LOGIC_VECTOR( 1 downto 0 );
 
 begin
 	----------------------------
@@ -141,7 +117,7 @@ begin
 	------------------------------
 	-- Port data to output when in FINISHED state
 	------------------------------
-	port_data_out : process (current_state, mult_R_next)
+	port_data_out : process (current_state, mult_R_next, msgin_last_reg)
 	begin
 		case current_state is
 			when "11" =>  -- FINISHED
@@ -150,7 +126,7 @@ begin
 			
 			when others =>
 				msgout_data <= (others => '0');
-				msgout_last <= '0';
+				msgout_last <= msgin_last_reg;
 		end case;
 	end process;
 
@@ -163,7 +139,7 @@ begin
 		case current_state is
 			when "00" =>  -- LOAD_NEW_MSG
 				mult_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
-				mult_P_next <= msgin_data_reg;				-- Load new message into P
+				mult_P_next <= msgin_data_reg;				 -- Load new message into P
 
 			when "10" =>  -- COUNT_FIN_PARTIAL
 				mult_R_next <= result_R;
@@ -205,23 +181,7 @@ begin
 			n			  	=> key_n_reg,
 			-- utility
 			clk       		=> clk,
-			reset_neg  		=> mult_reset_neg,
-
-			-- internal signals for testing. Can be moved to signal interface when testing is done.
-			counter			=> mult_counter,
-			current_state	=> mult_current_state,
-			s0				=> open,
-			s1				=> open,
-			s2				=> open,
-			s3				=> open,
-			s4				=> open,
-			s5				=> open,
-			s6				=> open,
-			s7				=> open,
-			s8				=> open,
-			s9				=> open,
-			s10				=> open,
-			s11				=> open	
+			reset_neg  		=> mult_reset_neg
 		);
 
 
@@ -242,7 +202,6 @@ begin
 			msgout_valid        => msgout_valid,
 			msgin_ready         => msgin_ready,
 			msgin_valid         => msgin_valid,
-			msgin_last          => msgin_last_reg,
 
 			-- handshaking signals with Mult_with_mod module.
 			mult_ready_in        => mult_ready_in,
@@ -251,16 +210,10 @@ begin
 			mult_valid_out       => mult_valid_out,
 			mult_reset_neg       => mult_reset_neg,
 
-			-- RSA status signal
-			rsa_status          => rsa_status,
-
 			-- exponent bits
 			key_e_d_reg         => key_e_d_reg,
 			key_e_d_LSB         => mult_e_d,     
 			
-			current_state       => current_state,
-
-			-- internal signals for testing
-			counter             => counter
+			current_state       => current_state
 		);
 end exponentiation_behave;

@@ -42,7 +42,7 @@ entity mult_with_mod is
 		--output data
 		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
 		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
-
+		
 		--modulus
 		n		    : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );	
 
@@ -50,21 +50,7 @@ entity mult_with_mod is
 		clk 		: in STD_LOGIC;
 		reset_neg 	: in STD_LOGIC;
 
-		-- internal signals for testing. Should be moved to signal interface when testing is done.
-		current_state 	: inout STD_LOGIC_VECTOR(1 downto 0); 
-		counter       	: inout INTEGER;
-		s0				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );	-- two extra bits: one for sign, one for possible overflow	
-		s1				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s2				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s3				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s4				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );	
-		s5				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s6				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s7				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s8				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s9				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );
-		s10				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 );	
-		s11				: inout STD_LOGIC_VECTOR( C_BLOCK_SIZE + 1 downto 0 )
+		current_state : inout STD_LOGIC_VECTOR ( 1 downto 0 )
 	);
 end mult_with_mod;
 
@@ -74,6 +60,20 @@ architecture mult_behave of mult_with_mod is
 	-- Signal Declarations
 	-------------------------------------------
 	
+	signal  s0,
+			s1,
+			s2,
+			s3,
+			s4,
+			s5,
+			s6,
+			s7,
+			s8,
+			s9,
+			s10,
+			s11
+		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
+
 	signal  bit_shifted_R,
 			bit_shifted_P
 		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );
@@ -100,12 +100,11 @@ begin
 			valid_in       			=> valid_in,
 			ready_in       			=> ready_in,
 			valid_out      			=> valid_out,
-			mux_ctrl_R_in  			=> s5(s5'high) &  s4(s4'high) & s3(s3'high) & s2(s2'high),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
-			mux_ctrl_P_in  			=> s11(s11'high) & s10(s10'high) & s9(s9'high) & s8(s8'high),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
+			mux_ctrl_R_in  			=>  s5(C_BLOCK_SIZE+1) &  s4(C_BLOCK_SIZE+1) & s3(C_BLOCK_SIZE+1) & s2(C_BLOCK_SIZE+1),		-- s5  sign bit, s4  sign bit, s3 sign bit, s2 sign bit
+			mux_ctrl_P_in  			=> s11(C_BLOCK_SIZE+1) & s10(C_BLOCK_SIZE+1) & s9(C_BLOCK_SIZE+1) & s8(C_BLOCK_SIZE+1),		-- s11 sign bit, s10 sign bit, s9 sign bit, s8 sign bit
 			mux_ctrl_R_out 			=> mux_ctrl_R_out,
 			mux_ctrl_P_out 			=> mux_ctrl_P_out,
-			current_state 			=> current_state,
-			counter 				=> counter
+			current_state 			=> current_state
 		);
  
 
@@ -140,7 +139,7 @@ begin
 	------------------------------------------
 	-- Output result selection process
 	------------------------------------------
-	mult_result: process(clk, e, mux_ctrl_P_out, mux_ctrl_R_out, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, current_state)
+	mult_result: process(clk)
 	begin
 		if rising_edge(clk) then
 			case current_state is 
