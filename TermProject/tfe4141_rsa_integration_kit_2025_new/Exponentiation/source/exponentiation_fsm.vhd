@@ -40,8 +40,7 @@ entity exponentiation_fsm is
         msgout_valid        : out STD_LOGIC;
         msgin_ready         : out STD_LOGIC;
         msgin_valid         : in STD_LOGIC;
-        msgin_last          : in STD_LOGIC;
-
+ 
         -- handshaking signals with mult_with_mod module.
         mult_ready_in       : in STD_LOGIC;
         mult_valid_in       : out STD_LOGIC;
@@ -49,17 +48,11 @@ entity exponentiation_fsm is
         mult_valid_out      : in STD_LOGIC;
         mult_reset_neg      : out STD_LOGIC;
 
-        -- RSA status signal
-        rsa_status          : out STD_LOGIC_VECTOR( 31 downto 0 );
-
         -- exponent bits
         key_e_d_reg         : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
         key_e_d_LSB         : out STD_LOGIC;     
-        
-        current_state       : inout STD_LOGIC_VECTOR( 1 downto 0 ); -- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
 
-        -- internal signals for testing
-        counter             : inout INTEGER
+        current_state       : inout STD_LOGIC_VECTOR( 1 downto 0 ) -- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
     );
 end exponentiation_fsm;
 
@@ -68,15 +61,9 @@ architecture exponentiation_fsm_behave of exponentiation_fsm is
     -- RESET = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
     -------------------------------------------------------------------------
     signal next_state                   : STD_LOGIC_VECTOR(1 downto 0);
-
+    signal counter                      : INTEGER range 0 to C_BLOCK_SIZE;
     signal bit_shifted_key_e_d          : STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
 begin
-
-    --------------------------------------
-    -- RSA Status Signal. Not used.
-    --------------------------------------
-    rsa_status <= (others => '0');
-
     ---------------------------------------
     -- Bit shift key_e_d to get LSB
     ---------------------------------------
