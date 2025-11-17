@@ -88,35 +88,15 @@ begin
 	----------------------------------------------------------
 	-- Port mapping of top-level signals to core-specific signals
 	----------------------------------------------------------
-	port_mapping: process(all)
-	begin
-		-- Default assignments to avoid latches
-		msgout_ready_array 			<= (others => '0');
-		msgin_valid_array 			<= (others => '0');
-		msgin_data_array 			<= (others => (others => '0'));
-		msgin_last_array 			<= (others => '0');
-		
-		-- Asynchronous reset
-		if reset_n = '0' then
-			msgout_valid 				<= '0';
-			msgout_data 				<= (others => '0');
-			msgin_ready 				<= '0';
-			msgout_last 				<= '0';
-		
-		else
-		    -- Override signals for the core at the head/tail of the queue
-			msgout_ready_array(queue_head) 	<= msgout_ready;
-			msgout_valid 					<= msgout_valid_array(queue_head);
-			msgout_data 					<= msgout_data_array(queue_head);
-			msgout_last 					<= msgout_last_array(queue_head);
+	msgout_ready_array 	<= (queue_head => msgout_ready, others => '0');
+	msgin_valid_array 	<= (queue_tail => msgin_valid, 	others => '0');
+	msgin_last_array 	<= (queue_tail => msgin_last, 	others => '0');
+	msgin_data_array 	<= (queue_tail => msgin_data, 	others => (others => '0'));
 
-			msgin_valid_array(queue_tail) 	<= msgin_valid;
-			msgin_data_array(queue_tail) 	<= msgin_data;
-			msgin_last_array(queue_tail) 	<= msgin_last;
-			msgin_ready 					<= msgin_ready_array(queue_tail);
-		end if;
-	end process port_mapping;
-
+	msgout_valid 		<= msgout_valid_array(queue_head) 	when reset_n = '1' else '0';
+	msgout_last 		<= msgout_last_array(queue_head) 	when reset_n = '1' else '0';
+	msgin_ready 		<= msgin_ready_array(queue_tail) 	when reset_n = '1' else '0';
+	msgout_data 		<= msgout_data_array(queue_head) 	when reset_n = '1' else (others => '0');
 
 	----------------------------------------------------------
 	-- Generate NUM_CORES instances of exponentiation module

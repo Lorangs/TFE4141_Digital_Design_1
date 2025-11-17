@@ -24,7 +24,7 @@ architecture struct of rsa_accelerator_tb is
 	-- Constant declarations
 	-----------------------------------------------------------------------------
 	constant C_BLOCK_SIZE   : integer := 256;
-	constant NUM_CORES      : integer := 6;
+	constant NUM_CORES      : integer := 4;
 
 	-- RENAME this constant to "long_test" for more comprehensive tests
 	-- "short_test" for shorter tests

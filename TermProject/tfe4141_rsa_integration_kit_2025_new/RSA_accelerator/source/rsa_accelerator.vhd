@@ -38,7 +38,7 @@ entity rsa_accelerator is
 	port (
 		-- Users to add ports here
 		clk             : in std_logic;
-		reset_neg       : in std_logic;
+		reset_n       : in std_logic;
 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
@@ -122,7 +122,7 @@ u_rsa_regio : entity work.rsa_regio
 		rsa_status              => rsa_status,
 
 		S_AXI_ACLK              => clk,
-		S_AXI_ARESETN           => reset_neg,
+		S_AXI_ARESETN           => reset_n,
 		S_AXI_AWADDR            => s00_axi_awaddr,
 		S_AXI_AWPROT            => s00_axi_awprot,
 		S_AXI_AWVALID           => s00_axi_awvalid,
@@ -151,7 +151,7 @@ u_rsa_msgin : entity work.rsa_msgin
 	)
 	port map (
 		S_AXIS_ACLK             => clk,
-		S_AXIS_ARESETN          => reset_neg,
+		S_AXIS_ARESETN          => reset_n,
 		S_AXIS_TREADY           => s00_axis_tready,
 		S_AXIS_TDATA            => s00_axis_tdata,
 		S_AXIS_TSTRB            => s00_axis_tstrb,
@@ -175,7 +175,7 @@ u_rsa_msgout : entity work.rsa_msgout
 	)
 	port map (
 		M_AXIS_ACLK             => clk,
-		M_AXIS_ARESETN          => reset_neg,
+		M_AXIS_ARESETN          => reset_n,
 		M_AXIS_TVALID           => m00_axis_tvalid,
 		M_AXIS_TDATA            => m00_axis_tdata,
 		M_AXIS_TSTRB            => m00_axis_tstrb,
@@ -200,7 +200,7 @@ u_rsa_core : entity work.rsa_core
 		-- Clocks and reset
 		-----------------------------------------------------------------------------
 		clk                    => clk,
-		reset_neg              => reset_neg,
+		reset_n              => reset_n,
 
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
