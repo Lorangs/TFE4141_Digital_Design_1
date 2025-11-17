@@ -108,16 +108,19 @@ begin
 	----------------------------------------------------------
 	-- Port mapping of top-level signals to core-specific signals
 	----------------------------------------------------------
-	msgout_ready_array 			<= (queue_head => msgout_ready others => '0');
-	msgin_valid_array 			<= (queue_tail => msgin_valid others => '0');
-	msgin_data_array 			<= (queue_tail => msgin_data others => (others => '0'));
-	msgin_last_array 			<= (queue_tail => msgin_last others => '0');
+	
+	gen_port_map: for i in 0 to NUM_CORES - 1 generate
+		msgin_valid_array(i) 	<= msgin_valid 	when (i = queue_tail and queue_full = '0') else '0';
+		msgin_last_array(i)  	<= msgin_last  	when (i = queue_tail and queue_full = '0') else '0';
+		msgin_data_array(i)  	<= msgin_data  	when (i = queue_tail and queue_full = '0') else (others => '0');
 
-	msgout_valid 				<= msgout_valid_array(queue_head) when reset_n = '1' else '0';
-	msgout_data 				<= msgout_data_array(queue_head) when reset_n = '1' else (others => '0');
-	msgout_last 				<= msgout_last_array(queue_head) when reset_n = '1' else '0';
-	msgin_ready 				<= msgin_ready_array(queue_tail) when reset_n = '1' else '0';
+		msgout_ready_array(i) 	<= msgout_ready when (i = queue_head and queue_empty = '0') else '0';
+	end generate gen_port_map;
 
+	msgout_valid 		<= msgout_valid_array(queue_head) 	when reset_n = '1' else '0';
+	msgout_last 		<= msgout_last_array(queue_head) 	when reset_n = '1' else '0';
+	msgin_ready 		<= msgin_ready_array(queue_tail) 	when reset_n = '1' else '0';
+	msgout_data 		<= msgout_data_array(queue_head) 	when reset_n = '1' else (others => '0');
 
 
 	----------------------------------------------------------
