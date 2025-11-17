@@ -141,7 +141,7 @@ begin
 	------------------------------
 	-- Port data to output when in FINISHED state
 	------------------------------
-	port_data_out : process (current_state, mult_R_next)
+	port_data_out : process (current_state, mult_R_next, msgin_last_reg)
 	begin
 		case current_state is
 			when "11" =>  -- FINISHED
