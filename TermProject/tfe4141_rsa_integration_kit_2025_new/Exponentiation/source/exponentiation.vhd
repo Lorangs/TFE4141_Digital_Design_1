@@ -114,66 +114,54 @@ architecture exponentiation_behave of exponentiation is
 	-- See the datasheet for documentation. 
 	----------------------------------------
 
-
-
 begin
+-	-----------------------------
+	-- Port data to output when in FINISHED state
+	------------------------------
+	msgout_data <= mult_R_next when current_state = "11" else (others => '0');
+	msgout_last <= msgin_last_reg when current_state = "11" else '0';
+
+
 	----------------------------
 	-- Register input signals. Can be opted out if register block is static.
 	----------------------------
-	Input_Reg : process (current_state, key_e_d, key_n, msgin_data, msgin_last, key_e_d_reg, key_n_reg, msgin_data_reg, msgin_last_reg)
+	Input_Reg : process (clk, reset_neg)
 	begin
-		case current_state is
-			when "00" =>  -- LOAD_NEW_MSG
+		if reset_neg = '0' then
+			key_e_d_reg    <= (others => '0');
+			key_n_reg      <= (others => '0');
+			msgin_data_reg <= (others => '0');
+			msgin_last_reg <= '0';
+
+		elsif rising_edge(clk) then
+			-- Registers are updated in the case statement below
+			if current_state = "00" then  -- LOAD_NEW_MSG
 				key_e_d_reg    <=  key_e_d;
 				key_n_reg      <=  key_n;
 				msgin_data_reg <=  msgin_data;
 				msgin_last_reg <=  msgin_last;
-
-			when others =>
-				key_e_d_reg    <=  key_e_d_reg;
-				key_n_reg      <=  key_n_reg;
-				msgin_data_reg <=  msgin_data_reg;
-				msgin_last_reg <=  msgin_last_reg;	
-		end case;
-	end process;
-
-
-	------------------------------
-	-- Port data to output when in FINISHED state
-	------------------------------
-	port_data_out : process (current_state, mult_R_next, msgin_last_reg)
-	begin
-		case current_state is
-			when "11" =>  -- FINISHED
-				msgout_data <= mult_R_next;
-				msgout_last <= msgin_last_reg;
-			
-			when others =>
-				msgout_data <= (others => '0');
-				msgout_last <= msgin_last_reg;
-		end case;
+			end if;
+		end if;
 	end process;
 
 
 	----------------------------------
 	-- Update mult_R_next and mult_P_next when finished a computation
 	----------------------------------
-	update_mult_inputs : process (current_state, mult_valid_out, result_R, result_P, msgin_data, mult_R_next, mult_P_next)
+	update_mult_inputs : process (clk, reset_neg)
 	begin
-		case current_state is
-			when "00" =>  -- LOAD_NEW_MSG
-				mult_R_next <= ( 0 => '1', others => '0' );  -- Initialize R to 1
-				mult_P_next <= msgin_data;				-- Load new message into P
-
-			when "10" =>  -- COUNT_FIN_PARTIAL
+		if reset_neg = '0' then
+			mult_R_next <= (others => '0');
+			mult_P_next <= (others => '0');
+		elsif rising_edge(clk) then
+			if current_state = "00" then -- LOAD_NEW_MSG
+				mult_R_next <= (0 => '1', others => '0');	-- R initialized to 1
+				mult_P_next <= msgin_data;		-- new message to be exponentiated
+			elsif current_state = "10" then -- COUNT_FIN_PARTIAL
 				mult_R_next <= result_R;
 				mult_P_next <= result_P;
-
-			when others => -- COUNT_WAIT, FINISHED
-				mult_R_next <= mult_R_next;
-				mult_P_next <= mult_P_next;
-			
-		end case;
+			end if;
+		end if;
 	end process;
 
 

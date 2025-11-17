@@ -94,6 +94,10 @@ architecture rtl of rsa_core is
 	-- signal queue_count : INTEGER range 0 to NUM_CORES;
 
 begin
+	-----------------------------------------------------------
+	-- RSA status signal. Not used 
+	-----------------------------------------------------------
+	rsa_status <= (others => '0');
 
 	-----------------------------------------------------------
 	-- Combinational logic for queue status signals
@@ -104,37 +108,20 @@ begin
 	----------------------------------------------------------
 	-- Port mapping of top-level signals to core-specific signals
 	----------------------------------------------------------
-	port_mapping: process(all)
-	begin
-		-- Default assignments to avoid latches
-		msgout_ready_array 			<= (others => '0');
-		msgin_valid_array 			<= (others => '0');
-		msgin_data_array 			<= (others => (others => '0'));
-		msgin_last_array 			<= (others => '0');
-		
-		-- Asynchronous reset 
-		if reset_n = '0' then
-			msgout_valid 				<= '0';
-			msgout_data 				<= (others => '0');
-			msgin_ready 				<= '0';
-			msgout_last 				<= '0';
-		
-		else
-		    -- Override signals for the core at the head/tail of the queue
-			msgout_ready_array(queue_head) 	<= msgout_ready;
-			msgout_valid 					<= msgout_valid_array(queue_head);
-			msgout_data 					<= msgout_data_array(queue_head);
-			msgout_last 					<= msgout_last_array(queue_head);
+	
+	gen_port_map: for i in 0 to NUM_CORES - 1 generate
+		msgin_valid_array(i) 	<= msgin_valid 	when (i = queue_tail and queue_full = '0') else '0';
+		msgin_last_array(i)  	<= msgin_last  	when (i = queue_tail and queue_full = '0') else '0';
+		msgin_data_array(i)  	<= msgin_data  	when (i = queue_tail and queue_full = '0') else (others => '0');
 
-			msgin_valid_array(queue_tail) 	<= msgin_valid;
-			msgin_data_array(queue_tail) 	<= msgin_data;
-			msgin_last_array(queue_tail) 	<= msgin_last;
-			msgin_ready 					<= msgin_ready_array(queue_tail);
-		end if;
-	end process port_mapping;
+		msgout_ready_array(i) 	<= msgout_ready when (i = queue_head and queue_empty = '0') else '0';
+	end generate gen_port_map;
 
+	msgout_valid 		<= msgout_valid_array(queue_head) 	when reset_n = '1' else '0';
+	msgout_last 		<= msgout_last_array(queue_head) 	when reset_n = '1' else '0';
+	msgin_ready 		<= msgin_ready_array(queue_tail) 	when reset_n = '1' else '0';
+	msgout_data 		<= msgout_data_array(queue_head) 	when reset_n = '1' else (others => '0');
 
-	rsa_status <= rsa_status_array(queue_head);  -- TEMPORARY: just output status of core 0
 
 	----------------------------------------------------------
 	-- Generate NUM_CORES instances of exponentiation module
