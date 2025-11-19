@@ -63,24 +63,24 @@ architecture exponentiation_behave of exponentiation is
 	-- R is the result accumulator, P is the base being exponentiated.
 	-- See the datasheet for documentation. 
 	----------------------------------------------------------------------------------
-	signal result_R			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Result accumulator
-	signal result_P			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Base being exponentiated
+	signal result_R				: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Result accumulator
+	signal result_P				: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Base being exponentiated
 
-	signal mult_R_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for R input to mult_with_mod
-	signal mult_P_next		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for P input to mult_with_mod
-	signal mult_e_d     	: STD_LOGIC;														-- LSB of exponent key for mult_with_mod e input
-	signal mult_valid_in    : STD_LOGIC;														-- Valid signal to mult_with_mod
-	signal mult_ready_out   : STD_LOGIC;														-- Ready signal from mult_with_mod
-	signal mult_valid_out   : STD_LOGIC;														-- Valid signal from mult_with_mod
-	signal mult_ready_in    : STD_LOGIC;														-- Ready signal to mult_with_mod
-	signal mult_reset_neg   : STD_LOGIC;														-- Active low reset to mult_with_mod
+	signal mult_R_next			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for R input to mult_with_mod
+	signal mult_P_next			: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Next value for P input to mult_with_mod
+	signal mult_e_d     		: STD_LOGIC;														-- LSB of exponent key for mult_with_mod e input
+	signal mult_valid_in    	: STD_LOGIC;														-- Valid signal to mult_with_mod
+	signal mult_ready_out   	: STD_LOGIC;														-- Ready signal from mult_with_mod
+	signal mult_valid_out   	: STD_LOGIC;														-- Valid signal from mult_with_mod
+	signal mult_ready_in    	: STD_LOGIC;														-- Ready signal to mult_with_mod
+	signal mult_reset_neg   	: STD_LOGIC;														-- Active low reset to mult_with_mod
 
-	signal key_e_d_reg    	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing exponent key
-	signal key_n_reg      	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing modulus key
-	signal msgin_data_reg 	: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing input message data
-	signal msgin_last_reg 	: STD_LOGIC;														-- Register for storing input message last signal
+	signal key_e_d_reg    		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing exponent key
+	signal key_n_reg      		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing modulus key
+	signal msgin_data_reg 		: STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );					-- Register for storing input message data
+	signal msgin_last_reg 		: STD_LOGIC;														-- Register for storing input message last signal
 	
-	signal current_state    : STD_LOGIC_VECTOR( 1 downto 0 );									-- Current state of the state machine
+	signal current_state    	: STD_LOGIC_VECTOR( 1 downto 0 );									-- Current state of the state machine
 
 begin
 	----------------------------------------------------------------------------------
@@ -89,9 +89,9 @@ begin
 	Input_Reg : process (clk, reset_neg)
 	begin
 		if reset_neg = '0' then
-			key_e_d_reg    <= (others => '0');
-			key_n_reg      <= (others => '0');
-			msgin_last_reg <= '0';
+			key_e_d_reg    		<= (others => '0');
+			key_n_reg      		<= (others => '0');
+			msgin_last_reg 		<= '0';
 
 		elsif rising_edge(clk) then
 			if current_state = "00" then  -- LOAD_NEW_MSG
@@ -145,7 +145,7 @@ begin
 		)
 		port map (	
 			clk       			=> clk,
-			reset_neg  			=> mult_reset_neg
+			reset_neg  			=> mult_reset_neg,
 			a			  		=> mult_P_next,
 			b 			 		=> mult_R_next,
 			c 			 		=> mult_P_next,
@@ -156,7 +156,7 @@ begin
 			valid_in       		=> mult_valid_in,
 			ready_out      		=> mult_ready_out,
 			valid_out      		=> mult_valid_out,
-			ready_in       		=> mult_ready_in,
+			ready_in       		=> mult_ready_in
 		);
 
 
