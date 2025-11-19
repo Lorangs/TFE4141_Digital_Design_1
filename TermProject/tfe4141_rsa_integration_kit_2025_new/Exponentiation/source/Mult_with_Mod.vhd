@@ -1,4 +1,4 @@
--------------------------------------------------------------------------  -------
+--------------------------------------------------------------------------------
 -- Author       : L. Strand, S. Gripsgård, O.J. Schubert
 -- Organization : Norwegian University of Science and Technology (NTNU)
 --                Department of Electronic Systems
@@ -55,8 +55,8 @@ entity mult_with_mod is
 		-----------------------------------------------------------------------------
 		--output data
 		-----------------------------------------------------------------------------
-		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);		
-		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);			-- result R = (a * b) mod n if e = '1', else R = b
+		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);			-- result P = (a * c) mod n
 
 
 		-----------------------------------------------------------------------------
@@ -84,18 +84,19 @@ architecture mult_behave of mult_with_mod is
 			s8,																	-- s8 = P shifted left - n
 			s9,																	-- s9 = P shifted left + c - n
 			s10,																-- s10 = P shifted left - n shifted left
-			s11																	-- s11 = P shifted left + c - n shifted left
+			s11,																-- s11 = P shifted left + c - n shifted left
+			bit_shifted_R,														-- R shifted left by 1 bit
+			bit_shifted_P,														-- P shifted left by 1 bit
+			bit_shifted_n,														-- modulus shifted left by 1 bit
+			b_minus_n,															-- b - n
+			b_minus_2n,															-- b - 2n
+			c_minus_n,															-- c - n
+			c_minus_2n															-- c - 2n
 		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
-
-	signal  bit_shifted_R,														-- R shifted left by 1 bit
-			bit_shifted_P														-- P shifted left by 1 bit
-		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );
 
 	signal  mux_ctrl_P_out,														-- Choose output: [ 000 = s6, 001 = s7, 010 = s8, 011 = s9, 100 = s10, 101 = s11 ]
 			mux_ctrl_R_out														-- Choose output: [ 000 = s0, 001 = s1, 010 = s2, 011 = s3, 100 =  s4, 101 = s5  ]	
 		: STD_LOGIC_VECTOR ( 2 downto 0 );
-
-	signal	bit_shifted_n	: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );		-- modulus shifted left by 1 bit
 
 begin
 	--------------------------------------------------------------------------
@@ -121,32 +122,38 @@ begin
 		);
  
 
-	--------------------------------------------------------------------------
+	-------------------------------------------
 	-- Prepare shifted values for R and P calculations
-	--------------------------------------------------------------------------
-	bit_shifted_R <= result_R & '0';
-	bit_shifted_P <= result_P & '0';
-	bit_shifted_n <= n & '0';
+	-------------------------------------------
+	bit_shifted_R <= '0' & result_R & '0';	-- Signbit and left shift by 1
+	bit_shifted_P <= '0' & result_P & '0';	-- Signbit and left shift by 1
+	bit_shifted_n <= '0' & n & '0';			-- Signbit and left shift by 1
 
-	--------------------------------------------------------------------------
+	b_minus_n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & b ) - SIGNED( "00" & n ) ) 		when current_state = "00" else b_minus_n;
+	b_minus_2n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & b ) - SIGNED(bit_shifted_n ) ) 	when current_state = "00" else b_minus_2n;
+	c_minus_n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & c ) - SIGNED( "00" & n ) ) 		when current_state = "00" else c_minus_n;
+	c_minus_2n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & c ) - SIGNED(bit_shifted_n ) ) 	when current_state = "00" else c_minus_2n;
+
+
+	-------------------------------------------
 	-- Calculate summations for R
-	--------------------------------------------------------------------------
-	s0  <= '0' & bit_shifted_R;
-	s1  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) + unsigned( "00" & b ) );
-	s2  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) - unsigned( "00" & n ) );  
-	s3  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( "00" & n ) ); 
-	s4  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) - unsigned( '0' & bit_shifted_n ) );
-	s5  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( '0' & bit_shifted_n ) );
+	-------------------------------------------
+	s0  <= bit_shifted_R;
+	s1  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED( "00" & b ) );
+	s2  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) - SIGNED( "00" & n ) );  
+	s3  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED(b_minus_n ) ); 
+	s4  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) - SIGNED(bit_shifted_n ) );
+	s5  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED(b_minus_2n ) );
 
-	--------------------------------------------------------------------------
+	-------------------------------------------
 	-- Calculate summations for P
-	--------------------------------------------------------------------------
-	s6  <= '0' & bit_shifted_P;
-	s7  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) );
-	s8  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) - unsigned( "00" & n ) );
-	s9  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( "00" & n ) );
-	s10 <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) - unsigned( '0' & bit_shifted_n ) );
-	s11 <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( '0' & bit_shifted_n ) );
+	-------------------------------------------
+	s6  <= bit_shifted_P;
+	s7  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED( "00" & c ) );
+	s8  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) - SIGNED( "00" & n ) );
+	s9  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED(c_minus_n ) );
+	s10 <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) - SIGNED(bit_shifted_n ) );
+	s11 <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED(c_minus_2n ) );
 
 
 	--------------------------------------------------------------------------
