@@ -1,22 +1,20 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 10/22/2025 06:00:20 PM
--- Design Name: 
--- Module Name: exponentiation_fsm - exponentiation_fsm_behave
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
+-------------------------------------------------------------------------  -------
+-- Author       : L. Strand, S. Gripsgård, O.J. Schubert
+-- Organization : Norwegian University of Science and Technology (NTNU)
+--                Department of Electronic Systems
+--                https://www.ntnu.edu/ies
+-- Course       : TFE4141 Design of digital systems 1 (DDS1)
+-- Year         : Autumn 2025
+-- Project      : RSA accelerator
+-- License      : This is free and unencumbered software released into the
+--                public domain (UNLICENSE)
+--------------------------------------------------------------------------------
+-- Purpose:
+    --   VHDL implementation of FSM for modular exponentiation module for RSA encryption
+    --   and decryption. Manages the states of the operation,
+    --   including resetting, counting through the bits of the exponent, and
+    --   signaling when the computation is finished.
+--------------------------------------------------------------------------------
 
 
 library IEEE;
@@ -52,6 +50,7 @@ entity exponentiation_fsm is
         key_e_d_reg         : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
         key_e_d_LSB         : out STD_LOGIC;     
 
+        -- internal state signal transmitted to top module
         current_state       : inout STD_LOGIC_VECTOR( 1 downto 0 ) -- LOAD_NEW_MSG = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
     );
 end exponentiation_fsm;
@@ -61,8 +60,8 @@ architecture exponentiation_fsm_behave of exponentiation_fsm is
     -- RESET = 00, COUNT_WAIT = 01, COUNT_FIN_PARTIAL = 10, FINISHED = 11
     -------------------------------------------------------------------------
     signal next_state                   : STD_LOGIC_VECTOR(1 downto 0);
-    signal counter                      : INTEGER range 0 to C_BLOCK_SIZE;
-    signal bit_shifted_key_e_d          : STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+    signal counter                      : INTEGER range 0 to C_BLOCK_SIZE;              -- Counter to track number of exponent bits processed
+    signal bit_shifted_key_e_d          : STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);    -- Shifted version of key_e_d to extract LSB at each step
 begin
     ---------------------------------------
     -- Bit shift key_e_d to get LSB
@@ -148,7 +147,6 @@ begin
 
             else
                 current_state <= next_state;
-
             end if;
         end if;
     end process CurrentState;
@@ -162,25 +160,24 @@ begin
         case current_state is 
 
             when "00" =>   -- LOAD_NEW_MSG
-
                 if (msgin_valid = '1' and mult_ready_in = '1') then
                     next_state  <= "01";  -- COUNT_WAIT state
+
                 else
                     next_state <= "00";   -- remain in LOAD_NEW_MSG state
                 end if;
 
 
             when "01" =>  -- COUNT_WAIT
-
                 if ( mult_valid_out = '0' ) then
                     next_state  <= "01";  -- COUNT_WAIT state
+
                 else
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
                 end if;
 
 
             when "10" =>  -- COUNT_FIN_PARTIAL
-
                 if (mult_ready_in = '0') then -- Should never happen. The counter will be out of sync.
                     next_state  <= "10";  -- COUNT_FIN_PARTIAL state
 
@@ -189,18 +186,15 @@ begin
 
                 else 
                     next_state  <= "11";  -- FINISHED state
-
                 end if;
 
 
             when "11" =>  -- FINISHED
-
                 if( msgout_ready = '1' ) then
                     next_state  <= "00";  -- LOAD_NEW_MSG state
 
                 else
                     next_state  <= "11";  -- FINISHED state
-
                 end if;
             
 

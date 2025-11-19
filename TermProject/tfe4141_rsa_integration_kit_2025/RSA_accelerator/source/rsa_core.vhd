@@ -17,14 +17,10 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		-- Slave msgin interface
 		-----------------------------------------------------------------------------
-		-- Message that will be sent out is valid
-		msgin_valid             : in STD_LOGIC;
-		-- Slave ready to accept a new message
-		msgin_ready             : out STD_LOGIC;
-		-- Message that will be sent out of the rsa_msgin module
-		msgin_data              : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		-- Indicates boundary of last packet
-		msgin_last              : in STD_LOGIC;
+		msgin_valid             : in STD_LOGIC;											-- Message that will be sent out is valid
+		msgin_ready             : out STD_LOGIC;										-- Slave ready to accept a new message
+		msgin_data              : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );		-- Message that will be sent out of the rsa_msgin module
+		msgin_last              : in STD_LOGIC;											-- Indicates boundary of last packet
 
 		-----------------------------------------------------------------------------
 		-- Master msgout interface
@@ -43,82 +39,73 @@ entity rsa_core is
 		-----------------------------------------------------------------------------
 		key_e_d                 : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 		key_n                   : in STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
-		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 )
+		rsa_status              : out STD_LOGIC_VECTOR( 31 downto 0 )  -- not used
 	);
 end rsa_core;
 
 architecture rtl of rsa_core is
-	
+	---------------------------------------------------------------------------------
 	-- Array types for connecting multiple cores
+	---------------------------------------------------------------------------------
 	type msg_data_array_t		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( C_BLOCK_SIZE - 1 downto 0 );
 	type logic_array_t 			is array (0 to NUM_CORES - 1) of STD_LOGIC;
     type status_array_t 		is array (0 to NUM_CORES - 1) of STD_LOGIC_VECTOR( 31 downto 0 );
 
+	---------------------------------------------------------------------------------
 	-- Internal arrays to connect to multiple cores
-	signal msgin_data_array    : msg_data_array_t;
-	signal msgout_data_array   : msg_data_array_t;
+	---------------------------------------------------------------------------------
+	signal msgin_data_array    : msg_data_array_t;		-- input data is muxed to the first available core in queue (tail).
+	signal msgout_data_array   : msg_data_array_t;		-- output data is muxed from the core at the head of the queue.
 
-	signal msgin_valid_array   : logic_array_t;
-	signal msgout_valid_array  : logic_array_t;
-	signal msgin_ready_array   : logic_array_t;
-	signal msgout_ready_array  : logic_array_t; 
-	signal msgin_last_array    : logic_array_t;
-	signal msgout_last_array   : logic_array_t;
-	signal rsa_status_array    : status_array_t;
+	signal msgin_valid_array   : logic_array_t;			-- input valid signals for each core
+	signal msgout_valid_array  : logic_array_t;			-- output valid signals for each core
+	signal msgin_ready_array   : logic_array_t; 		-- input ready signals for each core
+	signal msgout_ready_array  : logic_array_t; 		-- output ready signals for each core
+	signal msgin_last_array    : logic_array_t;			-- input last signals for each core
+	signal msgout_last_array   : logic_array_t;			-- output last signals for each core
+	signal rsa_status_array    : status_array_t;		-- status signals from each core (not used)
 
 	-- Queue management signals
-	signal queue_head          : INTEGER range 0 to NUM_CORES - 1;
-	signal queue_tail          : INTEGER range 0 to NUM_CORES - 1;
-	signal queue_count         : INTEGER range 0 to NUM_CORES;
+	signal queue_head          : INTEGER range 0 to NUM_CORES - 1;		-- FIFO head index. First core to output data.
+	signal queue_tail          : INTEGER range 0 to NUM_CORES - 1;		-- FIFO tail index. First core to accept new incoming data.
+	signal queue_count         : INTEGER range 0 to NUM_CORES;			-- Number of cores currently in the queue.
 	signal queue_empty         : STD_LOGIC;
 	signal queue_full          : STD_LOGIC;
 
 begin
-    --------------------------------------
+    --------------------------------------------------------------
     -- RSA Status Signal. Not used.
-    --------------------------------------
+    --------------------------------------------------------------
     rsa_status <= (others => '0');
 
-	-----------------------------------------------------------
+	--------------------------------------------------------------
 	-- Combinational logic for queue status signals
-	-----------------------------------------------------------
+	--------------------------------------------------------------
 	queue_empty <= '1' when queue_count = 0 else '0';
 	queue_full  <= '1' when queue_count = NUM_CORES else '0';
 
-	----------------------------------------------------------
+	--------------------------------------------------------------
 	-- Port mapping of top-level signals to core-specific signals
-	----------------------------------------------------------
-	port_mapping: process(all)
-	begin
-		-- Default assignments to avoid latches
-		msgout_ready_array 			<= (others => '0');
-		msgin_valid_array 			<= (others => '0');
-		msgin_data_array 			<= (others => (others => '0'));
-		msgin_last_array 			<= (others => '0');
-		
-		-- Asynchronous reset
-		if reset_n = '0' then
-			msgout_valid 				<= '0';
-			msgout_data 				<= (others => '0');
-			msgin_ready 				<= '0';
-			msgout_last 				<= '0';
-		
-		else
-		    -- Override signals for the core at the head/tail of the queue
-			msgout_ready_array(queue_head) 	<= msgout_ready;
-			msgout_valid 					<= msgout_valid_array(queue_head);
-			msgout_data 					<= msgout_data_array(queue_head);
-			msgout_last 					<= msgout_last_array(queue_head);
+	--------------------------------------------------------------
+	--msgout_ready_array	<= ( queue_head => msgout_ready, others => '0' );
+	--msgin_valid_array 	<= ( queue_tail => msgin_valid,  others => '0' );
+	--msgin_data_array 	<= ( queue_tail => msgin_data,   others => (others => '0') );
+	--msgin_last_array 	<= ( queue_tail => msgin_last,   others => '0' );
 
-			msgin_valid_array(queue_tail) 	<= msgin_valid;
-			msgin_data_array(queue_tail) 	<= msgin_data;
-			msgin_last_array(queue_tail) 	<= msgin_last;
-			msgin_ready 					<= msgin_ready_array(queue_tail);
-		end if;
-	end process port_mapping;
+	msgout_valid 		<= msgout_valid_array( queue_head ) when reset_n = '1' else '0';
+	msgout_data 		<= msgout_data_array( queue_head )  when reset_n = '1' else (others => '0');
+	msgout_last 		<= msgout_last_array( queue_head )  when reset_n = '1' else '0';
+	msgin_ready 		<= msgin_ready_array( queue_tail )  when reset_n = '1' else '0';
 
 
-	----------------------------------------------------------
+	gen_mux: for i in 0 to NUM_CORES - 1 generate
+		msgin_valid_array(i) 	<= msgin_valid 	when (queue_tail = i and reset_n = '1') else '0';
+		msgin_last_array(i)  	<= msgin_last  	when (queue_tail = i and reset_n = '1') else '0';
+		msgin_data_array(i)  	<= msgin_data  	when (queue_tail = i and reset_n = '1') else (others => '0');
+		msgout_ready_array(i) 	<= msgout_ready when (queue_head = i and reset_n = '1') else '0';
+	end generate;
+			
+	---------------------------------------------------------
 	-- Generate NUM_CORES instances of exponentiation module
 	----------------------------------------------------------
 	gen_exponentiation_cores: for i in 0 to NUM_CORES - 1 generate

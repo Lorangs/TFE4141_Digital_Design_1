@@ -1,14 +1,23 @@
-------------------------------------------
--- Exponentiation FSM VHDL Module
+-------------------------------------------------------------------------  -------
+-- Author       : L. Strand, S. Gripsgård, O.J. Schubert
+-- Organization : Norwegian University of Science and Technology (NTNU)
+--                Department of Electronic Systems
+--                https://www.ntnu.edu/ies
+-- Course       : TFE4141 Design of digital systems 1 (DDS1)
+-- Year         : Autumn 2025
+-- Project      : RSA accelerator
+-- License      : This is free and unencumbered software released into the
+--                public domain (UNLICENSE)
+--------------------------------------------------------------------------------
+-- Purpose:
+    -- This module implements the finite state machine (FSM) for controlling the
+    -- modular exponentiation process. It manages the states of the operation,
+    -- including resetting, counting through the bits of the exponent, and
+    -- signaling when the computation is finished.
 
--- This module implements the finite state machine (FSM) for controlling the
--- modular exponentiation process. It manages the states of the operation,
--- including resetting, counting through the bits of the exponent, and
--- signaling when the computation is finished.
-
--- assumes constant inputs during operation.
--- Do not change inputs until valid_out is high.
-------------------------------------------
+    -- assumes constant inputs during operation.
+    -- Do not change inputs until valid_out is high.
+--------------------------------------------------------------------------------
 
 
 library IEEE;
@@ -21,52 +30,53 @@ entity mult_with_mod_fsm is
 		C_BLOCK_SIZE    : INTEGER := 256
 	);
     port ( 
-        -- utility
-        reset_neg       : in STD_LOGIC;
-        clk             : in STD_LOGIC;
+        ------------------------------------------------------------------------
+        -- Clocks and reset
+        ------------------------------------------------------------------------
+        clk             : in STD_LOGIC;                                             -- system clock
+        reset_neg       : in STD_LOGIC;                                             -- active low reset
 
+        ------------------------------------------------------------------------
         -- input data
+        ------------------------------------------------------------------------
         a               : in STD_LOGIC_VECTOR ( C_BLOCK_SIZE - 1 downto 0 );
 
-        -- input control
-        ready_out       : in STD_LOGIC;
-        valid_in        : in STD_LOGIC;
+        ------------------------------------------------------------------------
+        -- Handshaking signals
+        ------------------------------------------------------------------------
+        ready_out       : in STD_LOGIC;                                             -- External Exponentiation module ready to accept new data
+        valid_in        : in STD_LOGIC;                                             -- Signal indicating input data is valid
+        ready_in        : out STD_LOGIC;                                            -- Mult_with_mod module ready to accept new data
+        valid_out       : out STD_LOGIC;                                            -- Signal indicating output data is valid
         
-        -- output control
-        ready_in        : out STD_LOGIC;
-        valid_out       : out STD_LOGIC;
-        
+        ------------------------------------------------------------------------
         -- mux control signals
-        mux_ctrl_P_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
-        mux_ctrl_R_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );
-        
-        -- output mux control signals
-        mux_ctrl_P_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
-        mux_ctrl_R_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );
+        ------------------------------------------------------------------------
+        mux_ctrl_R_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );                       -- [ s5 ( Sign Bit ), s4 ( Sign Bit ), s3( Sign Bit ), s2( Sign Bit ) ] 
+        mux_ctrl_P_in   : in STD_LOGIC_VECTOR ( 3 downto 0 );                       -- [ s11( Sign Bit ), s10( Sign Bit ), s9( Sign Bit ), s8( Sign Bit ) ]
+        mux_ctrl_R_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );                      -- Choose output: [ "000" = S0, "001" = S1, "010" = S2, "011" = S3, "100" =  S4, "101" = S5  ] based on mux_ctrl_R_in and a(255)
+        mux_ctrl_P_out  : out STD_LOGIC_VECTOR ( 2 downto 0 );                      -- Choose output: [ "000" = S6, "001" = S7, "010" = S8, "011" = S9, "100" = S10, "101" = S11 ] based on mux_ctrl_P_in and a(255)
 
+        ------------------------------------------------------------------------
         -- internal state signal
-        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 )
+        ------------------------------------------------------------------------
+        current_state   : inout STD_LOGIC_VECTOR ( 1 downto 0 )                     -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
     ); 
 end mult_with_mod_fsm;
 
 architecture mult_fsm_behave of mult_with_mod_fsm is
-    --------------------------------------------------------------------
-    -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
-    --------------------------------------------------------------------
-    signal  next_state 
-        : STD_LOGIC_VECTOR ( 1 downto 0 );
-
-    signal counter 
-        : INTEGER range 0 to C_BLOCK_SIZE;
-
-    signal  bit_shifted_a 
-        : STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );
+    ----------------------------------------------------------------------------
+    -- Internal Signal Declarations
+    ----------------------------------------------------------------------------
+    signal next_state              : STD_LOGIC_VECTOR ( 1 downto 0 );               -- RESET = 00, COUNTING = 01, FINISHED = 10, unused 11
+    signal bit_shifted_a           : STD_LOGIC_VECTOR ( C_BLOCK_SIZE-1 downto 0 );  -- Shifted version of a to extract MSB at each step
+    signal counter                 : INTEGER range 0 to C_BLOCK_SIZE;               -- Counter to track number of exponent bits processed
 
 begin
 
-    ------------------------------------------
-    -- Set outputs based on current state
-    ------------------------------------------
+    ----------------------------------------------------------------------------
+    -- Set outputs based on current state according to state diagram
+    ----------------------------------------------------------------------------
     setOutputs: process (current_state, mux_ctrl_R_in, mux_ctrl_P_in, bit_shifted_a(255))
     begin
         case current_state is
@@ -85,7 +95,7 @@ begin
 
                 -- If a(255) = '1'  --> possible outputs: S1, S3, S5 for R and S7, S9, S11 for P
                 ----------------------------------------------------------------------------------
-                if (bit_shifted_a(255) = '1') then
+                if (bit_shifted_a(C_BLOCK_SIZE-1) = '1') then
                     -- Mux control R
                     if ( mux_ctrl_R_in(3) = '0') then       -- If R + b - 2*n >= 0
                         mux_ctrl_R_out <= "101";            -- Select S5: R = R + b - 2*n
@@ -158,9 +168,9 @@ begin
     end process setOutputs;
 
     
-    -----------------------------------------
-    -- Next State Logic.
-    -----------------------------------------
+    ----------------------------------------------------------------------------
+    -- Next State Logic based on state diagram
+    ----------------------------------------------------------------------------
    NextState: process (current_state, counter, ready_out, valid_in) 
    begin
         case current_state is 
@@ -172,11 +182,10 @@ begin
                 end if;
 
             when "01" =>  -- COUNTING
-   
                 if ( counter = C_BLOCK_SIZE ) then
                     next_state  <= "10";  -- FINISHED state
                 else
-                    next_state <= "01";  -- COUNTING state
+                    next_state  <= "01";  -- COUNTING state
                 end if;
                 
             when "10" =>  -- FINISHED
@@ -186,22 +195,21 @@ begin
                     next_state  <= "10";  -- FINISHED state
                 end if;
                 
-    
             when others => -- UNUSED
-                next_state <= "00"; -- RESET state
+                next_state      <= "00"; -- RESET state
 
         end case;
     end process NextState;
    
 
-    -----------------------------------------
+    ----------------------------------------------------------------------------
     -- State Register. Updates current state on clock edge.
-    -----------------------------------------
+    ----------------------------------------------------------------------------
     SyncState: process (clk, reset_neg, current_state, next_state) 
     begin
         if rising_edge(clk) then
             if( reset_neg = '0' ) then
-                current_state <= "00";  -- RESET state
+                current_state   <= "00";  -- RESET state
             else
                 current_state <= next_state;
             end if;
@@ -210,11 +218,14 @@ begin
     end process SyncState;
   
 
-    -----------------------------------------
-    -- Counter Control. Increments during COUNTING state.
-    -- In other states, resets to zero.
-    -- Uses next_state signal from Next State Logic.
-    -----------------------------------------
+    ----------------------------------------------------------------------------
+    -- Counter Control. 
+        -- Increments during COUNTING state.
+        -- In other states, resets to zero.
+
+        -- Uses next_state signal from Next State Logic to determine when to increment.
+        -- Not dependent on current_state to avoid timing issues.
+    ----------------------------------------------------------------------------
     SyncCounter: process (clk, next_state) 
     begin
         if rising_edge(clk) then
@@ -229,10 +240,12 @@ begin
     end process SyncCounter;  
   
 
-    -----------------------------------------
-    -- Shift A register. Shifts left during COUNTING state.
-    -- In other states, loads input a.
-    -----------------------------------------
+    ----------------------------------------------------------------------------
+    -- Shift A register. 
+        -- Shifts left during COUNTING state.
+        -- On entering RESET state, loads input a.
+        -- In other states, holds value.
+    ----------------------------------------------------------------------------
    ShiftA: process (clk, current_state, a, bit_shifted_a)
     begin
         if rising_edge(clk) then
@@ -241,7 +254,7 @@ begin
                     bit_shifted_a <= a;
 
                 when "01" =>   -- COUNTING
-                    bit_shifted_a <= STD_LOGIC_VECTOR( shift_left( unsigned( bit_shifted_a ), 1 ) );  -- Shift left by 1 bit 
+                    bit_shifted_a <= STD_LOGIC_VECTOR( shift_left( unsigned( bit_shifted_a ), 1 ) ); 
     
                 when others => -- FINISHED and UNUSED
                     bit_shifted_a <= bit_shifted_a;

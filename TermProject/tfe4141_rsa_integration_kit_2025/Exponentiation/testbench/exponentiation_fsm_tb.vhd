@@ -1,16 +1,24 @@
+-------------------------------------------------------------------------  -------
+-- Author       : L. Strand, S. Gripsgård, O.J. Schubert
+-- Organization : Norwegian University of Science and Technology (NTNU)
+--                Department of Electronic Systems
+--                https://www.ntnu.edu/ies
+-- Course       : TFE4141 Design of digital systems 1 (DDS1)
+-- Year         : Autumn 2025
+-- Project      : RSA accelerator
+-- License      : This is free and unencumbered software released into the
+--                public domain (UNLICENSE)
+--------------------------------------------------------------------------------
+-- Purpose:
+--      VHDL testbench for the exponentiation_fsm module.
+--------------------------------------------------------------------------------
+
+
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.Numeric_STD.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity exponentiation_fsm_tb is
     generic (
