@@ -91,7 +91,10 @@ architecture mult_behave of mult_with_mod is
 			b_minus_n,															-- b - n
 			b_minus_2n,															-- b - 2n
 			c_minus_n,															-- c - n
-			c_minus_2n															-- c - 2n
+			c_minus_2n,															-- c - 2n
+			b_or_2R,															-- b or 2R depending on state
+			c_or_2P																-- c or 2P depending on state
+
 		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
 
 	signal  mux_ctrl_P_out,														-- Choose output: [ 000 = s6, 001 = s7, 010 = s8, 011 = s9, 100 = s10, 101 = s11 ]
@@ -125,35 +128,54 @@ begin
 	-------------------------------------------
 	-- Prepare shifted values for R and P calculations
 	-------------------------------------------
-	bit_shifted_R <= '0' & result_R & '0';	-- Signbit and left shift by 1
-	bit_shifted_P <= '0' & result_P & '0';	-- Signbit and left shift by 1
-	bit_shifted_n <= '0' & n & '0';			-- Signbit and left shift by 1
+	bit_shifted_R <= '0' & result_R & '0';			-- Signbit and left shift by 1
+	bit_shifted_P <= '0' & result_P & '0';			-- Signbit and left shift by 1
+	bit_shifted_n <= '0' & n & '0';					-- Signbit and left shift by 1
 
-	b_minus_n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & b ) - SIGNED( "00" & n ) ) 		when current_state = "00" else b_minus_n;
-	b_minus_2n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & b ) - SIGNED(bit_shifted_n ) ) 	when current_state = "00" else b_minus_2n;
-	c_minus_n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & c ) - SIGNED( "00" & n ) ) 		when current_state = "00" else c_minus_n;
-	c_minus_2n 	<= STD_LOGIC_VECTOR( SIGNED( "00" & c ) - SIGNED(bit_shifted_n ) ) 	when current_state = "00" else c_minus_2n;
+	b_or_2R <= b when current_state = "00" else bit_shifted_R;
+	c_or_2P <= c when current_state = "00" else bit_shifted_P;	
+
+
+	-------------------------------------------
+	-- Pre-calculate b - n, b - 2n, c - n, c - 2n
+	-- in RESET state to use in later calculations.
+	-- and store in registers to reduce numbers of adders needed. 
+	-------------------------------------------
+	precalculations: process(clk)
+	begin
+		if rising_edge(clk) then
+			if current_state = "00" then	-- RESET
+				b_minus_n 	<= s2;
+				b_minus_2n 	<= s4;
+				c_minus_n 	<= s8;
+				c_minus_2n 	<= s10;
+			end if;
+		end if;
+	end process;
+
 
 
 	-------------------------------------------
 	-- Calculate summations for R
-	-------------------------------------------
-	s0  <= bit_shifted_R;
-	s1  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED( "00" & b ) );
-	s2  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) - SIGNED( "00" & n ) );  
-	s3  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED(b_minus_n ) ); 
-	s4  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) - SIGNED(bit_shifted_n ) );
-	s5  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_R) + SIGNED(b_minus_2n ) );
+	-------------------------------------------	
+	s0  <= bit_shifted_R;															-- s0 = 2R
+	s1  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( "00" & b ) );		-- s1 = 2R + b
+	s2  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( "00" & n ) );  		-- s2 = 2R - n 			( or b - n, for pre-calculation in RESET )
+	s3  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( b_minus_n ) ); 		-- s3 = 2R + b - n
+	s4  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( bit_shifted_n ) );	-- s4 = 2R - 2n			( or b - 2n, for pre-calculation in RESET )
+	s5  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( b_minus_2n ) );		-- s5 = 2R + b - 2n
 
 	-------------------------------------------
 	-- Calculate summations for P
 	-------------------------------------------
-	s6  <= bit_shifted_P;
-	s7  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED( "00" & c ) );
-	s8  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) - SIGNED( "00" & n ) );
-	s9  <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED(c_minus_n ) );
-	s10 <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) - SIGNED(bit_shifted_n ) );
-	s11 <= STD_LOGIC_VECTOR( SIGNED(bit_shifted_P) + SIGNED(c_minus_2n ) );
+	s6  <= bit_shifted_P;															-- s6 = 2P	
+	s7  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( "00" & c ) );		-- s7 = 2P + c
+	s8  <= STD_LOGIC_VECTOR( SIGNED( c_or_2P ) 		 - SIGNED( "00" & n ) );		-- s8 = 2P - n 			( or c - n, for pre-calculation in RESET )
+	s9  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( c_minus_n ) );		-- s9 = 2P + c - n
+	s10 <= STD_LOGIC_VECTOR( SIGNED( c_or_2P ) 		 - SIGNED( bit_shifted_n ) );	-- s10 = 2P - 2n		( or c - 2n, for pre-calculation in RESET )
+	s11 <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( c_minus_2n ) );		-- s11 = 2P + c - 2n
+
+
 
 
 	--------------------------------------------------------------------------
