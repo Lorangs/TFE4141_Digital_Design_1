@@ -1,7 +1,7 @@
 import csv
 import os
 
-def mult_with_mod(a, b, n):
+def mult_with_mod_old(a, b, n):
     R = 0
     for i in range(n):
         R = R << 1
@@ -16,7 +16,7 @@ def mult_with_mod(a, b, n):
        # vi ønsker å velge R som ikke er negativ. aka 1 på 255 eller 256 
     return R
 
-def encrypt(M, e, n):
+def encrypt_old(M, e, n):
     c = 1
     P = M
     for i in range(n):
@@ -49,7 +49,7 @@ def mult_with_mod_v2(a, b, c, e, n):
             P -= n
 
     if e == 0:
-        R = b
+        R = b 
     return R, P
 
 def encrypt_v2(M, e, n):
@@ -59,7 +59,6 @@ def encrypt_v2(M, e, n):
         x = (e >> i) & 1
         R, P = mult_with_mod_v2(P, R, P, x, n)
     return R
-
 
 key_N = 0X99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
 e     = 0x0000000000000000000000000000000000000000000000000000000000010001
@@ -232,3 +231,41 @@ def encrypt_print_steps(M, e, n, path="test_data", filename="encrypt_test_01.csv
 
 print(encrypt_print_steps(msg, e, key_N, path="test_data", filename="encryption_steps_01.csv"))
 
+
+
+#---------------------------------------------
+# The handin version
+#---------------------------------------------
+def mult_with_mod(a, b, c, e, n, C_block_size):
+    R = 0
+    P = 0
+
+    for i in range(C_block_size):                              
+        R = R << 1
+        P = P << 1
+
+        if (a >> (C_block_size-1-i) & 1):
+            R += b
+            P += c
+
+        if R >= 2*n:
+            R -= 2*n
+        if R >= n:
+            R -= n
+        if P >= 2*n:
+            P -= 2*n
+        if P >= n:
+            P -= n
+
+    if e == 0:
+        R = b # returning the old value of R
+    return R, P
+
+
+def encrypt(M, key_e, key_n, C_block_size):
+    R = 1
+    P = M
+    for i in range(C_block_size):
+        e_i = (key_e >> i) & 1
+        R, P = mult_with_mod(P, R, P, e_i, key_n, C_block_size)
+    return R
