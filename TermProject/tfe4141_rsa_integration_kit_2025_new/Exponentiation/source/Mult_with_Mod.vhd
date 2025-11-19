@@ -102,9 +102,9 @@ architecture mult_behave of mult_with_mod is
 		: STD_LOGIC_VECTOR ( 2 downto 0 );
 
 begin
-	--------------------------------------------------------------------------
+	---------------------------------------------------------------------------
 	-- FSM module instantiation
-	--------------------------------------------------------------------------
+	---------------------------------------------------------------------------
 	mult_fsm: entity work.mult_with_mod_fsm
 		generic map (
 			C_BLOCK_SIZE => C_BLOCK_SIZE
@@ -125,22 +125,22 @@ begin
 		);
  
 
-	-------------------------------------------
+	----------------------------------------------------------------------------
 	-- Prepare shifted values for R and P calculations
-	-------------------------------------------
-	bit_shifted_R <= '0' & result_R & '0';			-- Signbit and left shift by 1
-	bit_shifted_P <= '0' & result_P & '0';			-- Signbit and left shift by 1
-	bit_shifted_n <= '0' & n & '0';					-- Signbit and left shift by 1
+	----------------------------------------------------------------------------
+	bit_shifted_R <= '0' & result_R & '0';									-- Signbit and left shift by 1
+	bit_shifted_P <= '0' & result_P & '0';									-- Signbit and left shift by 1
+	bit_shifted_n <= '0' & n & '0';											-- Signbit and left shift by 1
 
-	b_or_2R <= b when current_state = "00" else bit_shifted_R;
-	c_or_2P <= c when current_state = "00" else bit_shifted_P;	
+	b_or_2R <= "00" & b when current_state = "00" else bit_shifted_R;		-- RESET state uses b for pre-calculation, else use 2R
+	c_or_2P <= "00" & c when current_state = "00" else bit_shifted_P;		-- RESET state uses c for pre-calculation, else use 2P
 
 
-	-------------------------------------------
+	----------------------------------------------------------------------------
 	-- Pre-calculate b - n, b - 2n, c - n, c - 2n
 	-- in RESET state to use in later calculations.
 	-- and store in registers to reduce numbers of adders needed. 
-	-------------------------------------------
+	----------------------------------------------------------------------------
 	precalculations: process(clk)
 	begin
 		if rising_edge(clk) then
@@ -154,10 +154,9 @@ begin
 	end process;
 
 
-
-	-------------------------------------------
+	---------------------------------------------------------------------------
 	-- Calculate summations for R
-	-------------------------------------------	
+	---------------------------------------------------------------------------
 	s0  <= bit_shifted_R;															-- s0 = 2R
 	s1  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( "00" & b ) );		-- s1 = 2R + b
 	s2  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( "00" & n ) );  		-- s2 = 2R - n 			( or b - n, for pre-calculation in RESET )
@@ -165,9 +164,9 @@ begin
 	s4  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( bit_shifted_n ) );	-- s4 = 2R - 2n			( or b - 2n, for pre-calculation in RESET )
 	s5  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( b_minus_2n ) );		-- s5 = 2R + b - 2n
 
-	-------------------------------------------
+	---------------------------------------------------------------------------
 	-- Calculate summations for P
-	-------------------------------------------
+	---------------------------------------------------------------------------
 	s6  <= bit_shifted_P;															-- s6 = 2P	
 	s7  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( "00" & c ) );		-- s7 = 2P + c
 	s8  <= STD_LOGIC_VECTOR( SIGNED( c_or_2P ) 		 - SIGNED( "00" & n ) );		-- s8 = 2P - n 			( or c - n, for pre-calculation in RESET )
