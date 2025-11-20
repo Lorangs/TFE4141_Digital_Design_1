@@ -1,4 +1,4 @@
--------------------------------------------------------------------------  -------
+--------------------------------------------------------------------------------
 -- Author       : L. Strand, S. Gripsgård, O.J. Schubert
 -- Organization : Norwegian University of Science and Technology (NTNU)
 --                Department of Electronic Systems
@@ -55,8 +55,8 @@ entity mult_with_mod is
 		-----------------------------------------------------------------------------
 		--output data
 		-----------------------------------------------------------------------------
-		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);		
-		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);
+		result_R 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);			-- result R = (a * b) mod n if e = '1', else R = b
+		result_P 	: inout STD_LOGIC_VECTOR(C_BLOCK_SIZE-1 downto 0);			-- result P = (a * c) mod n
 
 
 		-----------------------------------------------------------------------------
@@ -84,23 +84,27 @@ architecture mult_behave of mult_with_mod is
 			s8,																	-- s8 = P shifted left - n
 			s9,																	-- s9 = P shifted left + c - n
 			s10,																-- s10 = P shifted left - n shifted left
-			s11																	-- s11 = P shifted left + c - n shifted left
-		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
+			s11,																-- s11 = P shifted left + c - n shifted left
+			bit_shifted_R,														-- R shifted left by 1 bit
+			bit_shifted_P,														-- P shifted left by 1 bit
+			bit_shifted_n,														-- modulus shifted left by 1 bit
+			b_minus_n,															-- b - n
+			b_minus_2n,															-- b - 2n
+			c_minus_n,															-- c - n
+			c_minus_2n,															-- c - 2n
+			b_or_2R,															-- b or 2R depending on state
+			c_or_2P																-- c or 2P depending on state
 
-	signal  bit_shifted_R,														-- R shifted left by 1 bit
-			bit_shifted_P														-- P shifted left by 1 bit
-		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );
+		: STD_LOGIC_VECTOR ( C_BLOCK_SIZE + 1 downto 0 );
 
 	signal  mux_ctrl_P_out,														-- Choose output: [ 000 = s6, 001 = s7, 010 = s8, 011 = s9, 100 = s10, 101 = s11 ]
 			mux_ctrl_R_out														-- Choose output: [ 000 = s0, 001 = s1, 010 = s2, 011 = s3, 100 =  s4, 101 = s5  ]	
 		: STD_LOGIC_VECTOR ( 2 downto 0 );
 
-	signal	bit_shifted_n	: STD_LOGIC_VECTOR ( C_BLOCK_SIZE downto 0 );		-- modulus shifted left by 1 bit
-
 begin
-	--------------------------------------------------------------------------
+	---------------------------------------------------------------------------
 	-- FSM module instantiation
-	--------------------------------------------------------------------------
+	---------------------------------------------------------------------------
 	mult_fsm: entity work.mult_with_mod_fsm
 		generic map (
 			C_BLOCK_SIZE => C_BLOCK_SIZE
@@ -121,32 +125,56 @@ begin
 		);
  
 
-	--------------------------------------------------------------------------
+	----------------------------------------------------------------------------
 	-- Prepare shifted values for R and P calculations
-	--------------------------------------------------------------------------
-	bit_shifted_R <= result_R & '0';
-	bit_shifted_P <= result_P & '0';
-	bit_shifted_n <= n & '0';
+	----------------------------------------------------------------------------
+	bit_shifted_R <= '0' & result_R & '0';									-- Signbit and left shift by 1
+	bit_shifted_P <= '0' & result_P & '0';									-- Signbit and left shift by 1
+	bit_shifted_n <= '0' & n & '0';											-- Signbit and left shift by 1
 
-	--------------------------------------------------------------------------
+	b_or_2R <= "00" & b when current_state = "00" else bit_shifted_R;		-- RESET state uses b for pre-calculation, else use 2R
+	c_or_2P <= "00" & c when current_state = "00" else bit_shifted_P;		-- RESET state uses c for pre-calculation, else use 2P
+
+
+	----------------------------------------------------------------------------
+	-- Pre-calculate b - n, b - 2n, c - n, c - 2n
+	-- in RESET state to use in later calculations.
+	-- and store in registers to reduce numbers of adders needed. 
+	----------------------------------------------------------------------------
+	precalculations: process(clk)
+	begin
+		if rising_edge(clk) then
+			if current_state = "00" then	-- RESET
+				b_minus_n 	<= s2;
+				b_minus_2n 	<= s4;
+				c_minus_n 	<= s8;
+				c_minus_2n 	<= s10;
+			end if;
+		end if;
+	end process;
+
+
+	---------------------------------------------------------------------------
 	-- Calculate summations for R
-	--------------------------------------------------------------------------
-	s0  <= '0' & bit_shifted_R;
-	s1  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) + unsigned( "00" & b ) );
-	s2  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) - unsigned( "00" & n ) );  
-	s3  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( "00" & n ) ); 
-	s4  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) - unsigned( '0' & bit_shifted_n ) );
-	s5  <= STD_LOGIC_VECTOR( unsigned( "0" & bit_shifted_R ) + unsigned( "00" & b ) - unsigned( '0' & bit_shifted_n ) );
+	---------------------------------------------------------------------------
+	s0  <= bit_shifted_R;															-- s0 = 2R
+	s1  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( "00" & b ) );		-- s1 = 2R + b
+	s2  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( "00" & n ) );  		-- s2 = 2R - n 			( or b - n, for pre-calculation in RESET )
+	s3  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( b_minus_n ) ); 		-- s3 = 2R + b - n
+	s4  <= STD_LOGIC_VECTOR( SIGNED( b_or_2R ) 		 - SIGNED( bit_shifted_n ) );	-- s4 = 2R - 2n			( or b - 2n, for pre-calculation in RESET )
+	s5  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_R ) + SIGNED( b_minus_2n ) );		-- s5 = 2R + b - 2n
 
-	--------------------------------------------------------------------------
+	---------------------------------------------------------------------------
 	-- Calculate summations for P
-	--------------------------------------------------------------------------
-	s6  <= '0' & bit_shifted_P;
-	s7  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) );
-	s8  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) - unsigned( "00" & n ) );
-	s9  <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( "00" & n ) );
-	s10 <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) - unsigned( '0' & bit_shifted_n ) );
-	s11 <= STD_LOGIC_VECTOR( unsigned( '0' & bit_shifted_P ) + unsigned( "00" & c ) - unsigned( '0' & bit_shifted_n ) );
+	---------------------------------------------------------------------------
+	s6  <= bit_shifted_P;															-- s6 = 2P	
+	s7  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( "00" & c ) );		-- s7 = 2P + c
+	s8  <= STD_LOGIC_VECTOR( SIGNED( c_or_2P ) 		 - SIGNED( "00" & n ) );		-- s8 = 2P - n 			( or c - n, for pre-calculation in RESET )
+	s9  <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( c_minus_n ) );		-- s9 = 2P + c - n
+	s10 <= STD_LOGIC_VECTOR( SIGNED( c_or_2P ) 		 - SIGNED( bit_shifted_n ) );	-- s10 = 2P - 2n		( or c - 2n, for pre-calculation in RESET )
+	s11 <= STD_LOGIC_VECTOR( SIGNED( bit_shifted_P ) + SIGNED( c_minus_2n ) );		-- s11 = 2P + c - 2n
+
+
 
 
 	--------------------------------------------------------------------------

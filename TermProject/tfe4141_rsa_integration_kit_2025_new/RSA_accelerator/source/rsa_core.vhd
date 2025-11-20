@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity rsa_core is
 	generic (
 		C_BLOCK_SIZE          	: INTEGER := 256;
-		NUM_CORES		   	    : INTEGER := 4
+		NUM_CORES		   	    : INTEGER := 6
 	);
 	port (
 		-----------------------------------------------------------------------------
